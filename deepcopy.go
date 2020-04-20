@@ -52,14 +52,15 @@ func deepCopy(dst, src reflect.Value) error {
 			return nil
 		}
 
+		if dst.IsNil() {
+			newMap := reflect.MakeMap(src.Type())
+			dst.Set(newMap)
+		}
+
 		iter := src.MapRange()
 		for iter.Next() {
 			k := iter.Key()
 			v := iter.Value()
-			if dst.IsNil() {
-				newMap := reflect.MakeMap(src.Type())
-				dst.Set(newMap)
-			}
 
 			dst.SetMapIndex(k, v)
 		}
