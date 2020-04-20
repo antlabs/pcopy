@@ -22,12 +22,12 @@ func isArraySlice(v reflect.Value) bool {
 
 func deepCopy(dst, src reflect.Value) error {
 
+	if src.IsZero() {
+		return nil
+	}
+
 	switch src.Kind() {
 	case reflect.Slice, reflect.Array:
-		// src.IsNil如果遇到array会崩溃,所有先判断下是Slice类型
-		if src.Kind() == reflect.Slice && src.IsNil() {
-			return nil
-		}
 
 		if !isArraySlice(dst) {
 			return nil
@@ -48,6 +48,22 @@ func deepCopy(dst, src reflect.Value) error {
 		}
 
 	case reflect.Map:
+		if dst.Kind() != reflect.Map {
+			return nil
+		}
+
+		iter := src.MapRange()
+		for iter.Next() {
+			k := iter.Key()
+			v := iter.Value()
+			if dst.IsNil() {
+				newMap := reflect.MakeMap(src.Type())
+				dst.Set(newMap)
+			}
+
+			dst.SetMapIndex(k, v)
+		}
+
 	case reflect.Func:
 	case reflect.Struct:
 

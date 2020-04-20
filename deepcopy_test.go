@@ -44,3 +44,34 @@ func Test_ArrayToSlice(t *testing.T) {
 	DeepCopy(&d, &s)
 	assert.Equal(t, d, dst{A: []int{1, 2, 3}})
 }
+
+func Test_MapToMap(t *testing.T) {
+	type dst struct {
+		A map[int]int
+		B map[string]string
+	}
+
+	type src struct {
+		B map[string]string
+		A map[int]int
+	}
+
+	var d dst
+	b := map[string]string{
+		"testA": "testA",
+		"testB": "testB",
+	}
+
+	a := map[int]int{
+		1: 1,
+		2: 2,
+	}
+
+	s := src{
+		B: b,
+		A: a,
+	}
+
+	DeepCopy(&d, &s)
+	assert.Equal(t, d, dst{A: a, B: b})
+}
