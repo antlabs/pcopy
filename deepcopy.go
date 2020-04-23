@@ -40,8 +40,8 @@ func (d *deepCopy) RegisterTagName(tagName string) *deepCopy {
 }
 
 // 需要的tag name
-func (d *deepCopy) needTagName(curTabName string) bool {
-	return d.tagName == curTabName
+func needTagName(curTabName string) bool {
+	return len(curTabName) > 0
 }
 
 // Do() 开干
@@ -58,6 +58,7 @@ func min(a, b int) int {
 	return a
 }
 
+// 是array或slice类型
 func isArraySlice(v reflect.Value) bool {
 	switch v.Kind() {
 	case reflect.Array, reflect.Slice:
@@ -136,7 +137,7 @@ func (d *deepCopy) deepCopy(dst, src reflect.Value, depth int) error {
 		typ := src.Type()
 		for i, n := 0, src.NumField(); i < n; i++ {
 			sf := typ.Field(i)
-			if !d.needTagName(sf.Tag.Get(d.tagName)) {
+			if !needTagName(sf.Tag.Get(d.tagName)) {
 				continue
 			}
 
@@ -146,9 +147,10 @@ func (d *deepCopy) deepCopy(dst, src reflect.Value, depth int) error {
 		}
 
 	case reflect.Interface:
-		if src.IsNil() {
-			return nil
-		}
+		/*
+
+			TODO dst如果是空指针的行为
+		*/
 
 		return d.deepCopy(dst.Elem(), src.Elem(), depth)
 	case reflect.Ptr:

@@ -154,3 +154,28 @@ func Test_MaxDepth(t *testing.T) {
 		assert.Equal(t, tc.need, tc.got)
 	}
 }
+
+func Test_TagName(t *testing.T) {
+	type tagName struct {
+		First string `copy:"first"`
+		Data  struct {
+			Result string
+		}
+	}
+
+	src := tagName{}
+	src.First = "first"
+	src.Data.Result = "test"
+
+	for _, tc := range []testCase{
+		func() testCase {
+			d := tagName{}
+			Copy(&d, &src).RegisterTagName("copy").Do()
+			need := tagName{}
+			need.First = "first"
+			return testCase{got: d, need: need}
+		}(),
+	} {
+		assert.Equal(t, tc.need, tc.got)
+	}
+}
