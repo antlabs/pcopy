@@ -9,12 +9,15 @@ const (
 	noTagLimit     = ""
 )
 
+type copyFunc func(dst, src reflect.Value, depth int) error
+
 // deepCopy结构体
 type deepCopy struct {
-	maxDepth int
-	tagName  string
 	dst      interface{}
 	src      interface{}
+	tagName  string
+	maxDepth int
+	tab      map[reflect.Kind]copyFunc
 }
 
 // 设置dst, src数据源
@@ -39,8 +42,44 @@ func (d *deepCopy) RegisterTagName(tagName string) *deepCopy {
 	return d
 }
 
+// 设置支持的类型
+func (d *deepCopy) OnlyType(kind ...reflect.Kind) *deepCopy {
+	if d.tab == nil && len(kind) > 0 {
+		d.tab = make(map[reflect.Kind]copyFunc, len(kind))
+		d.tab[reflect.Struct] = d.cpyStruct
+		d.tab[reflect.Ptr] = d.cpyPtr
+	}
+
+	for _, v := range kind {
+		switch v {
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+			reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+			reflect.Uintptr, reflect.Float32, reflect.Float64, reflect.Complex64, reflect.Complex128:
+
+			d.tab[v] = d.cpyDefault
+
+		case reflect.Slice, reflect.Array:
+			d.tab[v] = d.cpySliceArray
+		case reflect.Map:
+			d.tab[v] = d.cpyMap
+		case reflect.Func:
+			d.tab[v] = d.cpyFunc
+		case reflect.Struct:
+			d.tab[v] = d.cpyStruct
+		case reflect.Interface:
+			d.tab[v] = d.cpyInterface
+		case reflect.Ptr:
+			d.tab[v] = d.cpyPtr
+		case reflect.String:
+			d.tab[v] = d.cpyDefault
+		}
+	}
+
+	return d
+}
+
 // 需要的tag name
-func needTagName(curTabName string) bool {
+func haveTagName(curTabName string) bool {
 	return len(curTabName) > 0
 }
 
@@ -58,13 +97,118 @@ func min(a, b int) int {
 	return a
 }
 
-// 是array或slice类型
+// 判断是array或slice类型
 func isArraySlice(v reflect.Value) bool {
 	switch v.Kind() {
 	case reflect.Array, reflect.Slice:
 		return true
 	}
 	return false
+}
+
+// 拷贝slice array
+func (d *deepCopy) cpySliceArray(dst, src reflect.Value, depth int) error {
+	if !isArraySlice(dst) {
+		return nil
+	}
+
+	if dst.Kind() == reflect.Slice && dst.Len() == 0 && src.Len() > 0 {
+		// MakeSlice的类型用reflect.SliceOf(src.Index(0).Type()),而不用src.Type()的原因
+		// 这里src的类型可能是array和slice。而需要的是src元素T[0]的 slice类型, 使用src.Type()会拿到T的array和slice类型
+		newDst := reflect.MakeSlice(reflect.SliceOf(src.Index(0).Type()), src.Len(), src.Len())
+		dst.Set(newDst)
+	}
+
+	l := min(dst.Len(), src.Len())
+	for i := 0; i < l; i++ {
+		if err := d.deepCopy(dst.Index(i), src.Index(i), depth); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// 拷贝map
+func (d *deepCopy) cpyMap(dst, src reflect.Value, depth int) error {
+	if dst.Kind() != reflect.Map {
+		return nil
+	}
+
+	if dst.IsNil() {
+		newMap := reflect.MakeMap(src.Type())
+		dst.Set(newMap)
+	}
+
+	iter := src.MapRange()
+	for iter.Next() {
+		k := iter.Key()
+		v := iter.Value()
+
+		newVal := reflect.New(v.Type()).Elem()
+		if err := d.deepCopy(newVal, v, depth); err != nil {
+			return err
+		}
+
+		dst.SetMapIndex(k, newVal)
+	}
+	return nil
+}
+
+// 拷贝函数
+func (d *deepCopy) cpyFunc(dst, src reflect.Value, depth int) error {
+	/*
+		结构体成员如果是一个函数变量, dst.IsNil()会返回true
+		if dst.IsNil() {
+			fmt.Printf("hell world\n")
+			newFunc := reflect.New(src.Type())
+			dst = newFunc.Elem()
+		}
+	*/
+
+	dst.Set(src)
+	return nil
+}
+
+// 拷贝结构体
+func (d *deepCopy) cpyStruct(dst, src reflect.Value, depth int) error {
+
+	typ := src.Type()
+	for i, n := 0, src.NumField(); i < n; i++ {
+		sf := typ.Field(i)
+		if len(d.tagName) > 0 && !haveTagName(sf.Tag.Get(d.tagName)) {
+			continue
+		}
+
+		if err := d.deepCopy(dst.FieldByName(sf.Name), src.Field(i), depth+1); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// 拷贝interface{}
+func (d *deepCopy) cpyInterface(dst, src reflect.Value, depth int) error {
+	/*
+
+		TODO dst如果是空指针的行为
+	*/
+	return d.deepCopy(dst.Elem(), src.Elem(), depth)
+}
+
+// 拷贝指针
+func (d *deepCopy) cpyPtr(dst, src reflect.Value, depth int) error {
+	if dst.Kind() == reflect.Ptr {
+		dst = dst.Elem()
+	}
+
+	return d.deepCopy(dst, src.Elem(), depth)
+}
+
+// 其他类型
+func (d *deepCopy) cpyDefault(dst, src reflect.Value, depth int) error {
+	dst.Set(src)
+	return nil
 }
 
 func (d *deepCopy) deepCopy(dst, src reflect.Value, depth int) error {
@@ -77,90 +221,35 @@ func (d *deepCopy) deepCopy(dst, src reflect.Value, depth int) error {
 		return nil
 	}
 
+	if d.tab != nil {
+		cpy, ok := d.tab[src.Kind()]
+		if !ok {
+			return nil
+		}
+		return cpy(dst, src, depth)
+	}
+
 	switch src.Kind() {
 	case reflect.Slice, reflect.Array:
-
-		if !isArraySlice(dst) {
-			return nil
-		}
-
-		if dst.Kind() == reflect.Slice && dst.Len() == 0 && src.Len() > 0 {
-			// MakeSlice的类型用reflect.SliceOf(src.Index(0).Type()),而不用src.Type()的原因
-			// 这里src的类型可能是array和slice。而需要的是src元素T[0]的 slice类型, 使用src.Type()会拿到T的array和slice类型
-			newDst := reflect.MakeSlice(reflect.SliceOf(src.Index(0).Type()), src.Len(), src.Len())
-			dst.Set(newDst)
-		}
-
-		l := min(dst.Len(), src.Len())
-		for i := 0; i < l; i++ {
-			if err := d.deepCopy(dst.Index(i), src.Index(i), depth); err != nil {
-				return err
-			}
-		}
+		return d.cpySliceArray(dst, src, depth)
 
 	case reflect.Map:
-		if dst.Kind() != reflect.Map {
-			return nil
-		}
-
-		if dst.IsNil() {
-			newMap := reflect.MakeMap(src.Type())
-			dst.Set(newMap)
-		}
-
-		iter := src.MapRange()
-		for iter.Next() {
-			k := iter.Key()
-			v := iter.Value()
-
-			newVal := reflect.New(v.Type()).Elem()
-			if err := d.deepCopy(newVal, v, depth); err != nil {
-				return err
-			}
-
-			dst.SetMapIndex(k, newVal)
-		}
+		return d.cpyMap(dst, src, depth)
 
 	case reflect.Func:
-		/*
-			结构体成员如果是一个函数变量, dst.IsNil()会返回true
-			if dst.IsNil() {
-				fmt.Printf("hell world\n")
-				newFunc := reflect.New(src.Type())
-				dst = newFunc.Elem()
-			}
-		*/
+		return d.cpyFunc(dst, src, depth)
 
-		dst.Set(src)
 	case reflect.Struct:
-
-		typ := src.Type()
-		for i, n := 0, src.NumField(); i < n; i++ {
-			sf := typ.Field(i)
-			if !needTagName(sf.Tag.Get(d.tagName)) {
-				continue
-			}
-
-			if err := d.deepCopy(dst.FieldByName(sf.Name), src.Field(i), depth+1); err != nil {
-				return err
-			}
-		}
+		return d.cpyStruct(dst, src, depth)
 
 	case reflect.Interface:
-		/*
+		return d.cpyInterface(dst, src, depth)
 
-			TODO dst如果是空指针的行为
-		*/
-
-		return d.deepCopy(dst.Elem(), src.Elem(), depth)
 	case reflect.Ptr:
-		if dst.Kind() == reflect.Ptr {
-			dst = dst.Elem()
-		}
+		return d.cpyPtr(dst, src, depth)
 
-		return d.deepCopy(dst, src.Elem(), depth)
 	default:
-		dst.Set(src)
+		return d.cpyDefault(dst, src, depth)
 	}
 
 	return nil

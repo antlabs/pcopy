@@ -2,9 +2,11 @@ package deepcopy
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
+	"reflect"
 	"testing"
 	"unsafe"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type testCase struct {
@@ -173,6 +175,32 @@ func Test_TagName(t *testing.T) {
 			Copy(&d, &src).RegisterTagName("copy").Do()
 			need := tagName{}
 			need.First = "first"
+			return testCase{got: d, need: need}
+		}(),
+	} {
+		assert.Equal(t, tc.need, tc.got)
+	}
+}
+
+func Test_Type(t *testing.T) {
+	type typeTest struct {
+		ID   int
+		Data struct {
+			Result string
+		}
+	}
+
+	src := typeTest{}
+	src.ID = 3
+	src.Data.Result = "test"
+
+	for _, tc := range []testCase{
+		func() testCase {
+
+			d := typeTest{}
+			Copy(&d, &src).OnlyType(reflect.Int).Do()
+			need := typeTest{}
+			need.ID = 3
 			return testCase{got: d, need: need}
 		}(),
 	} {
