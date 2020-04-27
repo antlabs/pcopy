@@ -1,6 +1,7 @@
 package deepcopy
 
 import (
+	"errors"
 	"reflect"
 )
 
@@ -9,7 +10,13 @@ const (
 	noTagLimit     = ""
 )
 
+type visit struct {
+	addr uintptr
+	typ  reflect.Type
+}
 type copyFunc func(dst, src reflect.Value, depth int) error
+
+var ErrCircularReference = errors.New("deepcopy.Copy:Circular reference")
 
 // deepCopy结构体
 type deepCopy struct {
@@ -17,6 +24,7 @@ type deepCopy struct {
 	src      interface{}
 	tagName  string
 	maxDepth int
+	visited  map[visit]struct{}
 	tab      map[reflect.Kind]copyFunc
 }
 
@@ -26,7 +34,13 @@ func Copy(dst, src interface{}) *deepCopy {
 		return nil
 	}
 
-	d := deepCopy{maxDepth: noDepthLimited, dst: dst, src: src}
+	d := deepCopy{
+		maxDepth: noDepthLimited,
+		dst:      dst,
+		src:      src,
+		visited:  make(map[visit]struct{}),
+	}
+
 	return &d
 }
 
@@ -156,6 +170,10 @@ func (d *deepCopy) cpyMap(dst, src reflect.Value, depth int) error {
 
 // 拷贝函数
 func (d *deepCopy) cpyFunc(dst, src reflect.Value, depth int) error {
+	if dst.Kind() != src.Kind() {
+		return nil
+	}
+
 	/*
 		结构体成员如果是一个函数变量, dst.IsNil()会返回true
 		if dst.IsNil() {
@@ -179,7 +197,30 @@ func (d *deepCopy) cpyStruct(dst, src reflect.Value, depth int) error {
 			continue
 		}
 
-		if err := d.deepCopy(dst.FieldByName(sf.Name), src.Field(i), depth+1); err != nil {
+		dstValue := dst.FieldByName(sf.Name)
+		if !dstValue.IsValid() {
+			continue
+		}
+
+		if dstValue.Kind() == reflect.Ptr && dstValue.IsNil() {
+			p := reflect.New(src.Field(i).Type().Elem())
+			dstValue.Set(p)
+			//fmt.Printf(":::::::::%t\n", dstValue.IsNil())
+		}
+
+		// 检查循环引用
+		sField := src.Field(i)
+		if src.Field(i).CanAddr() {
+			addr := sField.UnsafeAddr()
+			//fmt.Printf(":::::::::::::::::(%x), (%s)\n", addr, typ.Field(i).Name)
+			v := visit{addr: addr, typ: src.Field(i).Type()}
+			if _, ok := d.visited[v]; ok {
+				return ErrCircularReference
+			}
+			d.visited[v] = struct{}{}
+		}
+
+		if err := d.deepCopy(dstValue, sField, depth+1); err != nil {
 			return err
 		}
 	}
@@ -189,6 +230,9 @@ func (d *deepCopy) cpyStruct(dst, src reflect.Value, depth int) error {
 
 // 拷贝interface{}
 func (d *deepCopy) cpyInterface(dst, src reflect.Value, depth int) error {
+	if dst.Kind() != src.Kind() {
+		return nil
+	}
 	/*
 
 		TODO dst如果是空指针的行为
@@ -198,15 +242,26 @@ func (d *deepCopy) cpyInterface(dst, src reflect.Value, depth int) error {
 
 // 拷贝指针
 func (d *deepCopy) cpyPtr(dst, src reflect.Value, depth int) error {
+	if dst.Kind() != src.Kind() {
+		return nil
+	}
+
+	if src.Kind() == reflect.Ptr {
+		src = src.Elem()
+	}
+
 	if dst.Kind() == reflect.Ptr {
 		dst = dst.Elem()
 	}
 
-	return d.deepCopy(dst, src.Elem(), depth)
+	return d.deepCopy(dst, src, depth)
 }
 
 // 其他类型
 func (d *deepCopy) cpyDefault(dst, src reflect.Value, depth int) error {
+	if dst.Kind() != src.Kind() {
+		return nil
+	}
 	dst.Set(src)
 	return nil
 }
