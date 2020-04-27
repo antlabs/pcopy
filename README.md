@@ -45,18 +45,19 @@ func main() {
 ```
 
 ## max copy depth
+如果src的结构体嵌套了两套，MaxDepth可以控制只拷贝一层
 ```go
-    deepcopy.Copy().MaxDepth(1).Do()
+    deepcopy.Copy(dst, src).MaxDepth(1).Do()
 ```
 
 ## copy only the specified   tag
 只拷贝结构体里面有copy tag的字段
 ```go
-    deepcopy.Copy().RegisterTagName("copy").Do()
+    deepcopy.Copy(dst, src).RegisterTagName("copy").Do()
 ```
 
 ## copy only the specified type
 只拷贝指定类型
 ```go
-deepcopy.Copy().OnlyType(reflect.String, reflect.Int).Do()
+    deepcopy.Copy(dst, src).OnlyType(reflect.String, reflect.Int).Do()
 ```
