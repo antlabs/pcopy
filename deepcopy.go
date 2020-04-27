@@ -14,6 +14,7 @@ type visit struct {
 	addr uintptr
 	typ  reflect.Type
 }
+
 type copyFunc func(dst, src reflect.Value, depth int) error
 
 var ErrCircularReference = errors.New("deepcopy.Copy:Circular reference")
@@ -205,18 +206,19 @@ func (d *deepCopy) cpyStruct(dst, src reflect.Value, depth int) error {
 		if dstValue.Kind() == reflect.Ptr && dstValue.IsNil() {
 			p := reflect.New(src.Field(i).Type().Elem())
 			dstValue.Set(p)
-			//fmt.Printf(":::::::::%t\n", dstValue.IsNil())
 		}
 
 		// 检查循环引用
 		sField := src.Field(i)
 		if src.Field(i).CanAddr() {
+
 			addr := sField.UnsafeAddr()
-			//fmt.Printf(":::::::::::::::::(%x), (%s)\n", addr, typ.Field(i).Name)
 			v := visit{addr: addr, typ: src.Field(i).Type()}
+
 			if _, ok := d.visited[v]; ok {
 				return ErrCircularReference
 			}
+
 			d.visited[v] = struct{}{}
 		}
 
