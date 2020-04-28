@@ -26,7 +26,8 @@ type deepCopy struct {
 	tagName  string
 	maxDepth int
 	visited  map[visit]struct{}
-	tab      map[reflect.Kind]copyFunc
+	//fieldMapping map[string]string
+	tab map[reflect.Kind]copyFunc
 }
 
 // 设置dst, src数据源
@@ -92,6 +93,13 @@ func (d *deepCopy) OnlyType(kind ...reflect.Kind) *deepCopy {
 
 	return d
 }
+
+// 只设置把src的某个字段拷贝到dst的某个字段，只支持同层次拷贝
+/* 暂时不实现，好像不是那么必须
+func (d *deepCopy) OnlyField(dstSrcField ...string) *deepCopy {
+	return d
+}
+*/
 
 // 需要的tag name
 func haveTagName(curTabName string) bool {
@@ -250,9 +258,6 @@ func (d *deepCopy) cpyPtr(dst, src reflect.Value, depth int) error {
 
 	if src.Kind() == reflect.Ptr {
 		src = src.Elem()
-	}
-
-	if dst.Kind() == reflect.Ptr {
 		dst = dst.Elem()
 	}
 
