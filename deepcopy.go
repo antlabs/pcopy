@@ -111,15 +111,6 @@ func (d *deepCopy) Do() error {
 	return d.deepCopy(reflect.ValueOf(d.dst), reflect.ValueOf(d.src), 0)
 }
 
-// 取最小值
-func min(a, b int) int {
-	if a > b {
-		return b
-	}
-
-	return a
-}
-
 // 判断是array或slice类型
 func isArraySlice(v reflect.Value) bool {
 	switch v.Kind() {
@@ -135,14 +126,20 @@ func (d *deepCopy) cpySliceArray(dst, src reflect.Value, depth int) error {
 		return nil
 	}
 
+	l := src.Len()
+	if dst.Len() > 0 && dst.Len() < src.Len() {
+		l = dst.Len()
+	}
+
 	if dst.Kind() == reflect.Slice && dst.Len() == 0 && src.Len() > 0 {
-		// MakeSlice的类型用reflect.SliceOf(src.Index(0).Type()),而不用src.Type()的原因
-		// 这里src的类型可能是array和slice。而需要的是src元素T[0]的 slice类型, 使用src.Type()会拿到T的array和slice类型
-		newDst := reflect.MakeSlice(reflect.SliceOf(src.Index(0).Type()), src.Len(), src.Len())
+		// MakeSlice的类型用reflect.SliceOf(src.Index(0).Type())
+		// 而不用src.Type()的原因如下
+		// src.Type()拿到的是类型可能是array和slice。
+		// 实际需要的是元素T的slice类型, 使用src.Type(), 这是错误的。
+		newDst := reflect.MakeSlice(reflect.SliceOf(src.Index(0).Type()), l, l)
 		dst.Set(newDst)
 	}
 
-	l := min(dst.Len(), src.Len())
 	for i := 0; i < l; i++ {
 		if err := d.deepCopy(dst.Index(i), src.Index(i), depth); err != nil {
 			return err
@@ -196,38 +193,46 @@ func (d *deepCopy) cpyFunc(dst, src reflect.Value, depth int) error {
 	return nil
 }
 
+// 检查循环引用
+func (d *deepCopy) checkCycle(sField reflect.Value) error {
+	if sField.CanAddr() {
+
+		addr := sField.UnsafeAddr()
+		v := visit{addr: addr, typ: sField.Type()}
+
+		if _, ok := d.visited[v]; ok {
+			return ErrCircularReference
+		}
+
+		d.visited[v] = struct{}{}
+	}
+
+	return nil
+}
+
 // 拷贝结构体
 func (d *deepCopy) cpyStruct(dst, src reflect.Value, depth int) error {
 
 	typ := src.Type()
 	for i, n := 0, src.NumField(); i < n; i++ {
 		sf := typ.Field(i)
+		// 检查是否注册tag
 		if len(d.tagName) > 0 && !haveTagName(sf.Tag.Get(d.tagName)) {
 			continue
 		}
 
+		// 使用src的字段名在dst里面取出reflect.Value值
 		dstValue := dst.FieldByName(sf.Name)
+
+		// dst没有src里面所有的字段，跳过
 		if !dstValue.IsValid() {
 			continue
 		}
 
-		if dstValue.Kind() == reflect.Ptr && dstValue.IsNil() {
-			p := reflect.New(src.Field(i).Type().Elem())
-			dstValue.Set(p)
-		}
-
-		// 检查循环引用
+		// 检查结构体里面的字段是否有循环引用
 		sField := src.Field(i)
-		if src.Field(i).CanAddr() {
-
-			addr := sField.UnsafeAddr()
-			v := visit{addr: addr, typ: src.Field(i).Type()}
-
-			if _, ok := d.visited[v]; ok {
-				return ErrCircularReference
-			}
-
-			d.visited[v] = struct{}{}
+		if err := d.checkCycle(sField); err != nil {
+			return err
 		}
 
 		if err := d.deepCopy(dstValue, sField, depth+1); err != nil {
@@ -240,14 +245,22 @@ func (d *deepCopy) cpyStruct(dst, src reflect.Value, depth int) error {
 
 // 拷贝interface{}
 func (d *deepCopy) cpyInterface(dst, src reflect.Value, depth int) error {
+	if src.IsNil() {
+		return nil
+	}
+
 	if dst.Kind() != src.Kind() {
 		return nil
 	}
-	/*
 
-		TODO dst如果是空指针的行为
-	*/
-	return d.deepCopy(dst.Elem(), src.Elem(), depth)
+	src = src.Elem()
+	newDst := reflect.New(src.Type()).Elem()
+
+	if err := d.deepCopy(newDst, src, depth); err != nil {
+		return err
+	}
+	dst.Set(newDst)
+	return nil
 }
 
 // 拷贝指针
@@ -256,10 +269,13 @@ func (d *deepCopy) cpyPtr(dst, src reflect.Value, depth int) error {
 		return nil
 	}
 
-	if src.Kind() == reflect.Ptr {
-		src = src.Elem()
-		dst = dst.Elem()
+	if dst.IsNil() {
+		p := reflect.New(src.Type().Elem())
+		dst.Set(p)
 	}
+
+	src = src.Elem()
+	dst = dst.Elem()
 
 	return d.deepCopy(dst, src, depth)
 }
@@ -279,6 +295,7 @@ func (d *deepCopy) deepCopy(dst, src reflect.Value, depth int) error {
 		return nil
 	}
 
+	// 检查递归深度
 	if d.maxDepth != noDepthLimited && depth > d.maxDepth {
 		return nil
 	}
