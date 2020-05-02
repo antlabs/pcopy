@@ -65,26 +65,3 @@ func Test_TypeCase(t *testing.T) {
 		assert.Equal(t, tc.need, tc.got)
 	}
 }
-
-// 测试interface{}
-func Test_Inteface(t *testing.T) {
-	type interfaceTest struct {
-		I interface{}
-		S interface{}
-	}
-
-	for _, tc := range []testCase{
-		func() testCase {
-			d := interfaceTest{}
-			src := interfaceTest{
-				I: 5,
-				S: "hello",
-			}
-
-			Copy(&d, &src).Do()
-			return testCase{got: d, need: src}
-		}(),
-	} {
-		assert.Equal(t, tc.need, tc.got)
-	}
-}

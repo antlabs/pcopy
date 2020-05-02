@@ -220,9 +220,6 @@ func (d *deepCopy) cpyStruct(dst, src reflect.Value, depth int) error {
 
 // 拷贝interface{}
 func (d *deepCopy) cpyInterface(dst, src reflect.Value, depth int) error {
-	if src.IsNil() {
-		return nil
-	}
 
 	if dst.Kind() != src.Kind() {
 		return nil
@@ -234,6 +231,7 @@ func (d *deepCopy) cpyInterface(dst, src reflect.Value, depth int) error {
 	if err := d.deepCopy(newDst, src, depth); err != nil {
 		return err
 	}
+
 	dst.Set(newDst)
 	return nil
 }
