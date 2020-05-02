@@ -116,11 +116,15 @@ func (d *deepCopy) cpySliceArray(dst, src reflect.Value, depth int) error {
 
 // 拷贝map
 func (d *deepCopy) cpyMap(dst, src reflect.Value, depth int) error {
-	if dst.Kind() != reflect.Map {
+	if dst.Kind() != src.Kind() {
 		return nil
 	}
 
 	if dst.IsNil() {
+		if !dst.CanSet() {
+			return nil
+		}
+
 		newMap := reflect.MakeMap(src.Type())
 		dst.Set(newMap)
 	}

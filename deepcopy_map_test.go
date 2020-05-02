@@ -45,6 +45,7 @@ func Test_Map_Special(t *testing.T) {
 	}
 
 	for _, tc := range []testCase{
+		// map里面的值是结构体
 		func() testCase {
 			src := map[string]mVal{
 				"1": mVal{ID: 1, Name: "name:1"},
@@ -55,6 +56,24 @@ func Test_Map_Special(t *testing.T) {
 			var dst map[string]mVal
 			Copy(&dst, &src).Do()
 			return testCase{got: dst, need: src}
+		}(),
+		// dst的地址不是指针，没有发送panic
+		func() testCase {
+			src := map[string]mVal{
+				"1": mVal{ID: 1, Name: "name:1"},
+			}
+
+			var dst map[string]mVal
+			Copy(dst, src).Do()
+			return testCase{}
+		}(),
+		func() testCase {
+			src := map[string]mVal{
+				"1": mVal{ID: 1, Name: "name:1"},
+			}
+
+			Copy(new(int), &src).Do()
+			return testCase{}
 		}(),
 	} {
 		assert.Equal(t, tc.need, tc.got)
