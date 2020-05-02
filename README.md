@@ -1,4 +1,7 @@
 ## 作用
+[![Go](https://github.com/antlabs/deepcopy/workflows/Go/badge.svg)](https://github.com/antlabs/deepcopy/actions)
+[![codecov](https://codecov.io/gh/antlabs/deepcopy/branch/master/graph/badge.svg)](https://codecov.io/gh/antlabs/deepcopy)
+
 deepcopy.Copy主要用作结构之间的深度拷贝[从零实现]
 
 
