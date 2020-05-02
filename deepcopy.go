@@ -27,13 +27,14 @@ type deepCopy struct {
 	maxDepth int
 	visited  map[visit]struct{}
 	//fieldMapping map[string]string
-	tab map[reflect.Kind]copyFunc
+
+	err error
 }
 
 // 设置dst, src数据源
 func Copy(dst, src interface{}) *deepCopy {
 	if dst == nil || src == nil {
-		return nil
+		return &deepCopy{err: errors.New("Unsupported type:nil")}
 	}
 
 	d := deepCopy{
@@ -55,42 +56,6 @@ func (d *deepCopy) MaxDepth(maxDepth int) *deepCopy {
 // 设置tag name，结构体的tag等于RegisterTagName注册的tag，才会copy值
 func (d *deepCopy) RegisterTagName(tagName string) *deepCopy {
 	d.tagName = tagName
-	return d
-}
-
-// 设置支持的类型
-func (d *deepCopy) OnlyType(kind ...reflect.Kind) *deepCopy {
-	if d.tab == nil && len(kind) > 0 {
-		d.tab = make(map[reflect.Kind]copyFunc, len(kind))
-		d.tab[reflect.Struct] = d.cpyStruct
-		d.tab[reflect.Ptr] = d.cpyPtr
-	}
-
-	for _, v := range kind {
-		switch v {
-		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-			reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
-			reflect.Uintptr, reflect.Float32, reflect.Float64, reflect.Complex64, reflect.Complex128:
-
-			d.tab[v] = d.cpyDefault
-
-		case reflect.Slice, reflect.Array:
-			d.tab[v] = d.cpySliceArray
-		case reflect.Map:
-			d.tab[v] = d.cpyMap
-		case reflect.Func:
-			d.tab[v] = d.cpyFunc
-		case reflect.Struct:
-			d.tab[v] = d.cpyStruct
-		case reflect.Interface:
-			d.tab[v] = d.cpyInterface
-		case reflect.Ptr:
-			d.tab[v] = d.cpyPtr
-		case reflect.String:
-			d.tab[v] = d.cpyDefault
-		}
-	}
-
 	return d
 }
 
@@ -122,6 +87,7 @@ func isArraySlice(v reflect.Value) bool {
 
 // 拷贝slice array
 func (d *deepCopy) cpySliceArray(dst, src reflect.Value, depth int) error {
+
 	if !isArraySlice(dst) {
 		return nil
 	}
@@ -290,6 +256,9 @@ func (d *deepCopy) cpyDefault(dst, src reflect.Value, depth int) error {
 }
 
 func (d *deepCopy) deepCopy(dst, src reflect.Value, depth int) error {
+	if d.err != nil {
+		return d.err
+	}
 
 	if src.IsZero() {
 		return nil
@@ -298,14 +267,6 @@ func (d *deepCopy) deepCopy(dst, src reflect.Value, depth int) error {
 	// 检查递归深度
 	if d.maxDepth != noDepthLimited && depth > d.maxDepth {
 		return nil
-	}
-
-	if d.tab != nil {
-		cpy, ok := d.tab[src.Kind()]
-		if !ok {
-			return nil
-		}
-		return cpy(dst, src, depth)
 	}
 
 	switch src.Kind() {

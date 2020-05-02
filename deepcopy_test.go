@@ -2,7 +2,6 @@ package deepcopy
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 	"unsafe"
 
@@ -188,32 +187,6 @@ func Test_TagName(t *testing.T) {
 	}
 }
 
-func Test_Type(t *testing.T) {
-	type typeTest struct {
-		ID   int
-		Data struct {
-			Result string
-		}
-	}
-
-	src := typeTest{}
-	src.ID = 3
-	src.Data.Result = "test"
-
-	for _, tc := range []testCase{
-		func() testCase {
-
-			d := typeTest{}
-			Copy(&d, &src).OnlyType(reflect.Int).Do()
-			need := typeTest{}
-			need.ID = 3
-			return testCase{got: d, need: need}
-		}(),
-	} {
-		assert.Equal(t, tc.need, tc.got)
-	}
-}
-
 // 下面的test case 确保不panic
 func Test_Special(t *testing.T) {
 	for _, tc := range []testCase{
@@ -246,6 +219,10 @@ func Test_Special(t *testing.T) {
 			s := src{Sex: "m"}
 			Copy(&d, &s).Do()
 			return testCase{got: d, need: d}
+		}(),
+		func() testCase {
+			Copy(new(int), nil).Do()
+			return testCase{got: true, need: true}
 		}(),
 	} {
 		assert.Equal(t, tc.need, tc.got)
