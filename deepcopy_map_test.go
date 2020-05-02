@@ -57,7 +57,7 @@ func Test_Map_Special(t *testing.T) {
 			Copy(&dst, &src).Do()
 			return testCase{got: dst, need: src}
 		}(),
-		// dst的地址不是指针，没有发送panic
+		// dst的地址不是指针，没有发生panic
 		func() testCase {
 			src := map[string]mVal{
 				"1": mVal{ID: 1, Name: "name:1"},

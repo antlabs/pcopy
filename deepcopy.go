@@ -183,6 +183,10 @@ func (d *deepCopy) checkCycle(sField reflect.Value) error {
 // 拷贝结构体
 func (d *deepCopy) cpyStruct(dst, src reflect.Value, depth int) error {
 
+	if dst.Kind() != src.Kind() {
+		return nil
+	}
+
 	typ := src.Type()
 	for i, n := 0, src.NumField(); i < n; i++ {
 		sf := typ.Field(i)
