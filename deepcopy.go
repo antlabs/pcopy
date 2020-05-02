@@ -41,7 +41,7 @@ func Copy(dst, src interface{}) *deepCopy {
 		maxDepth: noDepthLimited,
 		dst:      dst,
 		src:      src,
-		visited:  make(map[visit]struct{}),
+		visited:  make(map[visit]struct{}, 8),
 	}
 
 	return &d
