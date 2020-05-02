@@ -1,9 +1,7 @@
 package deepcopy
 
 import (
-	"fmt"
 	"testing"
-	"unsafe"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -11,27 +9,6 @@ import (
 type testCase struct {
 	need interface{}
 	got  interface{}
-}
-
-func Test_FuncToFunc(t *testing.T) {
-	type dst struct {
-		A func()
-	}
-
-	type src struct {
-		A func()
-	}
-
-	d := dst{}
-	s := src{
-		A: func() { fmt.Printf("hello") },
-	}
-
-	Copy(&d, &s).Do()
-
-	//如果指向的是同一个地址的函数，注释的方法是不行的
-	//assert.Equal(t, d.A, s.A)
-	assert.Equal(t, *(*uintptr)(unsafe.Pointer(&d.A)), *(*uintptr)(unsafe.Pointer(&s.A)))
 }
 
 // 最大深度
@@ -87,6 +64,7 @@ func Test_MaxDepth(t *testing.T) {
 	}
 }
 
+// 测试设置tag的情况
 func Test_TagName(t *testing.T) {
 	type tagName struct {
 		First string `copy:"first"`
@@ -154,6 +132,7 @@ func Test_Special(t *testing.T) {
 	}
 }
 
+// 测试循环引用
 func Test_Cycle(t *testing.T) {
 	for _, e := range []error{
 		func() error {

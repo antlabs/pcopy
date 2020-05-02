@@ -1,11 +1,36 @@
 package deepcopy
 
 import (
-	"github.com/stretchr/testify/assert"
+	"fmt"
 	"testing"
+	"unsafe"
+
+	"github.com/stretchr/testify/assert"
 )
 
-func Test_Func(t *testing.T) {
+func Test_FuncToFunc(t *testing.T) {
+	type dst struct {
+		A func()
+	}
+
+	type src struct {
+		A func()
+	}
+
+	d := dst{}
+	s := src{
+		A: func() { fmt.Printf("hello") },
+	}
+
+	Copy(&d, &s).Do()
+
+	//如果指向的是同一个地址的函数，注释的方法是不行的
+	//assert.Equal(t, d.A, s.A)
+	assert.Equal(t, *(*uintptr)(unsafe.Pointer(&d.A)), *(*uintptr)(unsafe.Pointer(&s.A)))
+}
+
+// 测试特殊情况
+func Test_Func_Special(t *testing.T) {
 
 	type fn struct {
 		Add func()

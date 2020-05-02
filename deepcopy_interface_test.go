@@ -29,7 +29,7 @@ func Test_Inteface(t *testing.T) {
 	}
 }
 
-// 测试指针特殊情况
+// 测试interface{}特殊情况
 // 只要不崩溃就是对的
 func Test_Interface_Special(t *testing.T) {
 	for _, tc := range []testCase{
@@ -58,10 +58,6 @@ func Test_Interface_Special(t *testing.T) {
 			}
 
 			Copy((*int)(nil), (*int)(nil)).Do()
-			return testCase{}
-		}(),
-		// dst 是双指针
-		func() testCase {
 			return testCase{}
 		}(),
 	} {

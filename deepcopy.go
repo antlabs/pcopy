@@ -191,6 +191,10 @@ func (d *deepCopy) cpyStruct(dst, src reflect.Value, depth int) error {
 	typ := src.Type()
 	for i, n := 0, src.NumField(); i < n; i++ {
 		sf := typ.Field(i)
+		if sf.PkgPath != "" && !sf.Anonymous {
+			continue
+		}
+
 		// 检查是否注册tag
 		if len(d.tagName) > 0 && !haveTagName(sf.Tag.Get(d.tagName)) {
 			continue
