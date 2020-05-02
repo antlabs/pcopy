@@ -120,10 +120,11 @@ func (d *deepCopy) cpyMap(dst, src reflect.Value, depth int) error {
 		return nil
 	}
 
+	if !dst.CanSet() {
+		return nil
+	}
+
 	if dst.IsNil() {
-		if !dst.CanSet() {
-			return nil
-		}
 
 		newMap := reflect.MakeMap(src.Type())
 		dst.Set(newMap)
@@ -244,6 +245,11 @@ func (d *deepCopy) cpyPtr(dst, src reflect.Value, depth int) error {
 	}
 
 	if dst.IsNil() {
+		// dst.CanSet必须放到dst.IsNil判断里面
+		// 不让会影响到struct或者map类型的指针
+		if !dst.CanSet() {
+			return nil
+		}
 		p := reflect.New(src.Type().Elem())
 		dst.Set(p)
 	}

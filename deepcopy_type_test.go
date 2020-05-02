@@ -88,28 +88,3 @@ func Test_Inteface(t *testing.T) {
 		assert.Equal(t, tc.need, tc.got)
 	}
 }
-
-// 测试指针
-func Test_Ptr(t *testing.T) {
-	type interfaceTest struct {
-		Iptr *int
-		Fptr *float64
-	}
-
-	for _, tc := range []testCase{
-		func() testCase {
-			d := interfaceTest{}
-			src := interfaceTest{
-				Iptr: new(int),
-				Fptr: new(float64),
-			}
-
-			*src.Iptr = 3
-			*src.Fptr = 3.3
-			Copy(&d, &src).Do()
-			return testCase{got: d, need: src}
-		}(),
-	} {
-		assert.Equal(t, tc.need, tc.got)
-	}
-}
