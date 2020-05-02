@@ -13,79 +13,6 @@ type testCase struct {
 	got  interface{}
 }
 
-// 考虑dst为空指针情况
-
-// 测试slice拷贝到array
-// TODO更多的情况
-func Test_SliceToArray(t *testing.T) {
-	type dst struct {
-		A [3]int
-	}
-
-	type src struct {
-		A []int
-	}
-
-	var d dst
-	s := src{
-		A: []int{1, 2, 3, 4, 5},
-	}
-
-	Copy(&d, &s).Do()
-	assert.Equal(t, d, dst{A: [3]int{1, 2, 3}})
-}
-
-// 测试array拷贝到slice
-// TODO 更多的情况
-func Test_ArrayToSlice(t *testing.T) {
-	type dst struct {
-		A []int
-	}
-
-	type src struct {
-		A [3]int
-	}
-
-	var d dst
-	s := src{
-		A: [3]int{1, 2, 3},
-	}
-
-	Copy(&d, &s).Do()
-	assert.Equal(t, d, dst{A: []int{1, 2, 3}})
-}
-
-func Test_MapToMap(t *testing.T) {
-	type dst struct {
-		A map[int]int
-		B map[string]string
-	}
-
-	type src struct {
-		B map[string]string
-		A map[int]int
-	}
-
-	var d dst
-	b := map[string]string{
-		"testA": "testA",
-		"testB": "testB",
-	}
-
-	a := map[int]int{
-		1: 1,
-		2: 2,
-	}
-
-	s := src{
-		B: b,
-		A: a,
-	}
-
-	Copy(&d, &s).Do()
-	assert.Equal(t, d, dst{A: a, B: b})
-}
-
 func Test_FuncToFunc(t *testing.T) {
 	type dst struct {
 		A func()
@@ -139,24 +66,22 @@ func Test_MaxDepth(t *testing.T) {
 			need.Data.Result = "test"
 			return testCase{got: d, need: need}
 		}(),
-		/*
-			func() testCase {
-				d := depth{}
-				Copy(&d, &src).MaxDepth(1).Do()
-				need := depth{}
-				need.First = "first"
-				return testCase{got: d, need: need}
-			}(),
-				func() testCase {
-					d := depth{}
-					Copy(&d, &src).MaxDepth(3).Do()
-					need := depth{}
-					need.First = "first"
-					need.Data.Result = "test"
-					need.Err.ErrMsg.Message = "good"
-					return testCase{got: d, need: need}
-				}(),
-		*/
+		func() testCase {
+			d := depth{}
+			Copy(&d, &src).MaxDepth(1).Do()
+			need := depth{}
+			need.First = "first"
+			return testCase{got: d, need: need}
+		}(),
+		func() testCase {
+			d := depth{}
+			Copy(&d, &src).MaxDepth(3).Do()
+			need := depth{}
+			need.First = "first"
+			need.Data.Result = "test"
+			need.Err.ErrMsg.Message = "good"
+			return testCase{got: d, need: need}
+		}(),
 	} {
 		assert.Equal(t, tc.need, tc.got)
 	}

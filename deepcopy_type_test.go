@@ -89,6 +89,7 @@ func Test_Inteface(t *testing.T) {
 	}
 }
 
+// 测试指针
 func Test_Ptr(t *testing.T) {
 	type interfaceTest struct {
 		Iptr *int
