@@ -75,6 +75,30 @@ func Test_Map_Special(t *testing.T) {
 			Copy(new(int), &src).Do()
 			return testCase{}
 		}(),
+		// key相同,value不同
+		func() testCase {
+			dst := map[int]string{
+				1: "hello",
+			}
+			src := map[int]int{
+				1: 1,
+			}
+
+			Copy(&dst, &src).Do()
+			return testCase{}
+		}(),
+		// key不同，value不同
+		func() testCase {
+			dst := map[string]int64{
+				"hello": 3,
+			}
+			src := map[int]int64{
+				1: 64,
+			}
+
+			Copy(&dst, &src).Do()
+			return testCase{}
+		}(),
 	} {
 		assert.Equal(t, tc.need, tc.got)
 	}

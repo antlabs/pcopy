@@ -67,19 +67,36 @@ func Test_ArrayToSlice(t *testing.T) {
 
 // 测试特殊情况
 func Test_ArraySlice_Special(t *testing.T) {
-	type dst struct {
-		A int
-	}
 
-	type src struct {
-		A [3]int
-	}
+	// 不崩溃就是对的
+	for _, tc := range []testCase{
+		func() testCase {
 
-	var d dst
-	s := src{
-		A: [3]int{1, 2, 3},
-	}
+			type dst struct {
+				A int
+			}
 
-	Copy(&d, &s).Do()
-	assert.Equal(t, d, d)
+			type src struct {
+				A [3]int
+			}
+
+			var d dst
+			s := src{
+				A: [3]int{1, 2, 3},
+			}
+			Copy(&d, &s).Do()
+			return testCase{}
+		}(),
+
+		func() testCase {
+
+			a1 := []int{1, 2, 3, 4, 5, 6}
+			a2 := []string{}
+			Copy(&a2, &a1).Do()
+			return testCase{}
+		}(),
+	} {
+
+		assert.Equal(t, tc.need, tc.got)
+	}
 }
