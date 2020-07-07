@@ -10,14 +10,13 @@ const (
 	noTagLimit     = ""
 )
 
+/*
 type visit struct {
 	addr uintptr
 	typ  reflect.Type
 }
-
-type copyFunc func(dst, src reflect.Value, depth int) error
-
 var ErrCircularReference = errors.New("deepcopy.Copy:Circular reference")
+*/
 
 // deepCopy结构体
 type deepCopy struct {
@@ -25,8 +24,7 @@ type deepCopy struct {
 	src      interface{}
 	tagName  string
 	maxDepth int
-	visited  map[visit]struct{}
-	//fieldMapping map[string]string
+	//visited  map[visit]struct{}
 
 	err error
 }
@@ -41,7 +39,7 @@ func Copy(dst, src interface{}) *deepCopy {
 		maxDepth: noDepthLimited,
 		dst:      dst,
 		src:      src,
-		visited:  make(map[visit]struct{}, 8),
+		//visited:  make(map[visit]struct{}, 8),
 	}
 
 	return &d
@@ -180,6 +178,7 @@ func (d *deepCopy) cpyFunc(dst, src reflect.Value, depth int) error {
 }
 
 // 检查循环引用
+/*
 func (d *deepCopy) checkCycle(sField reflect.Value) error {
 	if sField.CanAddr() {
 
@@ -195,6 +194,7 @@ func (d *deepCopy) checkCycle(sField reflect.Value) error {
 
 	return nil
 }
+*/
 
 // 拷贝结构体
 func (d *deepCopy) cpyStruct(dst, src reflect.Value, depth int) error {
@@ -225,9 +225,11 @@ func (d *deepCopy) cpyStruct(dst, src reflect.Value, depth int) error {
 
 		// 检查结构体里面的字段是否有循环引用
 		sField := src.Field(i)
-		if err := d.checkCycle(sField); err != nil {
-			return err
-		}
+		/*
+			if err := d.checkCycle(sField); err != nil {
+				return err
+			}
+		*/
 
 		if err := d.deepCopy(dstValue, sField, depth+1); err != nil {
 			return err

@@ -142,9 +142,9 @@ func main() {
 goos: linux
 goarch: amd64
 pkg: github.com/antlabs/deepcopy
-Benchmark_MiniCopy-12    	  243212	      4987 ns/op
-Benchmark_DeepCopy-12    	  273775	      4781 ns/op
+Benchmark_MiniCopy-16    	  159084	      6737 ns/op
+Benchmark_DeepCopy-16    	  374920	      2895 ns/op
 PASS
-ok  	github.com/antlabs/deepcopy	4.496s
+ok  	github.com/antlabs/deepcopy	2.275s
 
 ```
