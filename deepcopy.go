@@ -200,6 +200,10 @@ func (d *deepCopy) checkCycle(sField reflect.Value) error {
 func (d *deepCopy) cpyStruct(dst, src reflect.Value, depth int) error {
 
 	if dst.Kind() != src.Kind() {
+		if dst.Kind() == reflect.Ptr && !dst.IsNil() {
+			dst = dst.Elem()
+			return d.cpyStruct(dst, src, depth)
+		}
 		return nil
 	}
 
@@ -265,7 +269,7 @@ func (d *deepCopy) cpyPtr(dst, src reflect.Value, depth int) error {
 
 	if dst.IsNil() {
 		// dst.CanSet必须放到dst.IsNil判断里面
-		// 不让会影响到struct或者map类型的指针
+		// 不然会影响到struct或者map类型的指针
 		if !dst.CanSet() {
 			return nil
 		}
