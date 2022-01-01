@@ -263,11 +263,8 @@ func (d *deepCopy) cpyInterface(dst, src reflect.Value, depth int) error {
 
 // 拷贝指针
 func (d *deepCopy) cpyPtr(dst, src reflect.Value, depth int) error {
-	if dst.Kind() != src.Kind() {
-		return nil
-	}
 
-	if dst.IsNil() {
+	if dst.Kind() == reflect.Ptr && dst.IsNil() {
 		// dst.CanSet必须放到dst.IsNil判断里面
 		// 不然会影响到struct或者map类型的指针
 		if !dst.CanSet() {
@@ -277,8 +274,13 @@ func (d *deepCopy) cpyPtr(dst, src reflect.Value, depth int) error {
 		dst.Set(p)
 	}
 
-	src = src.Elem()
-	dst = dst.Elem()
+	if src.Kind() == reflect.Ptr {
+		src = src.Elem()
+	}
+
+	if dst.Kind() == reflect.Ptr {
+		dst = dst.Elem()
+	}
 
 	return d.deepCopy(dst, src, depth)
 }
