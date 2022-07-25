@@ -4,7 +4,6 @@
 
 deepcopy.Copy主要用于两个类型间的深度拷贝[从零实现]
 
-
 ## feature
 * 支持异构结构体拷贝, dst和src可以是不同的类型，会拷贝dst和src交集的部分
 * 多类型支持struct/map/slice/array/int...int64/uint...uint64/ 等等
@@ -20,7 +19,8 @@ deepcopy.Copy主要用于两个类型间的深度拷贝[从零实现]
     - [2. 只拷贝设置tag的结构体成员](#copy-only-the-specified-tag)
     - [3.拷贝slice](#copy-slice)
     - [4.拷贝map](#copy-map)
-
+    - [5.简化业务代码开发](#simplify-business-code-development)
+- [性能压测](#benchmark)
 ## Installation
 ```
 go get github.com/antlabs/deepcopy
@@ -136,7 +136,34 @@ func main() {
 }
 
 ```
-## 性能
+## simplify business code development
+经常看到，对同一个结构体的，有值更新操作，都是一堆手工if 然后赋值的代码。不仅容易出错，还累。快使用deepcopy解放双手。
+```go
+type option struct {
+        Int int
+        Float64 float64
+        S  string
+}
+
+func main() {
+        var a, b option
+        if b.Int != 0 {
+                a.Int = b.Int
+        }
+
+        if b.Float64 != 0.0 {
+                a.Float64 = b.Float64
+        }
+
+        if b.S != "" {
+                a.S = b.S
+        }
+
+        //可以约化成
+        deepcopy.Copy(&a, &b).Do()
+}
+```
+# benchmark
 从零实现的deepcopy相比json序列化与反序列化方式拥有更好的性能
 ```
 goos: linux
