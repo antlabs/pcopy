@@ -3,6 +3,7 @@ package deepcopy
 import (
 	"errors"
 	"reflect"
+	"time"
 )
 
 const (
@@ -205,6 +206,15 @@ func (d *deepCopy) cpyStruct(dst, src reflect.Value, depth int) error {
 			return d.cpyStruct(dst, src, depth)
 		}
 		return nil
+	}
+
+	// time.Time类型
+	if dst.CanSet() {
+
+		if _, ok := src.Interface().(time.Time); ok {
+			dst.Set(src)
+			return nil
+		}
 	}
 
 	typ := src.Type()
