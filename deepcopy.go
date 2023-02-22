@@ -204,8 +204,7 @@ func (d *deepCopy) cpyStruct(dst, src reflect.Value, depth int) error {
 		if dst.Kind() == reflect.Ptr {
 			// 不是空指针，直接解引用
 			if !dst.IsNil() {
-				dst = dst.Elem()
-				return d.cpyStruct(dst, src, depth)
+				return d.cpyStruct(dst.Elem(), src, depth)
 			}
 
 			// 被拷贝结构体是指针类型，值是空，
@@ -215,6 +214,7 @@ func (d *deepCopy) cpyStruct(dst, src reflect.Value, depth int) error {
 				if dst.CanSet() {
 					p := reflect.New(dst.Type().Elem())
 					dst.Set(p)
+					return d.cpyStruct(dst.Elem(), src, depth)
 				}
 			}
 		}
