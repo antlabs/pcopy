@@ -87,6 +87,7 @@ func isArraySlice(v reflect.Value) bool {
 // 拷贝slice array
 func (d *deepCopy) cpySliceArray(dst, src reflect.Value, depth int) error {
 
+	// dst只能是slice和array类型
 	if !isArraySlice(dst) {
 		return nil
 	}
@@ -96,17 +97,11 @@ func (d *deepCopy) cpySliceArray(dst, src reflect.Value, depth int) error {
 		l = dst.Len()
 	}
 
+	// 被拷贝dst类型是slice, 长度是0, src的长度有值
 	if dst.Kind() == reflect.Slice && dst.Len() == 0 && src.Len() > 0 {
-		elemType := src.Type().Elem()
-		if dst.Type().Elem().Kind() != elemType.Kind() {
-			return nil
-		}
 
-		// MakeSlice的类型用reflect.SliceOf(src.Index(0).Type())
-		// 而不用src.Type()的原因如下
-		// src.Type()拿到的是类型可能是array和slice。
-		// 实际需要的是元素T的slice类型, 使用src.Type(), 这是错误的。
-		newDst := reflect.MakeSlice(reflect.SliceOf(elemType), l, l)
+		dstElemType := dst.Type().Elem()
+		newDst := reflect.MakeSlice(reflect.SliceOf(dstElemType), l, l)
 		dst.Set(newDst)
 	}
 
@@ -293,7 +288,7 @@ func (d *deepCopy) cpyPtr(dst, src reflect.Value, depth int) error {
 		if !dst.CanSet() {
 			return nil
 		}
-		p := reflect.New(src.Type().Elem())
+		p := reflect.New(dst.Type().Elem())
 		dst.Set(p)
 	}
 
@@ -354,5 +349,4 @@ func (d *deepCopy) deepCopy(dst, src reflect.Value, depth int) error {
 		return d.cpyDefault(dst, src, depth)
 	}
 
-	return nil
 }
