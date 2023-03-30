@@ -333,6 +333,7 @@ func (d *deepCopy) cpyDefault(dst, src reflect.Value, depth int) error {
 	case
 		reflect.Bool:
 		dst.SetBool(src.Bool())
+		return nil
 	case
 		reflect.Float32,
 		reflect.Float64:
