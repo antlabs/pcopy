@@ -308,6 +308,40 @@ func (d *deepCopy) cpyDefault(dst, src reflect.Value, depth int) error {
 	if dst.Kind() != src.Kind() {
 		return nil
 	}
+
+	switch src.Kind() {
+	case
+		reflect.Int,
+		reflect.Int8,
+		reflect.Int16,
+		reflect.Int32,
+		reflect.Int64:
+		dst.SetInt(src.Int())
+		return nil
+	case
+		reflect.Uint,
+		reflect.Uint8,
+		reflect.Uint16,
+		reflect.Uint32,
+		reflect.Uint64:
+		dst.SetUint(src.Uint())
+		return nil
+	case
+		reflect.String:
+		dst.SetString(src.String())
+		return nil
+	case
+		reflect.Bool:
+		dst.SetBool(src.Bool())
+		return nil
+	case
+		reflect.Float32,
+		reflect.Float64:
+		dst.SetFloat(src.Float())
+		return nil
+	}
+
+	// 如果这里是枚举类型(type newType oldType)，底层的数据类型(oldType)一样，set也会报错, 所以在前面加个前置判断保护下
 	dst.Set(src)
 	return nil
 }
