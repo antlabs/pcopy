@@ -86,7 +86,7 @@ func main() {
         d := dst{}
         s := src{ID: 3, Result: "use tag"}
 
-        deepcopy.CopyEx(&d, &s, WithTagName("copy"))
+        deepcopy.CopyEx(&d, &s, deepcopy.WithTagName("copy"))
 
         fmt.Printf("%#v\n", d)
 }
