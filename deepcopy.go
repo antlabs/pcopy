@@ -306,12 +306,18 @@ func (d *deepCopy) cpyDefault(dst, src reflect.Value, depth int) error {
 		reflect.Uint64:
 		dst.SetUint(src.Uint())
 		return nil
-	case reflect.String:
+	case
+		reflect.String:
 		dst.SetString(src.String())
 		return nil
-	case reflect.Bool:
+	case
+		reflect.Bool:
 		dst.SetBool(src.Bool())
-	case reflect.Float32, reflect.Float64:
+		return nil
+	case
+		reflect.Float32,
+		reflect.Float64:
+
 		dst.SetFloat(src.Float())
 		return nil
 	}

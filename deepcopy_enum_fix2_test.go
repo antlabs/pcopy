@@ -67,10 +67,11 @@ type GetRecommendedListResp struct {
 }
 
 func Test_Fix2(t *testing.T) {
+
 	var r *GetRecommendedListResp_GetRecommendedListRespData
 	resp := GetRecommendedListResp{
 		// 帮我优化这个代码
-		List:    []*SquareDiaryItemSrc{{ResourceType: DiaryResourceType_DiaryResourceTypeVideo}},
+		List:    []*SquareDiaryItemSrc{&SquareDiaryItemSrc{ResourceType: DiaryResourceType_DiaryResourceTypeVideo}},
 		HasMore: true,
 		Pos:     10,
 		Offset:  11,
