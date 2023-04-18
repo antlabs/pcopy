@@ -2,22 +2,19 @@ package deepcopy
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"time"
 )
 
+// 不支持的类型
+var ErrUnsupportedType = errors.New("Unsupported type")
+
+// 优化下面的代码，让性能变得更高
 const (
 	noDepthLimited = -1
 	noTagLimit     = ""
 )
-
-/*
-type visit struct {
-	addr uintptr
-	typ  reflect.Type
-}
-var ErrCircularReference = errors.New("deepcopy.Copy:Circular reference")
-*/
 
 // deepCopy结构体
 type deepCopy struct {
@@ -25,45 +22,33 @@ type deepCopy struct {
 	src      interface{}
 	tagName  string
 	maxDepth int
-	//visited  map[visit]struct{}
+	// visited  map[visit]struct{}
 
 	err error
 }
 
-// 设置dst, src数据源
-func Copy(dst, src interface{}) *deepCopy {
+func CopyEx(dst, src interface{}, opts ...Option) error {
 	if dst == nil || src == nil {
-		return &deepCopy{err: errors.New("Unsupported type:nil")}
+		return fmt.Errorf("%w:nil", ErrUnsupportedType)
+	}
+
+	var opt options
+	for _, o := range opts {
+		o(&opt)
 	}
 
 	d := deepCopy{
 		maxDepth: noDepthLimited,
 		dst:      dst,
 		src:      src,
-		//visited:  make(map[visit]struct{}, 8),
+		tagName:  opt.TagName,
 	}
 
-	return &d
+	if opt.MaxDepth > 0 {
+		d.maxDepth = opt.MaxDepth
+	}
+	return d.Do()
 }
-
-// 设置最多递归的层次
-func (d *deepCopy) MaxDepth(maxDepth int) *deepCopy {
-	d.maxDepth = maxDepth
-	return d
-}
-
-// 设置tag name，结构体的tag等于RegisterTagName注册的tag，才会copy值
-func (d *deepCopy) RegisterTagName(tagName string) *deepCopy {
-	d.tagName = tagName
-	return d
-}
-
-// 只设置把src的某个字段拷贝到dst的某个字段，只支持同层次拷贝
-/* 暂时不实现，好像不是那么必须
-func (d *deepCopy) OnlyField(dstSrcField ...string) *deepCopy {
-	return d
-}
-*/
 
 // 需要的tag name
 func haveTagName(curTabName string) bool {
@@ -86,7 +71,6 @@ func isArraySlice(v reflect.Value) bool {
 
 // 拷贝slice array
 func (d *deepCopy) cpySliceArray(dst, src reflect.Value, depth int) error {
-
 	// dst只能是slice和array类型
 	if !isArraySlice(dst) {
 		return nil
@@ -194,7 +178,6 @@ func (d *deepCopy) checkCycle(sField reflect.Value) error {
 
 // 拷贝结构体
 func (d *deepCopy) cpyStruct(dst, src reflect.Value, depth int) error {
-
 	if dst.Kind() != src.Kind() {
 		if dst.Kind() == reflect.Ptr {
 			// 不是空指针，直接解引用
@@ -218,7 +201,6 @@ func (d *deepCopy) cpyStruct(dst, src reflect.Value, depth int) error {
 
 	// time.Time类型
 	if dst.CanSet() {
-
 		if _, ok := src.Interface().(time.Time); ok {
 			dst.Set(src)
 			return nil
@@ -263,7 +245,6 @@ func (d *deepCopy) cpyStruct(dst, src reflect.Value, depth int) error {
 
 // 拷贝interface{}
 func (d *deepCopy) cpyInterface(dst, src reflect.Value, depth int) error {
-
 	if dst.Kind() != src.Kind() {
 		return nil
 	}
@@ -281,7 +262,6 @@ func (d *deepCopy) cpyInterface(dst, src reflect.Value, depth int) error {
 
 // 拷贝指针
 func (d *deepCopy) cpyPtr(dst, src reflect.Value, depth int) error {
-
 	if dst.Kind() == reflect.Ptr && dst.IsNil() {
 		// dst.CanSet必须放到dst.IsNil判断里面
 		// 不然会影响到struct或者map类型的指针
@@ -337,6 +317,7 @@ func (d *deepCopy) cpyDefault(dst, src reflect.Value, depth int) error {
 	case
 		reflect.Float32,
 		reflect.Float64:
+
 		dst.SetFloat(src.Float())
 		return nil
 	}
@@ -382,5 +363,4 @@ func (d *deepCopy) deepCopy(dst, src reflect.Value, depth int) error {
 	default:
 		return d.cpyDefault(dst, src, depth)
 	}
-
 }

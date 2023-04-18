@@ -26,7 +26,6 @@ type SquareDiaryItemDst struct {
 }
 
 type GetRecommendedListResp_GetRecommendedListRespData struct {
-
 	// 列表
 	List []*SquareDiaryItemDst `protobuf:"bytes,1,rep,name=List,proto3" json:"List,omitempty"`
 	// 是否有更多记录

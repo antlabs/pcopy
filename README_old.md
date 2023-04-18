@@ -1,10 +1,7 @@
 ## 作用
-[![Go](https://github.com/antlabs/deepcopy/workflows/Go/badge.svg)](https://github.com/antlabs/deepcopy/actions)
-[![codecov](https://codecov.io/gh/antlabs/deepcopy/branch/master/graph/badge.svg)](https://codecov.io/gh/antlabs/deepcopy)
+deepcopy.Copy主要用于两个类型间的深度拷贝[从零实现]
 
-`deepcopy.CopyEx`主要用于两个类型间的深度拷贝[从零实现]-这是新文档
-
-本文是新文档，[旧接口文档](./README_old.md)保持兼容性
+本文是旧文档，[新口文档](./README.md)推荐使用
 
 ## feature
 * 支持异构结构体拷贝, dst和src可以是不同的类型，会拷贝dst和src交集的部分
@@ -48,7 +45,7 @@ type src struct{
 }
 func main() {
    d, s := dst{}, src{ID:3}
-   deepcopy.CopyEx(&d, &s)
+   deepcopy.Copy(&d, &s).Do()
    fmt.Printf("%#v\n", d)
    
 }
@@ -58,7 +55,7 @@ func main() {
 ## max copy depth
 如果src的结构体嵌套了两套，MaxDepth可以控制只拷贝一层
 ```go
-deepcopy.CopyEx(&dst{}, &src{}, deepcopy.WithMaxDepth(1))
+deepcopy.Copy(&dst{}, &src{}).MaxDepth(1).Do()
 ```
 
 ## copy only the specified   tag
@@ -86,7 +83,7 @@ func main() {
         d := dst{}
         s := src{ID: 3, Result: "use tag"}
 
-        deepcopy.CopyEx(&d, &s, deepcopy.WithTagName("copy"))
+        deepcopy.Copy(&d, &s).RegisterTagName("copy").Do()
 
         fmt.Printf("%#v\n", d)
 }
@@ -106,7 +103,7 @@ func main() {
         i := []int{1, 2, 3, 4, 5, 6}
         var o []int
 
-        deepcopy.CopyEx(&o, &i)
+        deepcopy.Copy(&o, &i).Do()
 
         fmt.Printf("%#v\n", o)
 }
@@ -132,7 +129,7 @@ func main() {
         }
 
         var o map[string]int
-        deepcopy.CopyEx(&o, &i)
+        deepcopy.Copy(&o, &i).Do()
 
         fmt.Printf("%#v\n", o)
 }
@@ -162,7 +159,7 @@ func main() {
         }
 
         //可以约化成
-        deepcopy.CopyEx(&a, &b)
+        deepcopy.Copy(&a, &b).Do()
 }
 ```
 # benchmark
