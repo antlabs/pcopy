@@ -1,7 +1,10 @@
 // Copyright [2020-2023] [guonaihong]
 package deepcopy
 
-import "errors"
+import (
+	"errors"
+	"reflect"
+)
 
 /*
 type visit struct {
@@ -19,8 +22,8 @@ func Copy(dst, src interface{}) *deepCopy {
 
 	d := deepCopy{
 		maxDepth: noDepthLimited,
-		dst:      dst,
-		src:      src,
+		dst:      reflect.ValueOf(dst),
+		src:      reflect.ValueOf(src),
 		// visited:  make(map[visit]struct{}, 8),
 	}
 
