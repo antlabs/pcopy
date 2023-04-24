@@ -17,7 +17,8 @@ type testBetterToUse struct {
 func Test_srcPtr_DstBaseType(t *testing.T) {
 	t1 := testBetterToUse{Str: "hello", ID: 1}
 	t2 := testBetterToUse{}
-	Copy(&t2, t1).Do()
+	err := Copy(&t2, t1).Do()
+	assert.NoError(t, err)
 	assert.Equal(t, t1, t2)
 }
 

@@ -11,6 +11,9 @@ import (
 // 不支持的类型
 var ErrUnsupportedType = errors.New("Unsupported type")
 
+// dst 和 src必须是指针类型
+var ErrNotPointer = errors.New("dst and src must be pointer")
+
 // 优化下面的代码，让性能变得更高
 const (
 	noDepthLimited = -1
@@ -19,13 +22,11 @@ const (
 
 // deepCopy结构体
 type deepCopy struct {
-	dst      interface{}
-	src      interface{}
+	dst      reflect.Value
+	src      reflect.Value
 	tagName  string
 	maxDepth int
-	// visited  map[visit]struct{}
-
-	err error
+	err      error
 }
 
 func CopyEx(dst, src interface{}, opts ...Option) error {
@@ -38,17 +39,26 @@ func CopyEx(dst, src interface{}, opts ...Option) error {
 		o(&opt)
 	}
 
+	dstValue := reflect.ValueOf(dst)
+	srcValue := reflect.ValueOf(src)
+	if opt.preheat {
+		if dstValue.Kind() != reflect.Ptr || srcValue.Kind() != reflect.Ptr {
+			return ErrNotPointer
+		}
+	}
+
 	d := deepCopy{
 		maxDepth: noDepthLimited,
-		dst:      dst,
-		src:      src,
+		dst:      dstValue,
+		src:      srcValue,
 		tagName:  opt.TagName,
 	}
 
 	if opt.MaxDepth > 0 {
 		d.maxDepth = opt.MaxDepth
 	}
-	return d.Do()
+
+	return d.deepCopy(d.dst, d.src, 0)
 }
 
 // 需要的tag name
@@ -58,7 +68,7 @@ func haveTagName(curTabName string) bool {
 
 // Do() 开干
 func (d *deepCopy) Do() error {
-	return d.deepCopy(reflect.ValueOf(d.dst), reflect.ValueOf(d.src), 0)
+	return d.deepCopy(d.dst, d.src, 0)
 }
 
 // 判断是array或slice类型
