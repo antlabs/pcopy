@@ -1,3 +1,4 @@
+// Copyright [2020-2023] [guonaihong]
 package deepcopy
 
 import (
@@ -17,13 +18,13 @@ type TopicItemSrc struct {
 // src
 type AllTopicResp struct {
 	TopicItem []*TopicItemSrc `protobuf:"bytes,1,rep,name=TopicItem,proto3" json:"TopicItem,omitempty"`
-	Total     int32           `protobuf:"varint,2,opt,name=Total,proto3" json:"Total,omitempty"` //总条数
+	Total     int32           `protobuf:"varint,2,opt,name=Total,proto3" json:"Total,omitempty"` // 总条数
 }
 
 // desc
 type AllTopicResp_AllTopicRespData struct {
 	TopicItem []*TopicItemDst `protobuf:"bytes,1,rep,name=TopicItem,proto3" json:"TopicItem,omitempty"`
-	Total     int32           `protobuf:"varint,2,opt,name=Total,proto3" json:"Total,omitempty"` //总条数
+	Total     int32           `protobuf:"varint,2,opt,name=Total,proto3" json:"Total,omitempty"` // 总条数
 }
 
 type TopicItemDst struct {
