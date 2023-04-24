@@ -22,11 +22,10 @@ const (
 
 // deepCopy结构体
 type deepCopy struct {
-	dst      reflect.Value
-	src      reflect.Value
-	tagName  string
-	maxDepth int
-	err      error
+	dst reflect.Value
+	src reflect.Value
+	options
+	err error
 }
 
 func CopyEx(dst, src interface{}, opts ...Option) error {
@@ -48,14 +47,12 @@ func CopyEx(dst, src interface{}, opts ...Option) error {
 	}
 
 	d := deepCopy{
-		maxDepth: noDepthLimited,
-		dst:      dstValue,
-		src:      srcValue,
-		tagName:  opt.TagName,
+		dst:     dstValue,
+		src:     srcValue,
+		options: opt,
 	}
-
-	if opt.MaxDepth > 0 {
-		d.maxDepth = opt.MaxDepth
+	if opt.maxDepth == 0 {
+		d.maxDepth = noDepthLimited
 	}
 
 	return d.deepCopy(d.dst, d.src, 0)

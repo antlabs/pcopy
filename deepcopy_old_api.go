@@ -21,11 +21,11 @@ func Copy(dst, src interface{}) *deepCopy {
 	}
 
 	d := deepCopy{
-		maxDepth: noDepthLimited,
-		dst:      reflect.ValueOf(dst),
-		src:      reflect.ValueOf(src),
+		dst: reflect.ValueOf(dst),
+		src: reflect.ValueOf(src),
 		// visited:  make(map[visit]struct{}, 8),
 	}
+	d.maxDepth = noDepthLimited
 
 	return &d
 }
