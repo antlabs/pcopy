@@ -1,3 +1,4 @@
+// Copyright [2020-2023] [guonaihong]
 package deepcopy
 
 type options struct {
@@ -10,6 +11,7 @@ type options struct {
 	// // OnlyField is the field name to copy.
 	// // If OnlyField is empty, it will be treated as no field.
 	// OnlyField string
+	preheat bool
 }
 
 type Option func(*options)
@@ -23,5 +25,12 @@ func WithMaxDepth(maxDepth int) Option {
 func WithTagName(tagName string) Option {
 	return func(o *options) {
 		o.TagName = tagName
+	}
+}
+
+// 是否预热
+func WithPreheat(preheat bool) Option {
+	return func(o *options) {
+		o.preheat = preheat
 	}
 }

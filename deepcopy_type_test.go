@@ -1,3 +1,4 @@
+// Copyright [2020-2023] [guonaihong]
 package deepcopy
 
 import (
@@ -8,7 +9,6 @@ import (
 
 // 测试所有类型(除了指针和inteface{})
 func Test_TypeCase(t *testing.T) {
-
 	type allType struct {
 		Bool       bool
 		Int8       int8
@@ -25,11 +25,11 @@ func Test_TypeCase(t *testing.T) {
 		Complex64  complex64
 		Complex128 complex128
 		ArrayInt   [3]int
-		//TODO       展开所有类型array
+		// TODO       展开所有类型array
 		SliceInt []int
 		C        chan int
 
-		//CB func() error
+		// CB func() error
 		S string
 	}
 
@@ -54,7 +54,7 @@ func Test_TypeCase(t *testing.T) {
 				ArrayInt:   [3]int{1, 2, 3},
 				SliceInt:   []int{4, 5, 6},
 				C:          make(chan int),
-				//CB:         func() error { return nil },
+				// CB:         func() error { return nil },
 				S: "test all",
 			}
 

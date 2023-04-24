@@ -1,3 +1,4 @@
+// Copyright [2020-2023] [guonaihong]
 package deepcopy
 
 import (
@@ -14,7 +15,6 @@ type testBetterToUse struct {
 // src是指针类型的结构体
 // dst是普通结构体
 func Test_srcPtr_DstBaseType(t *testing.T) {
-
 	t1 := testBetterToUse{Str: "hello", ID: 1}
 	t2 := testBetterToUse{}
 	Copy(&t2, t1).Do()

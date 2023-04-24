@@ -1,3 +1,4 @@
+// Copyright [2020-2023] [guonaihong]
 package deepcopy
 
 import (
@@ -40,11 +41,9 @@ func miniCopy(dst, src interface{}) error {
 	}
 
 	return json.Unmarshal(bytes, dst)
-
 }
 
 func Benchmark_MiniCopy(b *testing.B) {
-
 	for i := 0; i < b.N; i++ {
 		var dst testData
 		miniCopy(&dst, &td)
