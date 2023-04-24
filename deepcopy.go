@@ -14,6 +14,9 @@ var ErrUnsupportedType = errors.New("Unsupported type")
 // dst 和 src必须是指针类型
 var ErrNotPointer = errors.New("dst and src must be pointer")
 
+// 不能获取指针地址
+var ErrNotAddr = errors.New("dst or src type can not get address")
+
 // 优化下面的代码，让性能变得更高
 const (
 	noDepthLimited = -1
@@ -40,9 +43,18 @@ func CopyEx(dst, src interface{}, opts ...Option) error {
 
 	dstValue := reflect.ValueOf(dst)
 	srcValue := reflect.ValueOf(src)
+	// 开启预热逻辑
 	if opt.preheat {
 		if dstValue.Kind() != reflect.Ptr || srcValue.Kind() != reflect.Ptr {
 			return ErrNotPointer
+		}
+
+		if !dstValue.Elem().CanAddr() {
+			return fmt.Errorf("dst %w", ErrNotAddr)
+		}
+
+		if !srcValue.Elem().CanAddr() {
+			return fmt.Errorf("src %w", ErrNotAddr)
 		}
 	}
 
