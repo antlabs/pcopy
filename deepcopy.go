@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"reflect"
 	"time"
+	"unsafe"
 )
 
 // 不支持的类型
@@ -16,6 +17,8 @@ var ErrNotPointer = errors.New("dst and src must be pointer")
 
 // 不能获取指针地址
 var ErrNotAddr = errors.New("dst or src type can not get address")
+
+var zeroUintptr = unsafe.Pointer(uintptr(0))
 
 // 优化下面的代码，让性能变得更高
 const (
@@ -67,7 +70,8 @@ func CopyEx(dst, src interface{}, opts ...Option) error {
 		d.maxDepth = noDepthLimited
 	}
 
-	return d.deepCopy(d.dst, d.src, 0)
+	// TODO
+	return d.deepCopy(d.dst, d.src, zeroUintptr, zeroUintptr, 0)
 }
 
 // 需要的tag name
@@ -77,7 +81,7 @@ func haveTagName(curTabName string) bool {
 
 // Do() 开干
 func (d *deepCopy) Do() error {
-	return d.deepCopy(d.dst, d.src, 0)
+	return d.deepCopy(d.dst, d.src, zeroUintptr, zeroUintptr, 0)
 }
 
 // 判断是array或slice类型
@@ -90,7 +94,7 @@ func isArraySlice(v reflect.Value) bool {
 }
 
 // 拷贝slice array
-func (d *deepCopy) cpySliceArray(dst, src reflect.Value, depth int) error {
+func (d *deepCopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, depth int) error {
 	// dst只能是slice和array类型
 	if !isArraySlice(dst) {
 		return nil
@@ -110,7 +114,9 @@ func (d *deepCopy) cpySliceArray(dst, src reflect.Value, depth int) error {
 	}
 
 	for i := 0; i < l; i++ {
-		if err := d.deepCopy(dst.Index(i), src.Index(i), depth); err != nil {
+		// 基地址+ i*类型大小
+		// TODO
+		if err := d.deepCopy(dst.Index(i), src.Index(i), dstBase, srcBase, depth); err != nil {
 			return err
 		}
 	}
@@ -149,7 +155,7 @@ func (d *deepCopy) cpyMap(dst, src reflect.Value, depth int) error {
 		v := iter.Value()
 
 		newVal := reflect.New(v.Type()).Elem()
-		if err := d.deepCopy(newVal, v, depth); err != nil {
+		if err := d.deepCopy(newVal, v, zeroUintptr, zeroUintptr, depth); err != nil {
 			return err
 		}
 
@@ -197,12 +203,12 @@ func (d *deepCopy) checkCycle(sField reflect.Value) error {
 */
 
 // 拷贝结构体
-func (d *deepCopy) cpyStruct(dst, src reflect.Value, depth int) error {
+func (d *deepCopy) cpyStruct(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, depth int) error {
 	if dst.Kind() != src.Kind() {
 		if dst.Kind() == reflect.Ptr {
 			// 不是空指针，直接解引用
 			if !dst.IsNil() {
-				return d.cpyStruct(dst.Elem(), src, depth)
+				return d.cpyStruct(dst.Elem(), src, dstBase, srcBase, depth)
 			}
 
 			// 被拷贝结构体是指针类型，值是空，
@@ -212,7 +218,7 @@ func (d *deepCopy) cpyStruct(dst, src reflect.Value, depth int) error {
 				if dst.CanSet() {
 					p := reflect.New(dst.Type().Elem())
 					dst.Set(p)
-					return d.cpyStruct(dst.Elem(), src, depth)
+					return d.cpyStruct(dst.Elem(), src, dstBase, srcBase, depth)
 				}
 			}
 		}
@@ -255,7 +261,7 @@ func (d *deepCopy) cpyStruct(dst, src reflect.Value, depth int) error {
 			}
 		*/
 
-		if err := d.deepCopy(dstValue, sField, depth+1); err != nil {
+		if err := d.deepCopy(dstValue, sField, zeroUintptr, zeroUintptr, depth+1); err != nil {
 			return err
 		}
 	}
@@ -272,7 +278,7 @@ func (d *deepCopy) cpyInterface(dst, src reflect.Value, depth int) error {
 	src = src.Elem()
 	newDst := reflect.New(src.Type()).Elem()
 
-	if err := d.deepCopy(newDst, src, depth); err != nil {
+	if err := d.deepCopy(newDst, src, zeroUintptr, zeroUintptr, depth); err != nil {
 		return err
 	}
 
@@ -300,7 +306,7 @@ func (d *deepCopy) cpyPtr(dst, src reflect.Value, depth int) error {
 		dst = dst.Elem()
 	}
 
-	return d.deepCopy(dst, src, depth)
+	return d.deepCopy(dst, src, zeroUintptr, zeroUintptr, depth)
 }
 
 // 其他类型
@@ -343,11 +349,13 @@ func (d *deepCopy) cpyDefault(dst, src reflect.Value, depth int) error {
 	return nil
 }
 
-func (d *deepCopy) deepCopy(dst, src reflect.Value, depth int) error {
+func (d *deepCopy) deepCopy(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, depth int) error {
 	if d.err != nil {
 		return d.err
 	}
 
+	// 预热的时间一定要绕开这个判断, 默认src都有值
+	// 寻找和dst匹配的字段
 	if src.IsZero() {
 		return nil
 	}
@@ -359,7 +367,7 @@ func (d *deepCopy) deepCopy(dst, src reflect.Value, depth int) error {
 
 	switch src.Kind() {
 	case reflect.Slice, reflect.Array:
-		return d.cpySliceArray(dst, src, depth)
+		return d.cpySliceArray(dst, src, dstBase, srcBase, depth)
 
 	case reflect.Map:
 		return d.cpyMap(dst, src, depth)
@@ -368,7 +376,7 @@ func (d *deepCopy) deepCopy(dst, src reflect.Value, depth int) error {
 		return d.cpyFunc(dst, src, depth)
 
 	case reflect.Struct:
-		return d.cpyStruct(dst, src, depth)
+		return d.cpyStruct(dst, src, dstBase, srcBase, depth)
 
 	case reflect.Interface:
 		return d.cpyInterface(dst, src, depth)
