@@ -356,8 +356,24 @@ func (d *deepCopy) deepCopy(dst, src reflect.Value, dstBase, srcBase unsafe.Poin
 
 	// 预热的时间一定要绕开这个判断, 默认src都有值
 	// 寻找和dst匹配的字段
-	if src.IsZero() {
-		return nil
+	if !d.preheat {
+		if src.IsZero() {
+			return nil
+		}
+	} else {
+		// 预热逻辑，先走白名单， 等稳定了，再走黑名单
+		switch src.Kind() {
+		// 处理 基础 类型
+		case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Int:
+		case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uint:
+		case reflect.Float32, reflect.Float64:
+		case reflect.String:
+		case reflect.Bool:
+		case reflect.Complex64, reflect.Complex128:
+		case reflect.Struct:
+		default:
+			return nil
+		}
 	}
 
 	// 检查递归深度
