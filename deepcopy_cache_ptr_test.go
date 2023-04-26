@@ -8,58 +8,60 @@ import (
 
 type FastCopyDst struct {
 	// 所有基础类型
-	Bool    bool
-	Int     int
-	Int8    int8
-	Int16   int16
-	Int32   int32
-	Int64   int64
-	Uint    uint
-	Uint8   uint8
-	Uint16  uint16
-	Uint32  uint32
-	Uint64  uint64
-	String  string
-	Float32 float32
-	Float64 float64
-	// Complex64  complex64
-	// Complex128 complex128
+	Bool       bool
+	Int        int
+	Int8       int8
+	Int16      int16
+	Int32      int32
+	Int64      int64
+	Uint       uint
+	Uint8      uint8
+	Uint16     uint16
+	Uint32     uint32
+	Uint64     uint64
+	String     string
+	Float32    float32
+	Float64    float64
+	Complex64  complex64
+	Complex128 complex128
 }
 
 type FastCopySrc struct {
-	Bool    bool
-	Int     int
-	Int8    int8
-	Int16   int16
-	Int32   int32
-	Int64   int64
-	Uint    uint
-	Uint8   uint8
-	Uint16  uint16
-	Uint32  uint32
-	Uint64  uint64
-	String  string
-	Float32 float32
-	Float64 float64
-	// Complex64  complex64
-	// Complex128 complex128
+	Bool       bool
+	Int        int
+	Int8       int8
+	Int16      int16
+	Int32      int32
+	Int64      int64
+	Uint       uint
+	Uint8      uint8
+	Uint16     uint16
+	Uint32     uint32
+	Uint64     uint64
+	String     string
+	Float32    float32
+	Float64    float64
+	Complex64  complex64
+	Complex128 complex128
 }
 
 var testSrc = FastCopySrc{
-	Bool:    true,
-	Int:     1,
-	Int8:    2,
-	Int16:   3,
-	Int32:   4,
-	Int64:   5,
-	Uint:    6,
-	Uint8:   7,
-	Uint16:  8,
-	Uint32:  9,
-	Uint64:  10,
-	String:  "11",
-	Float32: 12.0,
-	Float64: 13.0,
+	Bool:       true,
+	Int:        1,
+	Int8:       2,
+	Int16:      3,
+	Int32:      4,
+	Int64:      5,
+	Uint:       6,
+	Uint8:      7,
+	Uint16:     8,
+	Uint32:     9,
+	Uint64:     10,
+	String:     "11",
+	Float32:    12.0,
+	Float64:    13.0,
+	Complex64:  14.0,
+	Complex128: 15.0,
 }
 
 func TestFastCopy(t *testing.T) {
@@ -67,10 +69,6 @@ func TestFastCopy(t *testing.T) {
 
 	err := Preheat(&dst, &testSrc)
 	assert.NoError(t, err)
-
-	// 给src赋值
-	// src.Complex64 = 14.0
-	// src.Complex128 = 15.0
 
 	printCacheAllFunc()
 	// fmt.Printf("%v\n", cacheAllFunc)
@@ -91,6 +89,8 @@ func TestFastCopy(t *testing.T) {
 	dst2.String = "11"
 	dst2.Float32 = 12.0
 	dst2.Float64 = 13.0
+	dst2.Complex64 = 14.0
+	dst2.Complex128 = 15.0
 	assert.NoError(t, err)
 	assert.Equal(t, dst, dst2)
 }

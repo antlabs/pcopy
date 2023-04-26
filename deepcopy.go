@@ -393,7 +393,7 @@ func (d *deepCopy) deepCopy(dst, src reflect.Value, dstBase, srcBase unsafe.Poin
 	} else {
 		// 预热逻辑，先走白名单， 等稳定了，再走黑名单
 		if !baseType(src.Kind()) && src.Kind() != reflect.Struct && src.Kind() != reflect.Ptr {
-			panic(fmt.Sprintf("wowowwo:%v", src.Kind()))
+			panic(fmt.Sprintf("遇到未知的类型:%v", src.Kind()))
 			return nil
 		}
 	}

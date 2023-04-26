@@ -1,10 +1,26 @@
-// Copyright [2020-2023] [guonaihong]
 package deepcopy
 
 import (
 	"encoding/json"
 	"testing"
 )
+
+func Benchmark_Use_CachePtr_Deepcopy(b *testing.B) {
+	var dst FastCopyDst
+	err := Preheat(&dst, &testSrc)
+	if err != nil {
+		b.Fatal(err)
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		var dst FastCopyDst
+		err := CopyEx(&dst, &testSrc, WithPreheat())
+		if err != nil {
+			b.Fatal(err)
+		}
+
+	}
+}
 
 type testData struct {
 	Int64  int64    `json:"int_64"`
@@ -45,14 +61,24 @@ func miniCopy(dst, src interface{}) error {
 
 func Benchmark_MiniCopy(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		var dst testData
-		miniCopy(&dst, &td)
+		// var dst testData
+		var dst FastCopyDst
+		err := miniCopy(&dst, &testSrc)
+		if err != nil {
+			b.Fatal(err)
+		}
+		// miniCopy(&dst, &td)
 	}
 }
 
 func Benchmark_DeepCopy(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		var dst testData
-		Copy(&dst, &td).Do()
+		// var dst testData
+		var dst FastCopyDst
+		err := CopyEx(&dst, &testSrc)
+		if err != nil {
+			b.Fatal(err)
+		}
+
 	}
 }
