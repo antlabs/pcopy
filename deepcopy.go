@@ -47,6 +47,8 @@ func CopyEx(dst, src interface{}, opts ...Option) error {
 	dstValue := reflect.ValueOf(dst)
 	srcValue := reflect.ValueOf(src)
 	// 开启预热逻辑
+	dstAddr := zeroUintptr
+	srcAddr := zeroUintptr
 	if opt.preheat {
 		if dstValue.Kind() != reflect.Ptr || srcValue.Kind() != reflect.Ptr {
 			return ErrNotPointer
@@ -59,6 +61,8 @@ func CopyEx(dst, src interface{}, opts ...Option) error {
 		if !srcValue.Elem().CanAddr() {
 			return fmt.Errorf("src %w", ErrNotAddr)
 		}
+		dstAddr = unsafe.Pointer(dstValue.Elem().UnsafeAddr())
+		srcAddr = unsafe.Pointer(srcValue.Elem().UnsafeAddr())
 	}
 
 	d := deepCopy{
@@ -70,8 +74,8 @@ func CopyEx(dst, src interface{}, opts ...Option) error {
 		d.maxDepth = noDepthLimited
 	}
 
-	// TODO
-	return d.deepCopy(d.dst, d.src, zeroUintptr, zeroUintptr, 0)
+	// fmt.Printf("%p:%p\n", dstAddr, srcAddr)
+	return d.deepCopy(d.dst, d.src, dstAddr, srcAddr, 0, offsetAndFunc{}, nil)
 }
 
 // 需要的tag name
@@ -81,7 +85,7 @@ func haveTagName(curTabName string) bool {
 
 // Do() 开干
 func (d *deepCopy) Do() error {
-	return d.deepCopy(d.dst, d.src, zeroUintptr, zeroUintptr, 0)
+	return d.deepCopy(d.dst, d.src, zeroUintptr, zeroUintptr, 0, offsetAndFunc{}, nil)
 }
 
 // 判断是array或slice类型
@@ -94,7 +98,7 @@ func isArraySlice(v reflect.Value) bool {
 }
 
 // 拷贝slice array
-func (d *deepCopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, depth int) error {
+func (d *deepCopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, depth int, of offsetAndFunc, all *allFieldFunc) error {
 	// dst只能是slice和array类型
 	if !isArraySlice(dst) {
 		return nil
@@ -116,7 +120,7 @@ func (d *deepCopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe
 	for i := 0; i < l; i++ {
 		// 基地址+ i*类型大小
 		// TODO
-		if err := d.deepCopy(dst.Index(i), src.Index(i), dstBase, srcBase, depth); err != nil {
+		if err := d.deepCopy(dst.Index(i), src.Index(i), dstBase, srcBase, depth, of, all); err != nil {
 			return err
 		}
 	}
@@ -124,7 +128,7 @@ func (d *deepCopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe
 }
 
 // 拷贝map
-func (d *deepCopy) cpyMap(dst, src reflect.Value, depth int) error {
+func (d *deepCopy) cpyMap(dst, src reflect.Value, depth int, of offsetAndFunc, all *allFieldFunc) error {
 	if dst.Kind() != src.Kind() {
 		return nil
 	}
@@ -155,7 +159,7 @@ func (d *deepCopy) cpyMap(dst, src reflect.Value, depth int) error {
 		v := iter.Value()
 
 		newVal := reflect.New(v.Type()).Elem()
-		if err := d.deepCopy(newVal, v, zeroUintptr, zeroUintptr, depth); err != nil {
+		if err := d.deepCopy(newVal, v, zeroUintptr, zeroUintptr, depth, of, all); err != nil {
 			return err
 		}
 
@@ -203,12 +207,12 @@ func (d *deepCopy) checkCycle(sField reflect.Value) error {
 */
 
 // 拷贝结构体
-func (d *deepCopy) cpyStruct(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, depth int) error {
+func (d *deepCopy) cpyStruct(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, depth int, of offsetAndFunc, all *allFieldFunc) error {
 	if dst.Kind() != src.Kind() {
 		if dst.Kind() == reflect.Ptr {
 			// 不是空指针，直接解引用
 			if !dst.IsNil() {
-				return d.cpyStruct(dst.Elem(), src, dstBase, srcBase, depth)
+				return d.cpyStruct(dst.Elem(), src, dstBase, srcBase, depth, of, all)
 			}
 
 			// 被拷贝结构体是指针类型，值是空，
@@ -218,7 +222,7 @@ func (d *deepCopy) cpyStruct(dst, src reflect.Value, dstBase, srcBase unsafe.Poi
 				if dst.CanSet() {
 					p := reflect.New(dst.Type().Elem())
 					dst.Set(p)
-					return d.cpyStruct(dst.Elem(), src, dstBase, srcBase, depth)
+					return d.cpyStruct(dst.Elem(), src, dstBase, srcBase, depth, of, all)
 				}
 			}
 		}
@@ -233,6 +237,12 @@ func (d *deepCopy) cpyStruct(dst, src reflect.Value, dstBase, srcBase unsafe.Poi
 		}
 	}
 
+	if d.preheat {
+		exist := getSetFromCacheAndRun(dstSrcType{dst: dst.Type(), src: src.Type()}, dstBase, srcBase)
+		if exist {
+			return nil
+		}
+	}
 	typ := src.Type()
 	for i, n := 0, src.NumField(); i < n; i++ {
 		sf := typ.Field(i)
@@ -261,7 +271,14 @@ func (d *deepCopy) cpyStruct(dst, src reflect.Value, dstBase, srcBase unsafe.Poi
 			}
 		*/
 
-		if err := d.deepCopy(dstValue, sField, zeroUintptr, zeroUintptr, depth+1); err != nil {
+		if d.preheat {
+			fmt.Printf("base:%p:%p\n", dstBase, srcBase)
+			fmt.Printf("field:%x:%x\n", dstValue.UnsafeAddr(), sField.UnsafeAddr())
+			of.dstOffset = sub(dstValue.UnsafeAddr(), uintptr(dstBase))
+			of.srcOffset = sub(sField.UnsafeAddr(), uintptr(srcBase))
+		}
+
+		if err := d.deepCopy(dstValue, sField, dstBase, srcBase, depth+1, of, all); err != nil {
 			return err
 		}
 	}
@@ -270,7 +287,7 @@ func (d *deepCopy) cpyStruct(dst, src reflect.Value, dstBase, srcBase unsafe.Poi
 }
 
 // 拷贝interface{}
-func (d *deepCopy) cpyInterface(dst, src reflect.Value, depth int) error {
+func (d *deepCopy) cpyInterface(dst, src reflect.Value, depth int, of offsetAndFunc, all *allFieldFunc) error {
 	if dst.Kind() != src.Kind() {
 		return nil
 	}
@@ -278,7 +295,7 @@ func (d *deepCopy) cpyInterface(dst, src reflect.Value, depth int) error {
 	src = src.Elem()
 	newDst := reflect.New(src.Type()).Elem()
 
-	if err := d.deepCopy(newDst, src, zeroUintptr, zeroUintptr, depth); err != nil {
+	if err := d.deepCopy(newDst, src, zeroUintptr, zeroUintptr, depth, of, all); err != nil {
 		return err
 	}
 
@@ -287,7 +304,7 @@ func (d *deepCopy) cpyInterface(dst, src reflect.Value, depth int) error {
 }
 
 // 拷贝指针
-func (d *deepCopy) cpyPtr(dst, src reflect.Value, depth int) error {
+func (d *deepCopy) cpyPtr(dst, src reflect.Value, depth int, of offsetAndFunc, all *allFieldFunc) error {
 	if dst.Kind() == reflect.Ptr && dst.IsNil() {
 		// dst.CanSet必须放到dst.IsNil判断里面
 		// 不然会影响到struct或者map类型的指针
@@ -306,13 +323,26 @@ func (d *deepCopy) cpyPtr(dst, src reflect.Value, depth int) error {
 		dst = dst.Elem()
 	}
 
-	return d.deepCopy(dst, src, zeroUintptr, zeroUintptr, depth)
+	dstPtr := zeroUintptr
+	srcPtr := zeroUintptr
+	if d.preheat {
+		dstPtr = unsafe.Pointer(dst.UnsafeAddr())
+		srcPtr = unsafe.Pointer(src.UnsafeAddr())
+	}
+	return d.deepCopy(dst, src, dstPtr, srcPtr, depth, of, all)
 }
 
 // 其他类型
-func (d *deepCopy) cpyDefault(dst, src reflect.Value, depth int) error {
+func (d *deepCopy) cpyDefault(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, depth int, of offsetAndFunc, all *allFieldFunc) error {
 	if dst.Kind() != src.Kind() {
 		return nil
+	}
+
+	if d.preheat {
+		of.srcType = src.Type()
+		of.dstType = dst.Type()
+		of.set = getSetFunc(src.Kind())
+		all.append(&of)
 	}
 
 	switch src.Kind() {
@@ -344,12 +374,12 @@ func (d *deepCopy) cpyDefault(dst, src reflect.Value, depth int) error {
 		return nil
 	}
 
-	// 如果这里是枚举类型(type newType oldType)，底层的数据类型(oldType)一样，set也会报错, 所以在前面加个前置判断保护下
+	// 如果这里是枚举类型(type newType oldType)，哪怕底层的数据类型(oldType)一样，set也会报错, 所以在前面加个前置判断保护下
 	dst.Set(src)
 	return nil
 }
 
-func (d *deepCopy) deepCopy(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, depth int) error {
+func (d *deepCopy) deepCopy(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, depth int, of offsetAndFunc, all *allFieldFunc) error {
 	if d.err != nil {
 		return d.err
 	}
@@ -362,16 +392,8 @@ func (d *deepCopy) deepCopy(dst, src reflect.Value, dstBase, srcBase unsafe.Poin
 		}
 	} else {
 		// 预热逻辑，先走白名单， 等稳定了，再走黑名单
-		switch src.Kind() {
-		// 处理 基础 类型
-		case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Int:
-		case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uint:
-		case reflect.Float32, reflect.Float64:
-		case reflect.String:
-		case reflect.Bool:
-		case reflect.Complex64, reflect.Complex128:
-		case reflect.Struct:
-		default:
+		if !baseType(src.Kind()) && src.Kind() != reflect.Struct && src.Kind() != reflect.Ptr {
+			panic(fmt.Sprintf("wowowwo:%v", src.Kind()))
 			return nil
 		}
 	}
@@ -383,24 +405,30 @@ func (d *deepCopy) deepCopy(dst, src reflect.Value, dstBase, srcBase unsafe.Poin
 
 	switch src.Kind() {
 	case reflect.Slice, reflect.Array:
-		return d.cpySliceArray(dst, src, dstBase, srcBase, depth)
+		return d.cpySliceArray(dst, src, dstBase, srcBase, depth, of, all)
 
 	case reflect.Map:
-		return d.cpyMap(dst, src, depth)
+		return d.cpyMap(dst, src, depth, of, all)
 
 	case reflect.Func:
 		return d.cpyFunc(dst, src, depth)
 
 	case reflect.Struct:
-		return d.cpyStruct(dst, src, dstBase, srcBase, depth)
+		// 查找类型缓存
+		var all *allFieldFunc
+		if d.preheat {
+			all = newAllFieldFunc()
+			defer saveToCache(all, dstSrcType{dst.Type(), src.Type()})
+		}
+		return d.cpyStruct(dst, src, dstBase, srcBase, depth, of, all)
 
 	case reflect.Interface:
-		return d.cpyInterface(dst, src, depth)
+		return d.cpyInterface(dst, src, depth, of, all)
 
 	case reflect.Ptr:
-		return d.cpyPtr(dst, src, depth)
+		return d.cpyPtr(dst, src, depth, of, all)
 
 	default:
-		return d.cpyDefault(dst, src, depth)
+		return d.cpyDefault(dst, src, dstBase, srcBase, depth, of, all)
 	}
 }
