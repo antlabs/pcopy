@@ -86,7 +86,8 @@ func baseType(kind reflect.Kind) bool {
 		reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Int,
 		reflect.Float32, reflect.Float64,
 		reflect.String,
-		reflect.Bool:
+		reflect.Bool,
+		reflect.Complex64, reflect.Complex128:
 		return true
 	}
 	return false
