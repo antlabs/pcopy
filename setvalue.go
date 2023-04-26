@@ -1,6 +1,7 @@
 package deepcopy
 
 import (
+	"fmt"
 	"reflect"
 	"unsafe"
 )
@@ -30,7 +31,10 @@ var copyTab = setFuncTab{
 }
 
 func getSetFunc(t reflect.Kind) setFunc {
-	f, _ := copyTab[t]
+	f, ok := copyTab[t]
+	if !ok {
+		panic(fmt.Sprintf("not support type:%T", t))
+	}
 	return f
 }
 

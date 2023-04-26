@@ -29,8 +29,9 @@ func WithTagName(tagName string) Option {
 }
 
 // 是否预热
-func WithPreheat(preheat bool) Option {
+// 还没有稳定下来，不建议使用
+func WithPreheat() Option {
 	return func(o *options) {
-		o.preheat = preheat
+		o.preheat = true
 	}
 }
