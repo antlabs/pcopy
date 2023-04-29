@@ -28,8 +28,7 @@ func WithTagName(tagName string) Option {
 	}
 }
 
-// 是否预热
-// 还没有稳定下来，不建议使用
+// 内部函数
 func WithPreheat() Option {
 	return func(o *options) {
 		o.preheat = true

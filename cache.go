@@ -2,6 +2,7 @@
 package deepcopy
 
 import (
+	"fmt"
 	"reflect"
 	"sync"
 	"unsafe"
@@ -28,7 +29,10 @@ type offsetAndFunc struct {
 	dstOffset int
 	srcOffset int
 
-	set setFunc
+	set       setFunc
+	baseSlice bool // 是否是基础类型的slice
+	// 找到一个复合类型
+	headComposite *allFieldFunc
 }
 
 // 打印cacheAllFunc
@@ -37,10 +41,20 @@ func printCacheAllFunc() {
 	defer rdlock.RUnlock()
 
 	for k, v := range cacheAllFunc {
-		println("key:", k.dst.String(), k.src.String())
-		for _, vv := range v.fieldFuncs {
-			println("val:", vv.dstType.String(), vv.srcType.String(), vv.dstOffset, vv.srcOffset)
+		println("map dst.string, src.string:", k.dst.String(), k.src.String())
+		for i, vv := range v.fieldFuncs {
+			if vv == nil {
+				fmt.Printf("nil, type %v, index:%d\n", vv, i)
+				continue
+			}
+			if vv.srcType == nil {
+				// continue
+			}
+			fmt.Printf("(%d)dst val: %v,", i, vv.dstType)
+			fmt.Printf("(%d)src val: %v ", i, vv.srcType)
+			// vv.dstOffset, vv.srcOffset)
 		}
+		println()
 	}
 }
 
@@ -60,14 +74,16 @@ func getSetFromCacheAndRun(a dstSrcType, dstAddr, srcAddr unsafe.Pointer) (exist
 	}
 	rdlock.RUnlock()
 
-	cacheFunc.do(0, dstAddr, srcAddr)
+	cacheFunc.do(dstAddr, srcAddr)
 	return true
 }
 
+// 基址+offset
 func add(addr unsafe.Pointer, offset int) unsafe.Pointer {
 	return unsafe.Pointer(uintptr(addr) + uintptr(offset))
 }
 
+// 基址-当前字段地址 求 offset
 func sub(base uintptr, addr uintptr) int {
 	return int(base - uintptr(addr))
 }
@@ -80,29 +96,31 @@ func (af *allFieldFunc) append(fieldFunc *offsetAndFunc) {
 	af.fieldFuncs = append(af.fieldFuncs, fieldFunc)
 }
 
-func baseType(kind reflect.Kind) bool {
-	switch kind {
-	case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uint,
-		reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Int,
-		reflect.Float32, reflect.Float64,
-		reflect.String,
-		reflect.Bool,
-		reflect.Complex64, reflect.Complex128:
-		return true
-	}
-	return false
-}
+func (c *allFieldFunc) do(dstBaseAddr, srcBaseAddr unsafe.Pointer) {
+	for _, v := range c.fieldFuncs {
+		var kind reflect.Kind
 
-func (c *allFieldFunc) do(start int, dstAddr, srcAddr unsafe.Pointer) {
-	for _, v := range c.fieldFuncs[start:] {
-		// for k, v := range c.fieldFuncs[start:] {
-		kind := v.srcType.Kind()
+		if v.set == nil {
+			goto next
+		}
+		kind = v.srcType.Kind()
 		switch {
-		// case reflect.Array, reflect.Slice:
-		// 	c.do(k+1, add(dstAddr, v.dstOffset), add(srcAddr, v.srcOffset))
-		// 	return
-		case baseType(kind):
-			v.set(add(dstAddr, v.dstOffset), add(srcAddr, v.srcOffset))
+
+		case kind == reflect.Slice:
+			if v.baseSlice {
+				// 基础类型的slice直接一把函数搞定
+				v.set(add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset))
+				continue
+			}
+		case isBaseType(kind):
+			v.set(add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset))
+		}
+
+	next:
+		if v.headComposite != nil {
+			fmt.Printf("%p, offset:%d, %d\n", c, v.dstOffset, v.srcOffset)
+			v.headComposite.do(dstBaseAddr, srcBaseAddr)
+			continue
 		}
 	}
 }

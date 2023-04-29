@@ -9,6 +9,9 @@ import (
 type (
 	setFunc    func(dstAddr, srcAddr unsafe.Pointer)
 	setFuncTab map[reflect.Kind]setFunc
+
+	setBaseSliceFunc    func(dstAddr, srcAddr unsafe.Pointer)
+	setBaseSliceFuncTab map[reflect.Kind]setFunc
 )
 
 var copyTab = setFuncTab{
@@ -100,4 +103,127 @@ func setComplex64(dstAddr, srcAddr unsafe.Pointer) {
 
 func setComplex128(dstAddr, srcAddr unsafe.Pointer) {
 	*(*complex128)(dstAddr) = *(*complex128)(srcAddr)
+}
+
+var copyBaseSliceTab = setFuncTab{
+	reflect.Bool:       setBaseSliceBool,
+	reflect.Int:        setBaseSliceInt,
+	reflect.Int8:       setBaseSliceInt8,
+	reflect.Int16:      setBaseSliceInt16,
+	reflect.Int32:      setBaseSliceInt32,
+	reflect.Int64:      setBaseSliceInt64,
+	reflect.Uint:       setBaseSliceUint,
+	reflect.Uint8:      setBaseSliceUint8,
+	reflect.Uint16:     setBaseSliceUint16,
+	reflect.Uint32:     setBaseSliceUint32,
+	reflect.Uint64:     setBaseSliceUint64,
+	reflect.String:     setBaseSliceString,
+	reflect.Float32:    setBaseSliceFloat32,
+	reflect.Float64:    setBaseSliceFloat64,
+	reflect.Complex64:  setBaseSliceComplex64,
+	reflect.Complex128: setBaseSliceComplex128,
+}
+
+func getSetBaseSliceFunc(t reflect.Kind) setFunc {
+	f, ok := copyBaseSliceTab[t]
+	if !ok {
+		panic(fmt.Sprintf("not support type:%T", t))
+	}
+	return f
+}
+
+func setBaseSliceBool(dstAddr, srcAddr unsafe.Pointer) {
+	dstSlice := *(*[]bool)(dstAddr)
+	srcSlice := *(*[]bool)(srcAddr)
+	copy(dstSlice, srcSlice)
+}
+
+func setBaseSliceInt(dstAddr, srcAddr unsafe.Pointer) {
+	dstSlice := *(*[]int)(dstAddr)
+	srcSlice := *(*[]int)(srcAddr)
+	copy(dstSlice, srcSlice)
+}
+
+func setBaseSliceInt8(dstAddr, srcAddr unsafe.Pointer) {
+	dstSlice := *(*[]int8)(dstAddr)
+	srcSlice := *(*[]int8)(srcAddr)
+	copy(dstSlice, srcSlice)
+}
+
+func setBaseSliceInt16(dstAddr, srcAddr unsafe.Pointer) {
+	dstSlice := *(*[]int16)(dstAddr)
+	srcSlice := *(*[]int16)(srcAddr)
+	copy(dstSlice, srcSlice)
+}
+
+func setBaseSliceInt32(dstAddr, srcAddr unsafe.Pointer) {
+	dstSlice := *(*[]int32)(dstAddr)
+	srcSlice := *(*[]int32)(srcAddr)
+	copy(dstSlice, srcSlice)
+}
+
+func setBaseSliceInt64(dstAddr, srcAddr unsafe.Pointer) {
+	dstSlice := *(*[]int64)(dstAddr)
+	srcSlice := *(*[]int64)(srcAddr)
+	copy(dstSlice, srcSlice)
+}
+
+func setBaseSliceUint(dstAddr, srcAddr unsafe.Pointer) {
+	dstSlice := *(*[]uint)(dstAddr)
+	srcSlice := *(*[]uint)(srcAddr)
+	copy(dstSlice, srcSlice)
+}
+
+func setBaseSliceUint8(dstAddr, srcAddr unsafe.Pointer) {
+	dstSlice := *(*[]uint8)(dstAddr)
+	srcSlice := *(*[]uint8)(srcAddr)
+	copy(dstSlice, srcSlice)
+}
+
+func setBaseSliceUint16(dstAddr, srcAddr unsafe.Pointer) {
+	dstSlice := *(*[]uint16)(dstAddr)
+	srcSlice := *(*[]uint16)(srcAddr)
+	copy(dstSlice, srcSlice)
+}
+
+func setBaseSliceUint32(dstAddr, srcAddr unsafe.Pointer) {
+	dstSlice := *(*[]uint32)(dstAddr)
+	srcSlice := *(*[]uint32)(srcAddr)
+	copy(dstSlice, srcSlice)
+}
+
+func setBaseSliceUint64(dstAddr, srcAddr unsafe.Pointer) {
+	dstSlice := *(*[]uint64)(dstAddr)
+	srcSlice := *(*[]uint64)(srcAddr)
+	copy(dstSlice, srcSlice)
+}
+
+func setBaseSliceString(dstAddr, srcAddr unsafe.Pointer) {
+	dstSlice := *(*[]string)(dstAddr)
+	srcSlice := *(*[]string)(srcAddr)
+	copy(dstSlice, srcSlice)
+}
+
+func setBaseSliceFloat32(dstAddr, srcAddr unsafe.Pointer) {
+	dstSlice := *(*[]float32)(dstAddr)
+	srcSlice := *(*[]float32)(srcAddr)
+	copy(dstSlice, srcSlice)
+}
+
+func setBaseSliceFloat64(dstAddr, srcAddr unsafe.Pointer) {
+	dstSlice := *(*[]float64)(dstAddr)
+	srcSlice := *(*[]float64)(srcAddr)
+	copy(dstSlice, srcSlice)
+}
+
+func setBaseSliceComplex64(dstAddr, srcAddr unsafe.Pointer) {
+	dstSlice := *(*[]complex64)(dstAddr)
+	srcSlice := *(*[]complex64)(srcAddr)
+	copy(dstSlice, srcSlice)
+}
+
+func setBaseSliceComplex128(dstAddr, srcAddr unsafe.Pointer) {
+	dstSlice := *(*[]complex128)(dstAddr)
+	srcSlice := *(*[]complex128)(srcAddr)
+	copy(dstSlice, srcSlice)
 }
