@@ -2,17 +2,13 @@
 package deepcopy
 
 import (
-	"fmt"
 	"reflect"
 	"sync"
 	"unsafe"
 )
 
-var (
-	cacheAllFunc map[dstSrcType]*allFieldFunc = make(map[dstSrcType]*allFieldFunc)
-	rdlock       sync.RWMutex
-	OpenCache    bool
-)
+// cacheAllFunc map[dstSrcType]*allFieldFunc = make(map[dstSrcType]*allFieldFunc)
+var cacheAllFunc sync.Map // rdlock       sync.RWMutex
 
 type dstSrcType struct {
 	dst reflect.Type
@@ -37,48 +33,55 @@ type offsetAndFunc struct {
 
 // 打印cacheAllFunc
 func printCacheAllFunc() {
-	rdlock.RLock()
-	defer rdlock.RUnlock()
+	// rdlock.RLock()
+	// defer rdlock.RUnlock()
 
-	for k, v := range cacheAllFunc {
-		println("map dst.string, src.string:", k.dst.String(), k.src.String())
-		for i, vv := range v.fieldFuncs {
-			if vv == nil {
-				fmt.Printf("nil, type %v, index:%d\n", vv, i)
-				continue
-			}
-			if vv.srcType == nil {
-				// continue
-			}
+	// for k, v := range cacheAllFunc {
+	// 	println("map dst.string, src.string:", k.dst.String(), k.src.String())
+	// 	for i, vv := range v.fieldFuncs {
+	// 		if vv == nil {
+	// 			fmt.Printf("nil, type %v, index:%d\n", vv, i)
+	// 			continue
+	// 		}
+	// 		if vv.srcType == nil {
+	// 			// continue
+	// 		}
 
-			fmt.Printf("(%d)dst val: %v,", i, vv.dstType)
-			fmt.Printf("(%d)src val: %v ", i, vv.srcType)
-			// vv.dstOffset, vv.srcOffset)
-		}
-		println()
-	}
+	// 		fmt.Printf("(%d)dst val: %v,", i, vv.dstType)
+	// 		fmt.Printf("(%d)src val: %v ", i, vv.srcType)
+	// 		// vv.dstOffset, vv.srcOffset)
+	// 	}
+	// 	println()
+	// }
 }
 
 func saveToCache(fieldFunc *allFieldFunc, a dstSrcType) {
-	rdlock.Lock()
-	defer rdlock.Unlock()
-	if _, ok := cacheAllFunc[a]; ok {
-		return
-	}
+	cacheAllFunc.Store(a, fieldFunc)
+	// rdlock.Lock()
+	// defer rdlock.Unlock()
+	// if _, ok := cacheAllFunc[a]; ok {
+	// 	return
+	// }
 
-	cacheAllFunc[a] = fieldFunc
+	// cacheAllFunc[a] = fieldFunc
 }
 
 func getSetFromCacheAndRun(a dstSrcType, dstAddr, srcAddr unsafe.Pointer) (exist bool) {
-	rdlock.RLock()
-	cacheFunc, ok := cacheAllFunc[a]
-	if !ok {
-		rdlock.RUnlock()
-		return ok
-	}
-	rdlock.RUnlock()
+	// rdlock.RLock()
+	// cacheFunc, ok := cacheAllFunc[a]
+	// if !ok {
+	// 	rdlock.RUnlock()
+	// 	return ok
+	// }
+	// rdlock.RUnlock()
 
-	cacheFunc.do(dstAddr, srcAddr)
+	v, ok := cacheAllFunc.Load(a)
+	if !ok {
+		return false
+	}
+
+	v.(*allFieldFunc).do(dstAddr, srcAddr)
+	// cacheFunc.do(dstAddr, srcAddr)
 	return true
 }
 
@@ -107,6 +110,7 @@ func (c *allFieldFunc) do(dstBaseAddr, srcBaseAddr unsafe.Pointer) {
 		if v.set == nil {
 			goto next
 		}
+
 		kind = v.srcType.Kind()
 		switch {
 
@@ -122,7 +126,7 @@ func (c *allFieldFunc) do(dstBaseAddr, srcBaseAddr unsafe.Pointer) {
 
 	next:
 		if v.headComposite != nil {
-			fmt.Printf("%p, offset:%d, %d\n", c, v.dstOffset, v.srcOffset)
+			// fmt.Printf("%p, offset:%d, %d\n", c, v.dstOffset, v.srcOffset)
 			v.headComposite.do(dstBaseAddr, srcBaseAddr)
 			continue
 		}
