@@ -56,7 +56,7 @@ func TestFastCopyBase(t *testing.T) {
 
 	printCacheAllFunc()
 	// fmt.Printf("%v\n", cacheAllFunc)
-	err = CopyEx(&dst, &testSrc, WithPreheat())
+	err = CopyEx(&dst, &testSrc, WithUsePreheat())
 
 	var dst2 FastCopyDst
 	dst2.Bool = true
@@ -232,7 +232,7 @@ func TestFastCopy_BaseWithSlice(t *testing.T) {
 
 	printCacheAllFunc()
 	// fmt.Printf("%v\n", cacheAllFunc)
-	err = CopyEx(&dst, &testSrc_BaseSlice, WithPreheat())
+	err = CopyEx(&dst, &testSrc_BaseSlice, WithUsePreheat())
 	assert.NoError(t, err)
 
 	var dst2 FastCopyDst_BaseSlice = FastCopyDst_BaseSlice(testSrc_BaseSlice)

@@ -49,7 +49,9 @@ func CopyEx(dst, src interface{}, opts ...Option) error {
 	// 开启预热逻辑
 	dstAddr := zeroUintptr
 	srcAddr := zeroUintptr
-	if opt.preheat {
+
+	// 预热逻辑和预热cache逻辑都要走
+	if opt.preheat || opt.usePreheat {
 		if dstValue.Kind() != reflect.Ptr || srcValue.Kind() != reflect.Ptr {
 			return ErrNotPointer
 		}
@@ -117,9 +119,9 @@ func (d *deepCopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe
 		dst.Set(newDst)
 	}
 
-	// 如果是基础类型的slice
-	if isBaseType(dst.Type().Elem().Kind()) && isBaseType(src.Type().Elem().Kind()) {
-		if d.preheat {
+	if d.preheat {
+		// 如果是基础类型的slice
+		if isBaseType(dst.Type().Elem().Kind()) && isBaseType(src.Type().Elem().Kind()) {
 			// TODO 挂到一级cache下面
 			// of.dstOffset = sub(dst.UnsafeAddr(), uintptr(dstBase))
 			// of.srcOffset = sub(src.UnsafeAddr(), uintptr(srcBase))
@@ -252,7 +254,7 @@ func (d *deepCopy) cpyStruct(dst, src reflect.Value, dstBase, srcBase unsafe.Poi
 		}
 	}
 
-	if d.preheat {
+	if d.usePreheat {
 		// 从cache load出类型直接执行
 		exist := getSetFromCacheAndRun(dstSrcType{dst: dst.Type(), src: src.Type()}, dstBase, srcBase)
 		if exist {
@@ -401,7 +403,7 @@ func (d *deepCopy) deepCopy(dst, src reflect.Value, dstBase, srcBase unsafe.Poin
 
 	// 预热的时间一定要绕开这个判断, 默认src都有值
 	// 寻找和dst匹配的字段
-	if !d.preheat {
+	if !(d.preheat || d.usePreheat) {
 		if src.IsZero() {
 			return nil
 		}
@@ -420,6 +422,7 @@ func (d *deepCopy) deepCopy(dst, src reflect.Value, dstBase, srcBase unsafe.Poin
 
 	switch src.Kind() {
 	case reflect.Slice, reflect.Array:
+		// 保存类型缓存
 		if d.preheat {
 			of.headComposite = newAllFieldFunc()
 			all.append(&of)
@@ -436,7 +439,7 @@ func (d *deepCopy) deepCopy(dst, src reflect.Value, dstBase, srcBase unsafe.Poin
 		return d.cpyFunc(dst, src, depth)
 
 	case reflect.Struct:
-		// 查找类型缓存
+		// 保存类型缓存
 		var all *allFieldFunc
 		if d.preheat {
 			all = newAllFieldFunc()

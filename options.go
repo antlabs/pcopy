@@ -12,6 +12,9 @@ type options struct {
 	// // If OnlyField is empty, it will be treated as no field.
 	// OnlyField string
 	preheat bool
+
+	// 使用预热cache
+	usePreheat bool
 }
 
 type Option func(*options)
@@ -28,8 +31,14 @@ func WithTagName(tagName string) Option {
 	}
 }
 
+func WithUsePreheat() Option {
+	return func(o *options) {
+		o.usePreheat = true
+	}
+}
+
 // 内部函数
-func WithPreheat() Option {
+func withPreheat() Option {
 	return func(o *options) {
 		o.preheat = true
 	}

@@ -9,9 +9,6 @@ import (
 type (
 	setFunc    func(dstAddr, srcAddr unsafe.Pointer)
 	setFuncTab map[reflect.Kind]setFunc
-
-	setBaseSliceFunc    func(dstAddr, srcAddr unsafe.Pointer)
-	setBaseSliceFuncTab map[reflect.Kind]setFunc
 )
 
 var copyTab = setFuncTab{
