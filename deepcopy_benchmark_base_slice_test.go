@@ -4,7 +4,7 @@ import "testing"
 
 func Benchmark_Use_CachePtr_BaseSlice_Deepcopy(b *testing.B) {
 	var dst FastCopyDst_BaseSlice
-	err := Preheat(&dst, &testSrc)
+	err := Preheat(&dst, &testSrc_BaseSlice)
 	if err != nil {
 		b.Fatal(err)
 	}
