@@ -14,11 +14,35 @@ func Benchmark_Use_CachePtr_Deepcopy(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		var dst FastCopyDst
-		err := CopyEx(&dst, &testSrc, WithPreheat())
+		err := CopyEx(&dst, &testSrc, WithUsePreheat())
 		if err != nil {
 			b.Fatal(err)
 		}
 
+	}
+}
+
+func Benchmark_RawCopy(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		var dst FastCopyDst
+		dst.Bool = testSrc.Bool
+		dst.Int = testSrc.Int
+		dst.Int8 = testSrc.Int8
+		dst.Int16 = testSrc.Int16
+		dst.Int32 = testSrc.Int32
+		dst.Int64 = testSrc.Int64
+		dst.Uint = testSrc.Uint
+		dst.Uint8 = testSrc.Uint8
+		dst.Uint16 = testSrc.Uint16
+		dst.Uint32 = testSrc.Uint32
+		dst.Uint64 = testSrc.Uint64
+		dst.Float32 = testSrc.Float32
+		dst.Float64 = testSrc.Float64
+		// dst.Complex64 = testSrc.Complex64
+		dst.String = testSrc.String
+		a := &dst
+		b := a
+		_ = b
 	}
 }
 

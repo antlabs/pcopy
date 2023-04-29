@@ -50,6 +50,7 @@ func printCacheAllFunc() {
 			if vv.srcType == nil {
 				// continue
 			}
+
 			fmt.Printf("(%d)dst val: %v,", i, vv.dstType)
 			fmt.Printf("(%d)src val: %v ", i, vv.srcType)
 			// vv.dstOffset, vv.srcOffset)
@@ -61,6 +62,9 @@ func printCacheAllFunc() {
 func saveToCache(fieldFunc *allFieldFunc, a dstSrcType) {
 	rdlock.Lock()
 	defer rdlock.Unlock()
+	if _, ok := cacheAllFunc[a]; ok {
+		return
+	}
 
 	cacheAllFunc[a] = fieldFunc
 }

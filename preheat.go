@@ -2,5 +2,5 @@
 package deepcopy
 
 func Preheat(dst, src interface{}, opts ...Option) error {
-	return CopyEx(dst, src, WithPreheat())
+	return CopyEx(dst, src, withPreheat())
 }
