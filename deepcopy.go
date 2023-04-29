@@ -65,6 +65,15 @@ func CopyEx(dst, src interface{}, opts ...Option) error {
 		}
 		dstAddr = unsafe.Pointer(dstValue.Elem().UnsafeAddr())
 		srcAddr = unsafe.Pointer(srcValue.Elem().UnsafeAddr())
+
+		dstValue = dstValue.Elem()
+		srcValue = srcValue.Elem()
+
+		// 从cache load出类型直接执行
+		exist := getSetFromCacheAndRun(dstSrcType{dst: dstValue.Type(), src: srcValue.Type()}, dstAddr, srcAddr)
+		if exist {
+			return nil
+		}
 	}
 
 	d := deepCopy{
