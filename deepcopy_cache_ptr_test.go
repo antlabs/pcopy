@@ -1,7 +1,9 @@
 package deepcopy
 
 import (
+	"reflect"
 	"testing"
+	"unsafe"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -53,6 +55,7 @@ func TestFastCopyBase(t *testing.T) {
 
 	err := Preheat(&dst, &testSrc)
 	assert.NoError(t, err)
+	dst = FastCopyDst{}
 
 	printCacheAllFunc()
 	// fmt.Printf("%v\n", cacheAllFunc)
@@ -224,17 +227,35 @@ var testSrc_BaseSlice = FastCopySrc_BaseSlice{
 	// SliceComplex128: []complex128{29.0, 30.0},
 }
 
+func getSliceHeaderPtr(s unsafe.Pointer) *reflect.SliceHeader {
+	return (*reflect.SliceHeader)(s)
+}
+
+// 基础类型slice测试
 func TestFastCopy_BaseWithSlice(t *testing.T) {
 	var dst FastCopyDst_BaseSlice
 
 	err := Preheat(&dst, &testSrc_BaseSlice)
+	dst = FastCopyDst_BaseSlice{}
 	assert.NoError(t, err)
 
 	printCacheAllFunc()
 	// fmt.Printf("%v\n", cacheAllFunc)
+	// fmt.Printf("%x\n", getSliceHeaderPtr(unsafe.Pointer(&dst.SliceBool)).Data)
+	// fmt.Printf("%d\n", getSliceHeaderPtr(unsafe.Pointer(&dst.SliceBool)).Len)
+	// fmt.Printf("%d\n", getSliceHeaderPtr(unsafe.Pointer(&dst.SliceBool)).Cap)
+
 	err = CopyEx(&dst, &testSrc_BaseSlice, WithUsePreheat())
 	assert.NoError(t, err)
 
 	var dst2 FastCopyDst_BaseSlice = FastCopyDst_BaseSlice(testSrc_BaseSlice)
 	assert.Equal(t, dst, dst2)
+	// fmt.Printf("%x\n", getSliceHeaderPtr(unsafe.Pointer(&dst.SliceBool)).Data)
+	// fmt.Printf("%d\n", getSliceHeaderPtr(unsafe.Pointer(&dst.SliceBool)).Len)
+	// fmt.Printf("%d\n", getSliceHeaderPtr(unsafe.Pointer(&dst.SliceBool)).Cap)
+	// fmt.Printf("%x\n", getSliceHeaderPtr(unsafe.Pointer(&testSrc_BaseSlice.SliceBool)).Data)
+	// fmt.Printf("%d\n", getSliceHeaderPtr(unsafe.Pointer(&testSrc_BaseSlice.SliceBool)).Len)
+	// fmt.Printf("%d\n", getSliceHeaderPtr(unsafe.Pointer(&testSrc_BaseSlice.SliceBool)).Cap)
 }
+
+type FastCopyDst_BaseStruct struct{}
