@@ -20,7 +20,7 @@ func Benchmark_Use_CachePtr_BaseSlice_Deepcopy(b *testing.B) {
 	}
 }
 
-func Benchmark_RawCopy_RawCopy(b *testing.B) {
+func Benchmark_BaseSlice_RawCopy(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		var dst FastCopyDst_BaseSlice
 		dst.Bool = testSrc_BaseSlice.Bool
