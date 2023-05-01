@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// FasttCopy指优化原来deepcopy的优化版本，正式发布也行会改名
 type FastCopyDst struct {
 	// 所有基础类型
 	Bool    bool
@@ -57,8 +58,6 @@ func TestFastCopyBase(t *testing.T) {
 	assert.NoError(t, err)
 	dst = FastCopyDst{}
 
-	printCacheAllFunc()
-	// fmt.Printf("%v\n", cacheAllFunc)
 	err = CopyEx(&dst, &testSrc, WithUsePreheat())
 
 	var dst2 FastCopyDst
@@ -239,7 +238,6 @@ func TestFastCopy_BaseWithSlice(t *testing.T) {
 	dst = FastCopyDst_BaseSlice{}
 	assert.NoError(t, err)
 
-	printCacheAllFunc()
 	// fmt.Printf("%v\n", cacheAllFunc)
 	// fmt.Printf("%x\n", getSliceHeaderPtr(unsafe.Pointer(&dst.SliceBool)).Data)
 	// fmt.Printf("%d\n", getSliceHeaderPtr(unsafe.Pointer(&dst.SliceBool)).Len)
@@ -258,4 +256,222 @@ func TestFastCopy_BaseWithSlice(t *testing.T) {
 	// fmt.Printf("%d\n", getSliceHeaderPtr(unsafe.Pointer(&testSrc_BaseSlice.SliceBool)).Cap)
 }
 
-type FastCopyDst_BaseStruct struct{}
+type FastCopySrc_BaseStruct FastCopyDst_BaseStruct
+
+// 基础下struct 套struct的情况
+type FastCopyDst_BaseStruct struct {
+	Bool    bool
+	Int     int
+	Int8    int8
+	Int16   int16
+	Int32   int32
+	Int64   int64
+	Uint    uint
+	Uint8   uint8
+	Uint16  uint16
+	Uint32  uint32
+	Uint64  uint64
+	String  string
+	Float32 float32
+	Float64 float64
+	// Complex64  complex64
+	// Complex128 complex128
+	SliceBool    []bool
+	SliceInt     []int
+	SliceInt8    []int8
+	SliceInt16   []int16
+	SliceInt32   []int32
+	SliceInt64   []int64
+	SliceUint    []uint
+	SliceUint8   []uint8
+	SliceUint16  []uint16
+	SliceUint32  []uint32
+	SliceUint64  []uint64
+	SliceString  []string
+	SliceFloat32 []float32
+	SliceFloat64 []float64
+
+	Sub2 FastCopyDst_BaseStruct_Sub2
+}
+
+type FastCopyDst_BaseStruct_Sub2 struct {
+	Bool    bool
+	Int     int
+	Int8    int8
+	Int16   int16
+	Int32   int32
+	Int64   int64
+	Uint    uint
+	Uint8   uint8
+	Uint16  uint16
+	Uint32  uint32
+	Uint64  uint64
+	String  string
+	Float32 float32
+	Float64 float64
+	// Complex64  complex64
+	// Complex128 complex128
+	SliceBool    []bool
+	SliceInt     []int
+	SliceInt8    []int8
+	SliceInt16   []int16
+	SliceInt32   []int32
+	SliceInt64   []int64
+	SliceUint    []uint
+	SliceUint8   []uint8
+	SliceUint16  []uint16
+	SliceUint32  []uint32
+	SliceUint64  []uint64
+	SliceString  []string
+	SliceFloat32 []float32
+	SliceFloat64 []float64
+
+	Sub3 FastCopyDst_BaseStruct_Sub3
+}
+
+type FastCopyDst_BaseStruct_Sub3 struct {
+	Bool    bool
+	Int     int
+	Int8    int8
+	Int16   int16
+	Int32   int32
+	Int64   int64
+	Uint    uint
+	Uint8   uint8
+	Uint16  uint16
+	Uint32  uint32
+	Uint64  uint64
+	String  string
+	Float32 float32
+	Float64 float64
+	// Complex64  complex64
+	// Complex128 complex128
+	SliceBool    []bool
+	SliceInt     []int
+	SliceInt8    []int8
+	SliceInt16   []int16
+	SliceInt32   []int32
+	SliceInt64   []int64
+	SliceUint    []uint
+	SliceUint8   []uint8
+	SliceUint16  []uint16
+	SliceUint32  []uint32
+	SliceUint64  []uint64
+	SliceString  []string
+	SliceFloat32 []float32
+	SliceFloat64 []float64
+}
+
+var testBaseStructSrc FastCopySrc_BaseStruct = FastCopySrc_BaseStruct{
+	Bool:    true,
+	Int:     1,
+	Int8:    2,
+	Int16:   3,
+	Int32:   4,
+	Int64:   5,
+	Uint:    6,
+	Uint8:   7,
+	Uint16:  8,
+	Uint32:  9,
+	Uint64:  10,
+	String:  "11",
+	Float32: 12,
+	Float64: 13,
+	// Complex64:  14,
+	// Complex128: 15,
+	SliceBool:    []bool{true, false},
+	SliceInt:     []int{1, 2},
+	SliceInt8:    []int8{3, 4},
+	SliceInt16:   []int16{5, 6},
+	SliceInt32:   []int32{7, 8},
+	SliceInt64:   []int64{9, 10},
+	SliceUint:    []uint{11, 12},
+	SliceUint8:   []uint8{13, 14},
+	SliceUint16:  []uint16{15, 16},
+	SliceUint32:  []uint32{17, 18},
+	SliceUint64:  []uint64{19, 20},
+	SliceString:  []string{"21", "22"},
+	SliceFloat32: []float32{23, 24},
+	SliceFloat64: []float64{25, 26},
+	Sub2: FastCopyDst_BaseStruct_Sub2{
+		Bool:    true,
+		Int:     1,
+		Int8:    2,
+		Int16:   3,
+		Int32:   4,
+		Int64:   5,
+		Uint:    6,
+		Uint8:   7,
+		Uint16:  8,
+		Uint32:  9,
+		Uint64:  10,
+		String:  "11",
+		Float32: 12,
+		Float64: 13,
+		// Complex64:  14,
+		// Complex128: 15,
+		SliceBool:    []bool{true, false},
+		SliceInt:     []int{1, 2},
+		SliceInt8:    []int8{3, 4},
+		SliceInt16:   []int16{5, 6},
+		SliceInt32:   []int32{7, 8},
+		SliceInt64:   []int64{9, 10},
+		SliceUint:    []uint{11, 12},
+		SliceUint8:   []uint8{13, 14},
+		SliceUint16:  []uint16{15, 16},
+		SliceUint32:  []uint32{17, 18},
+		SliceUint64:  []uint64{19, 20},
+		SliceString:  []string{"21", "22"},
+		SliceFloat32: []float32{23, 24},
+		SliceFloat64: []float64{25, 26},
+		Sub3: FastCopyDst_BaseStruct_Sub3{
+			Bool:    true,
+			Int:     1,
+			Int8:    2,
+			Int16:   3,
+			Int32:   4,
+			Int64:   5,
+			Uint:    6,
+			Uint8:   7,
+			Uint16:  8,
+			Uint32:  9,
+			Uint64:  10,
+			String:  "11",
+			Float32: 12,
+			Float64: 13,
+			// Complex64:  14,
+			// Complex128: 15,
+			SliceBool:    []bool{true, false},
+			SliceInt:     []int{1, 2},
+			SliceInt8:    []int8{3, 4},
+			SliceInt16:   []int16{5, 6},
+			SliceInt32:   []int32{7, 8},
+			SliceInt64:   []int64{9, 10},
+			SliceUint:    []uint{11, 12},
+			SliceUint8:   []uint8{13, 14},
+			SliceUint16:  []uint16{15, 16},
+			SliceUint32:  []uint32{17, 18},
+			SliceUint64:  []uint64{19, 20},
+			SliceString:  []string{"21", "22"},
+			SliceFloat32: []float32{23, 24},
+			SliceFloat64: []float64{25, 26},
+		},
+	},
+}
+
+func Test_StructWithStruct(t *testing.T) {
+	var dst FastCopyDst_BaseStruct
+
+	err := Preheat(&dst, &testBaseStructSrc)
+	// err := Preheat(&dst, &testSrc)
+	assert.NoError(t, err)
+	dst = FastCopyDst_BaseStruct{}
+
+	// fmt.Printf("%v\n", cacheAllFunc)
+	err = CopyEx(&dst, &testBaseStructSrc, WithUsePreheat())
+
+	// 直接赋值对于slice是浅拷贝，这里只是为了测试
+	dst2 := testBaseStructSrc
+	assert.NoError(t, err)
+	assert.Equal(t, dst, FastCopyDst_BaseStruct(dst2))
+}
