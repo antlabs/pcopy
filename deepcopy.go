@@ -51,6 +51,7 @@ func CopyEx(dst, src interface{}, opts ...Option) error {
 	srcAddr := zeroUintptr
 
 	// 预热逻辑和预热cache逻辑都要走
+	var all *allFieldFunc
 	if opt.preheat || opt.usePreheat {
 		if dstValue.Kind() != reflect.Ptr || srcValue.Kind() != reflect.Ptr {
 			return ErrNotPointer
@@ -74,6 +75,10 @@ func CopyEx(dst, src interface{}, opts ...Option) error {
 		if exist {
 			return nil
 		}
+
+		if opt.preheat {
+			all = newAllFieldFunc()
+		}
 	}
 
 	d := deepCopy{
@@ -86,7 +91,7 @@ func CopyEx(dst, src interface{}, opts ...Option) error {
 	}
 
 	// fmt.Printf("%p:%p\n", dstAddr, srcAddr)
-	return d.deepCopy(d.dst, d.src, dstAddr, srcAddr, 0, offsetAndFunc{}, nil)
+	return d.deepCopy(d.dst, d.src, dstAddr, srcAddr, 0, offsetAndFunc{}, all)
 }
 
 // 需要的tag name
@@ -131,14 +136,14 @@ func (d *deepCopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe
 	if d.preheat {
 		// 如果是基础类型的slice
 		if isBaseType(dst.Type().Elem().Kind()) && isBaseType(src.Type().Elem().Kind()) {
-			// TODO 挂到一级cache下面
 			// of.dstOffset = sub(dst.UnsafeAddr(), uintptr(dstBase))
 			// of.srcOffset = sub(src.UnsafeAddr(), uintptr(srcBase))
 			of.srcType = src.Type()
 			of.dstType = dst.Type()
 			of.set = getSetBaseSliceFunc(dst.Type().Elem().Kind())
 			of.baseSlice = true
-			all.append(&of)
+			of.createFlag = baseSliceTypeSet
+			all.append(of)
 			return nil
 		}
 	}
@@ -368,7 +373,8 @@ func (d *deepCopy) cpyDefault(dst, src reflect.Value, dstBase, srcBase unsafe.Po
 		of.srcType = src.Type()
 		of.dstType = dst.Type()
 		of.set = getSetFunc(src.Kind())
-		all.append(&of)
+		of.createFlag = baseTypeSet
+		all.append(of)
 	}
 
 	switch src.Kind() {
@@ -433,10 +439,13 @@ func (d *deepCopy) deepCopy(dst, src reflect.Value, dstBase, srcBase unsafe.Poin
 	case reflect.Slice, reflect.Array:
 		// 保存类型缓存
 		if d.preheat {
-			of.headComposite = newAllFieldFunc()
-			all.append(&of)
+			of.nextComposite = newAllFieldFunc()
+			of.createFlag = sliceTypeSet
+			all.append(of)
+			of.createFlag = debugTypeSet
 			// 重置all
-			all = of.headComposite
+			all = of.nextComposite
+			of.nextComposite = nil
 			defer saveToCache(all, dstSrcType{dst.Type(), src.Type()})
 		}
 		return d.cpySliceArray(dst, src, dstBase, srcBase, depth, of, all)
@@ -449,9 +458,16 @@ func (d *deepCopy) deepCopy(dst, src reflect.Value, dstBase, srcBase unsafe.Poin
 
 	case reflect.Struct:
 		// 保存类型缓存
-		var all *allFieldFunc
+		// var all *allFieldFunc
 		if d.preheat {
-			all = newAllFieldFunc()
+			of.nextComposite = newAllFieldFunc()
+			of.createFlag = structTypeSet
+			all.append(of)
+			of.createFlag = emptyTypeSet
+			// 重置all
+			all = of.nextComposite
+			// 这里需要清除，不然会影响到后面的逻辑
+			of.nextComposite = nil
 			defer saveToCache(all, dstSrcType{dst.Type(), src.Type()})
 		}
 		return d.cpyStruct(dst, src, dstBase, srcBase, depth, of, all)

@@ -16,47 +16,36 @@ type dstSrcType struct {
 }
 
 type allFieldFunc struct {
-	fieldFuncs []*offsetAndFunc
+	fieldFuncs []offsetAndFunc
 }
+
+type flag int
+
+const (
+	// 空值类型
+	emptyTypeSet     flag = iota
+	baseTypeSet           // 基础类型
+	sliceTypeSet          // slice类型
+	baseSliceTypeSet      // 基础类型的slice
+	structTypeSet         // 结构体类型
+	debugTypeSet          // debug类型
+)
 
 type offsetAndFunc struct {
 	dstType   reflect.Type
 	srcType   reflect.Type
 	dstOffset int
 	srcOffset int
-
 	set       setFunc
-	baseSlice bool // 是否是基础类型的slice
+
 	// 找到一个复合类型
-	headComposite *allFieldFunc
-}
-
-// 打印cacheAllFunc
-func printCacheAllFunc() {
-	// rdlock.RLock()
-	// defer rdlock.RUnlock()
-
-	// for k, v := range cacheAllFunc {
-	// 	println("map dst.string, src.string:", k.dst.String(), k.src.String())
-	// 	for i, vv := range v.fieldFuncs {
-	// 		if vv == nil {
-	// 			fmt.Printf("nil, type %v, index:%d\n", vv, i)
-	// 			continue
-	// 		}
-	// 		if vv.srcType == nil {
-	// 			// continue
-	// 		}
-
-	// 		fmt.Printf("(%d)dst val: %v,", i, vv.dstType)
-	// 		fmt.Printf("(%d)src val: %v ", i, vv.srcType)
-	// 		// vv.dstOffset, vv.srcOffset)
-	// 	}
-	// 	println()
-	// }
+	nextComposite *allFieldFunc
+	baseSlice     bool // 是否是基础类型的slice
+	createFlag    flag // 记录offsetAndFunc这个对象生成的触发点
 }
 
 func saveToCache(fieldFunc *allFieldFunc, a dstSrcType) {
-	cacheAllFunc.Store(a, fieldFunc)
+	cacheAllFunc.LoadOrStore(a, fieldFunc)
 	// rdlock.Lock()
 	// defer rdlock.Unlock()
 	// if _, ok := cacheAllFunc[a]; ok {
@@ -85,21 +74,12 @@ func getSetFromCacheAndRun(a dstSrcType, dstAddr, srcAddr unsafe.Pointer) (exist
 	return true
 }
 
-// 基址+offset
-func add(addr unsafe.Pointer, offset int) unsafe.Pointer {
-	return unsafe.Pointer(uintptr(addr) + uintptr(offset))
+func newAllFieldFunc() (rv *allFieldFunc) {
+	rv = &allFieldFunc{fieldFuncs: make([]offsetAndFunc, 0, 5)}
+	return
 }
 
-// 基址-当前字段地址 求 offset
-func sub(base uintptr, addr uintptr) int {
-	return int(base - uintptr(addr))
-}
-
-func newAllFieldFunc() *allFieldFunc {
-	return &allFieldFunc{fieldFuncs: make([]*offsetAndFunc, 0, 8)}
-}
-
-func (af *allFieldFunc) append(fieldFunc *offsetAndFunc) {
+func (af *allFieldFunc) append(fieldFunc offsetAndFunc) {
 	af.fieldFuncs = append(af.fieldFuncs, fieldFunc)
 }
 
@@ -125,10 +105,19 @@ func (c *allFieldFunc) do(dstBaseAddr, srcBaseAddr unsafe.Pointer) {
 		}
 
 	next:
-		if v.headComposite != nil {
-			// fmt.Printf("%p, offset:%d, %d\n", c, v.dstOffset, v.srcOffset)
-			v.headComposite.do(dstBaseAddr, srcBaseAddr)
+		if v.nextComposite != nil {
+			v.nextComposite.do(dstBaseAddr, srcBaseAddr)
 			continue
 		}
 	}
+}
+
+// 基址+offset
+func add(addr unsafe.Pointer, offset int) unsafe.Pointer {
+	return unsafe.Pointer(uintptr(addr) + uintptr(offset))
+}
+
+// 基址-当前字段地址 求 offset
+func sub(base uintptr, addr uintptr) int {
+	return int(base - uintptr(addr))
 }
