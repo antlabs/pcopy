@@ -90,7 +90,6 @@ func CopyEx(dst, src interface{}, opts ...Option) error {
 		d.maxDepth = noDepthLimited
 	}
 
-	// fmt.Printf("%p:%p\n", dstAddr, srcAddr)
 	return d.deepCopy(d.dst, d.src, dstAddr, srcAddr, 0, offsetAndFunc{}, all)
 }
 
@@ -184,6 +183,21 @@ func (d *deepCopy) cpyMap(dst, src reflect.Value, depth int, of offsetAndFunc, a
 		dst.Set(newMap)
 	}
 
+	if d.preheat {
+		// 如果是基础类型的slice
+		if isBaseType(dst.Type().Elem().Kind()) && isBaseType(src.Type().Elem().Kind()) {
+			// of.dstOffset = sub(dst.UnsafeAddr(), uintptr(dstBase))
+			// of.srcOffset = sub(src.UnsafeAddr(), uintptr(srcBase))
+			of.srcType = src.Type()
+			of.dstType = dst.Type()
+			of.set = getSetBaseSliceFunc(dst.Type().Elem().Kind())
+			of.baseSlice = true
+			of.createFlag = baseSliceTypeSet
+			all.append(of)
+			return nil
+		}
+	}
+  
 	iter := src.MapRange()
 	for iter.Next() {
 		k := iter.Key()
@@ -439,18 +453,16 @@ func (d *deepCopy) deepCopy(dst, src reflect.Value, dstBase, srcBase unsafe.Poin
 	case reflect.Slice, reflect.Array:
 		// 保存类型缓存
 		if d.preheat {
-			of.nextComposite = newAllFieldFunc()
-			of.createFlag = sliceTypeSet
-			all.append(of)
-			of.createFlag = debugTypeSet
-			// 重置all
-			all = of.nextComposite
-			of.nextComposite = nil
+			all = addNextComposite(all, of)
 			defer saveToCache(all, dstSrcType{dst.Type(), src.Type()})
 		}
 		return d.cpySliceArray(dst, src, dstBase, srcBase, depth, of, all)
 
 	case reflect.Map:
+		if d.preheat {
+			all = addNextComposite(all, of)
+			defer saveToCache(all, dstSrcType{dst.Type(), src.Type()})
+		}
 		return d.cpyMap(dst, src, depth, of, all)
 
 	case reflect.Func:
@@ -460,14 +472,7 @@ func (d *deepCopy) deepCopy(dst, src reflect.Value, dstBase, srcBase unsafe.Poin
 		// 保存类型缓存
 		// var all *allFieldFunc
 		if d.preheat {
-			of.nextComposite = newAllFieldFunc()
-			of.createFlag = structTypeSet
-			all.append(of)
-			of.createFlag = emptyTypeSet
-			// 重置all
-			all = of.nextComposite
-			// 这里需要清除，不然会影响到后面的逻辑
-			of.nextComposite = nil
+			all = addNextComposite(all, of)
 			defer saveToCache(all, dstSrcType{dst.Type(), src.Type()})
 		}
 		return d.cpyStruct(dst, src, dstBase, srcBase, depth, of, all)
@@ -481,4 +486,15 @@ func (d *deepCopy) deepCopy(dst, src reflect.Value, dstBase, srcBase unsafe.Poin
 	default:
 		return d.cpyDefault(dst, src, dstBase, srcBase, depth, of, all)
 	}
+}
+
+func addNextComposite(all *allFieldFunc, of offsetAndFunc) (newAll *allFieldFunc) {
+	of.nextComposite = newAllFieldFunc()
+	of.createFlag = sliceTypeSet
+	all.append(of)
+	of.createFlag = debugTypeSet
+	// 重置all
+	newAll = of.nextComposite
+	of.nextComposite = nil
+	return
 }

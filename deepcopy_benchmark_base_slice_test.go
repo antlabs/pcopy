@@ -2,7 +2,7 @@ package deepcopy
 
 import "testing"
 
-func Benchmark_Use_CachePtr_BaseSlice_Deepcopy(b *testing.B) {
+func Benchmark_BaseSlice_Unsafe_Deepcopy(b *testing.B) {
 	var dst FastCopyDst_BaseSlice
 	err := Preheat(&dst, &testSrc_BaseSlice)
 	if err != nil {
@@ -58,7 +58,7 @@ func Benchmark_BaseSlice_RawCopy(b *testing.B) {
 	}
 }
 
-func Benchmark_miniCopy_Deepcopy(b *testing.B) {
+func Benchmark_BaseSlice_miniCopy(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		var dst FastCopyDst_BaseSlice
 		err := miniCopy(&dst, &testSrc_BaseSlice)
@@ -69,7 +69,7 @@ func Benchmark_miniCopy_Deepcopy(b *testing.B) {
 	}
 }
 
-func Benchmark_Reflect_Deepcopy(b *testing.B) {
+func Benchmark_BaseSlice_Reflect(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		var dst FastCopyDst_BaseSlice
 		err := CopyEx(&dst, &testSrc_BaseSlice)
