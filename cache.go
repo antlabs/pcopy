@@ -48,24 +48,9 @@ type offsetAndFunc struct {
 
 func saveToCache(fieldFunc *allFieldFunc, a dstSrcType) {
 	cacheAllFunc.LoadOrStore(a, fieldFunc)
-	// rdlock.Lock()
-	// defer rdlock.Unlock()
-	// if _, ok := cacheAllFunc[a]; ok {
-	// 	return
-	// }
-
-	// cacheAllFunc[a] = fieldFunc
 }
 
 func getSetFromCacheAndRun(a dstSrcType, dstAddr, srcAddr unsafe.Pointer) (exist bool) {
-	// rdlock.RLock()
-	// cacheFunc, ok := cacheAllFunc[a]
-	// if !ok {
-	// 	rdlock.RUnlock()
-	// 	return ok
-	// }
-	// rdlock.RUnlock()
-
 	v, ok := cacheAllFunc.Load(a)
 	if !ok {
 		return false
