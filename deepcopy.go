@@ -190,14 +190,14 @@ func (d *deepCopy) cpyMap(dst, src reflect.Value, depth int, of offsetAndFunc, a
 			// of.srcOffset = sub(src.UnsafeAddr(), uintptr(srcBase))
 			of.srcType = src.Type()
 			of.dstType = dst.Type()
-			of.set = getSetBaseSliceFunc(dst.Type().Elem().Kind())
-			of.baseSlice = true
-			of.createFlag = baseSliceTypeSet
+			of.set = getSetBaseMapFunc(src.Type().Key().Kind(), src.Type().Elem().Kind())
+			of.baseMap = true
+			of.createFlag = baseMapTypeSet
 			all.append(of)
 			return nil
 		}
 	}
-  
+
 	iter := src.MapRange()
 	for iter.Next() {
 		k := iter.Key()
@@ -438,7 +438,7 @@ func (d *deepCopy) deepCopy(dst, src reflect.Value, dstBase, srcBase unsafe.Poin
 		}
 	} else {
 		// 预热逻辑，先走白名单， 等稳定了，再走黑名单
-		if !isBaseType(src.Kind()) && src.Kind() != reflect.Struct && src.Kind() != reflect.Ptr && src.Kind() != reflect.Slice {
+		if !isBaseType(src.Kind()) && src.Kind() != reflect.Struct && src.Kind() != reflect.Ptr && src.Kind() != reflect.Slice && src.Kind() != reflect.Map {
 			panic(fmt.Sprintf("遇到未知的类型:%v", src.Kind()))
 			return nil
 		}
