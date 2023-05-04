@@ -3,7 +3,7 @@ package deepcopy
 import "testing"
 
 func Benchmark_BaseSlice_Unsafe_Deepcopy(b *testing.B) {
-	var dst FastCopyDst_BaseSlice
+	var dst DCopyDst_BaseSlice
 	err := Preheat(&dst, &testSrc_BaseSlice)
 	if err != nil {
 		b.Fatal(err)
@@ -11,7 +11,7 @@ func Benchmark_BaseSlice_Unsafe_Deepcopy(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		var dst FastCopyDst_BaseSlice
+		var dst DCopyDst_BaseSlice
 		err := CopyEx(&dst, &testSrc_BaseSlice, WithUsePreheat())
 		if err != nil {
 			b.Fatal(err)
@@ -22,7 +22,7 @@ func Benchmark_BaseSlice_Unsafe_Deepcopy(b *testing.B) {
 
 func Benchmark_BaseSlice_RawCopy(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		var dst FastCopyDst_BaseSlice
+		var dst DCopyDst_BaseSlice
 		dst.Bool = testSrc_BaseSlice.Bool
 		dst.Int = testSrc_BaseSlice.Int
 		dst.Int8 = testSrc_BaseSlice.Int8
@@ -60,7 +60,7 @@ func Benchmark_BaseSlice_RawCopy(b *testing.B) {
 
 func Benchmark_BaseSlice_miniCopy(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		var dst FastCopyDst_BaseSlice
+		var dst DCopyDst_BaseSlice
 		err := miniCopy(&dst, &testSrc_BaseSlice)
 		if err != nil {
 			b.Fatal(err)
@@ -71,7 +71,7 @@ func Benchmark_BaseSlice_miniCopy(b *testing.B) {
 
 func Benchmark_BaseSlice_Reflect(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		var dst FastCopyDst_BaseSlice
+		var dst DCopyDst_BaseSlice
 		err := CopyEx(&dst, &testSrc_BaseSlice)
 		if err != nil {
 			b.Fatal(err)

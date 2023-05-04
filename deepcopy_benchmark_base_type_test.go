@@ -5,15 +5,15 @@ import (
 	"testing"
 )
 
-func Benchmark_Use_CachePtr_Deepcopy(b *testing.B) {
-	var dst FastCopyDst
+func Benchmark_BaseType_Unsafe_Deepcopy(b *testing.B) {
+	var dst DCopyDst
 	err := Preheat(&dst, &testSrc)
 	if err != nil {
 		b.Fatal(err)
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		var dst FastCopyDst
+		var dst DCopyDst
 		err := CopyEx(&dst, &testSrc, WithUsePreheat())
 		if err != nil {
 			b.Fatal(err)
@@ -22,9 +22,9 @@ func Benchmark_Use_CachePtr_Deepcopy(b *testing.B) {
 	}
 }
 
-func Benchmark_RawCopy(b *testing.B) {
+func Benchmark_BaseType_RawCopy(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		var dst FastCopyDst
+		var dst DCopyDst
 		dst.Bool = testSrc.Bool
 		dst.Int = testSrc.Int
 		dst.Int8 = testSrc.Int8
@@ -83,10 +83,10 @@ func miniCopy(dst, src interface{}) error {
 	return json.Unmarshal(bytes, dst)
 }
 
-func Benchmark_MiniCopy(b *testing.B) {
+func Benchmark_BaseType_MiniCopy(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		// var dst testData
-		var dst FastCopyDst
+		var dst DCopyDst
 		err := miniCopy(&dst, &testSrc)
 		if err != nil {
 			b.Fatal(err)
@@ -95,10 +95,10 @@ func Benchmark_MiniCopy(b *testing.B) {
 	}
 }
 
-func Benchmark_DeepCopy(b *testing.B) {
+func Benchmark_BaseType_DeepCopy(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		// var dst testData
-		var dst FastCopyDst
+		var dst DCopyDst
 		err := CopyEx(&dst, &testSrc)
 		if err != nil {
 			b.Fatal(err)

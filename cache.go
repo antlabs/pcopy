@@ -2,6 +2,7 @@
 package deepcopy
 
 import (
+	"fmt"
 	"reflect"
 	"sync"
 	"unsafe"
@@ -28,6 +29,7 @@ const (
 	sliceTypeSet          // slice类型
 	baseSliceTypeSet      // 基础类型的slice
 	structTypeSet         // 结构体类型
+	baseMapTypeSet        // 基础类型的map
 	debugTypeSet          // debug类型
 )
 
@@ -41,6 +43,7 @@ type offsetAndFunc struct {
 	// 找到一个复合类型
 	nextComposite *allFieldFunc
 	baseSlice     bool // 是否是基础类型的slice
+	baseMap       bool // 是否是基础类型的map
 	createFlag    flag // 记录offsetAndFunc这个对象生成的触发点
 }
 
@@ -100,6 +103,14 @@ func (c *allFieldFunc) do(dstBaseAddr, srcBaseAddr unsafe.Pointer) {
 				v.set(add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset))
 				continue
 			}
+		case kind == reflect.Map:
+			if v.baseMap {
+				// 基础类型的map直接一把函数搞定
+				fmt.Printf("####### %p, %p", add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset))
+				v.set(add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset))
+				continue
+			}
+
 		case isBaseType(kind):
 			v.set(add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset))
 		}
