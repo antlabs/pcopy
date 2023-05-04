@@ -2,7 +2,6 @@
 package deepcopy
 
 import (
-	"fmt"
 	"reflect"
 	"sync"
 	"unsafe"
@@ -106,7 +105,6 @@ func (c *allFieldFunc) do(dstBaseAddr, srcBaseAddr unsafe.Pointer) {
 		case kind == reflect.Map:
 			if v.baseMap {
 				// 基础类型的map直接一把函数搞定
-				fmt.Printf("####### %p, %p", add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset))
 				v.set(add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset))
 				continue
 			}

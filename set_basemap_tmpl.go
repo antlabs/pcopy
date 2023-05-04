@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"go/format"
 	"html/template"
-	"os"
+	"io/ioutil"
 
 	"github.com/Masterminds/sprig/v3"
 )
@@ -169,5 +169,5 @@ func saveBaseMapFuncToFile(fileName string) error {
 		return fmt.Errorf("format code fail:%w", err)
 	}
 
-	return os.WriteFile(fileName, src, 0o666)
+	return ioutil.WriteFile(fileName, src, 0o666)
 }
