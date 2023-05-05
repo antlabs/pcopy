@@ -6,9 +6,11 @@ import (
 )
 
 type (
-	setFunc           func(dstAddr, srcAddr unsafe.Pointer)
-	setFuncTab        map[reflect.Kind]setFunc
-	setBaseMapFuncTab map[baseMapKind]setFunc
+	setUnsafeFunc     func(dstAddr, srcAddr unsafe.Pointer)
+	setReflectFunc    func(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt *options)
+	setUnsafeFuncTab  map[reflect.Kind]setUnsafeFunc
+	setReflectFuncTab map[reflect.Kind]setReflectFunc
+	setBaseMapFuncTab map[baseMapKind]setUnsafeFunc
 )
 
 type baseMapKind struct {

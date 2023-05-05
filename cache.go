@@ -37,7 +37,7 @@ type offsetAndFunc struct {
 	srcType   reflect.Type
 	dstOffset int
 	srcOffset int
-	set       setFunc
+	set       setUnsafeFunc
 
 	// 找到一个复合类型
 	nextComposite *allFieldFunc
@@ -50,13 +50,13 @@ func saveToCache(fieldFunc *allFieldFunc, a dstSrcType) {
 	cacheAllFunc.LoadOrStore(a, fieldFunc)
 }
 
-func getSetFromCacheAndRun(a dstSrcType, dstAddr, srcAddr unsafe.Pointer) (exist bool) {
+func getSetFromCacheAndRun(a dstSrcType, dstAddr, srcAddr unsafe.Pointer, opt *options) (exist bool) {
 	v, ok := cacheAllFunc.Load(a)
 	if !ok {
 		return false
 	}
 
-	v.(*allFieldFunc).do(dstAddr, srcAddr)
+	v.(*allFieldFunc).do(dstAddr, srcAddr, opt)
 	// cacheFunc.do(dstAddr, srcAddr)
 	return true
 }
@@ -70,7 +70,7 @@ func (af *allFieldFunc) append(fieldFunc offsetAndFunc) {
 	af.fieldFuncs = append(af.fieldFuncs, fieldFunc)
 }
 
-func (c *allFieldFunc) do(dstBaseAddr, srcBaseAddr unsafe.Pointer) {
+func (c *allFieldFunc) do(dstBaseAddr, srcBaseAddr unsafe.Pointer, opt *options) {
 	for _, v := range c.fieldFuncs {
 		var kind reflect.Kind
 
@@ -100,7 +100,7 @@ func (c *allFieldFunc) do(dstBaseAddr, srcBaseAddr unsafe.Pointer) {
 
 	next:
 		if v.nextComposite != nil {
-			v.nextComposite.do(dstBaseAddr, srcBaseAddr)
+			v.nextComposite.do(dstBaseAddr, srcBaseAddr, opt)
 			continue
 		}
 	}
