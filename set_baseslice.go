@@ -6,7 +6,7 @@ import (
 	"unsafe"
 )
 
-var copyBaseSliceTab = setFuncTab{
+var copyBaseSliceTab = setUnsafeFuncTab{
 	reflect.Bool:       setBaseSliceBool,
 	reflect.Int:        setBaseSliceInt,
 	reflect.Int8:       setBaseSliceInt8,
@@ -25,7 +25,7 @@ var copyBaseSliceTab = setFuncTab{
 	reflect.Complex128: setBaseSliceComplex128,
 }
 
-func getSetBaseSliceFunc(t reflect.Kind) setFunc {
+func getSetBaseSliceFunc(t reflect.Kind) setUnsafeFunc {
 	f, ok := copyBaseSliceTab[t]
 	if !ok {
 		panic(fmt.Sprintf("not support type:%T", t))

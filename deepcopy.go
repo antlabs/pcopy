@@ -71,7 +71,7 @@ func CopyEx(dst, src interface{}, opts ...Option) error {
 		srcValue = srcValue.Elem()
 
 		// 从cache load出类型直接执行
-		exist := getSetFromCacheAndRun(dstSrcType{dst: dstValue.Type(), src: srcValue.Type()}, dstAddr, srcAddr)
+		exist := getSetFromCacheAndRun(dstSrcType{dst: dstValue.Type(), src: srcValue.Type()}, dstAddr, srcAddr, &opt)
 		if exist {
 			return nil
 		}
@@ -126,7 +126,6 @@ func (d *deepCopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe
 
 	// 被拷贝dst类型是slice, 长度是0, src的长度有值
 	if dst.Kind() == reflect.Slice && dst.Len() == 0 && src.Len() > 0 {
-
 		dstElemType := dst.Type().Elem()
 		newDst := reflect.MakeSlice(reflect.SliceOf(dstElemType), l, l)
 		dst.Set(newDst)
@@ -145,6 +144,14 @@ func (d *deepCopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe
 			all.append(of)
 			return nil
 		}
+
+		// 如果是结构体类型的slice, 也即是复合slice
+		of.srcType = src.Type()
+		of.dstType = dst.Type()
+		// of.set = getSetCompositeSliceFunc(dst.Type().Elem())
+		of.baseSlice = false
+		all.append(of)
+		return nil
 	}
 
 	for i := 0; i < l; i++ {
@@ -284,11 +291,12 @@ func (d *deepCopy) cpyStruct(dst, src reflect.Value, dstBase, srcBase unsafe.Poi
 
 	if d.usePreheat {
 		// 从cache load出类型直接执行
-		exist := getSetFromCacheAndRun(dstSrcType{dst: dst.Type(), src: src.Type()}, dstBase, srcBase)
+		exist := getSetFromCacheAndRun(dstSrcType{dst: dst.Type(), src: src.Type()}, dstBase, srcBase, &d.options)
 		if exist {
 			return nil
 		}
 	}
+
 	typ := src.Type()
 	for i, n := 0, src.NumField(); i < n; i++ {
 		sf := typ.Field(i)

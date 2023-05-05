@@ -115,7 +115,7 @@ var baseMapTab = setBaseMapFuncTab{
 {{end}}
 }
 
-func getSetBaseMapFunc(key reflect.Kind, val reflect.Kind) setFunc {
+func getSetBaseMapFunc(key reflect.Kind, val reflect.Kind) setUnsafeFunc {
 	k := baseMapKind{key: key, val: val}
 	f, ok := baseMapTab[k]
 	if !ok {

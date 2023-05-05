@@ -6,7 +6,7 @@ import (
 	"unsafe"
 )
 
-var copyTab = setFuncTab{
+var copyTab = setUnsafeFuncTab{
 	reflect.Bool:       setBool,
 	reflect.Int:        setInt,
 	reflect.Int8:       setInt8,
@@ -25,7 +25,7 @@ var copyTab = setFuncTab{
 	reflect.Complex128: setComplex128,
 }
 
-func getSetFunc(t reflect.Kind) setFunc {
+func getSetFunc(t reflect.Kind) setUnsafeFunc {
 	f, ok := copyTab[t]
 	if !ok {
 		panic(fmt.Sprintf("not support type:%T", t))
