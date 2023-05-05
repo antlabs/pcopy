@@ -106,6 +106,10 @@ func (c *allFieldFunc) do(dstBaseAddr, srcBaseAddr unsafe.Pointer, opt *options)
 	}
 }
 
+func addOffset(addr unsafe.Pointer, offset uintptr, i int) unsafe.Pointer {
+	return add(addr, int(offset)*i)
+}
+
 // 基址+offset
 func add(addr unsafe.Pointer, offset int) unsafe.Pointer {
 	return unsafe.Pointer(uintptr(addr) + uintptr(offset))
