@@ -23,7 +23,7 @@ func Test_FuncToFunc(t *testing.T) {
 		A: func() { fmt.Printf("hello") },
 	}
 
-	Copy(&d, &s).Do()
+	Copy(&d, &s)
 
 	// 如果指向的是同一个地址的函数，注释的方法是不行的
 	// assert.Equal(t, d.A, s.A)
@@ -39,7 +39,7 @@ func Test_Func_Special(t *testing.T) {
 	for _, tc := range []testCase{
 		// dst 里面没有Add成员变量
 		func() testCase {
-			Copy(new(int), fn{Add: func() {}}).Do()
+			Copy(new(int), fn{Add: func() {}})
 			return testCase{true, true}
 		}(),
 		func() testCase {
@@ -48,7 +48,7 @@ func Test_Func_Special(t *testing.T) {
 				Add int
 			}
 
-			Copy(&dstFn{}, &fn{Add: func() {}}).Do()
+			Copy(&dstFn{}, &fn{Add: func() {}})
 			return testCase{true, true}
 		}(),
 	} {

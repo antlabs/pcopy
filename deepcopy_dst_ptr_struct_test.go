@@ -29,7 +29,7 @@ func Test_DstPtr_Struct(t *testing.T) {
 		TestDstPtr: TestDstPtr2{X: 3, Y: 4},
 	}
 
-	Copy(&dst, &src).Do()
+	Copy(&dst, &src)
 	assert.NotNil(t, dst.TestDstPtr)
 	assert.Equal(t, dst.TestDstPtr.X, 3)
 	assert.Equal(t, dst.TestDstPtr.Y, 4)

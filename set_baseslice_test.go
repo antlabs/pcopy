@@ -92,7 +92,7 @@ func TestDCopy_BaseWithSlice(t *testing.T) {
 	// fmt.Printf("%d\n", getSliceHeaderPtr(unsafe.Pointer(&dst.SliceBool)).Len)
 	// fmt.Printf("%d\n", getSliceHeaderPtr(unsafe.Pointer(&dst.SliceBool)).Cap)
 
-	err = CopyEx(&dst, &testSrc_BaseSlice, WithUsePreheat())
+	err = Copy(&dst, &testSrc_BaseSlice, WithUsePreheat())
 	assert.NoError(t, err)
 
 	var dst2 DCopyDst_BaseSlice = DCopyDst_BaseSlice(testSrc_BaseSlice)

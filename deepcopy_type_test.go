@@ -58,7 +58,7 @@ func Test_TypeCase(t *testing.T) {
 				S: "test all",
 			}
 
-			Copy(&d, &src).Do()
+			Copy(&d, &src)
 			return testCase{got: d, need: src}
 		}(),
 	} {

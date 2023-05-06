@@ -76,7 +76,7 @@ func Test_Fix2(t *testing.T) {
 		Pos:     10,
 		Offset:  11,
 	}
-	err := Copy(&r, &resp).Do()
+	err := Copy(&r, &resp)
 	assert.NoError(t, err)
 	assert.NotEqual(t, r, nil)
 	assert.NotEqual(t, len(r.List), 0)

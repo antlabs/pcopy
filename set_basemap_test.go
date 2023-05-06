@@ -170,7 +170,7 @@ func Test_SetBaseMap(t *testing.T) {
 	dst = DCopyDst_BaseMap{}
 	assert.NoError(t, err)
 
-	err = CopyEx(&dst, &testSrc_BaseMap, WithUsePreheat())
+	err = Copy(&dst, &testSrc_BaseMap, WithUsePreheat())
 	assert.NoError(t, err)
 
 	var dst2 DCopyDst_BaseMap = DCopyDst_BaseMap(testSrc_BaseMap)

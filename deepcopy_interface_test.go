@@ -22,7 +22,7 @@ func Test_Inteface(t *testing.T) {
 				S: "hello",
 			}
 
-			Copy(&d, &src).Do()
+			Copy(&d, &src)
 			return testCase{got: d, need: src}
 		}(),
 	} {
@@ -44,7 +44,7 @@ func Test_Interface_Special(t *testing.T) {
 				I interface{}
 			}
 
-			Copy(&dst{}, &src{I: "hello"}).Do()
+			Copy(&dst{}, &src{I: "hello"})
 			return testCase{}
 		}(),
 
@@ -58,7 +58,7 @@ func Test_Interface_Special(t *testing.T) {
 				I interface{}
 			}
 
-			Copy((*int)(nil), (*int)(nil)).Do()
+			Copy((*int)(nil), (*int)(nil))
 			return testCase{}
 		}(),
 	} {

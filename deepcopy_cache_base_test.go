@@ -58,7 +58,7 @@ func TestDCopyBase(t *testing.T) {
 	assert.NoError(t, err)
 	dst = DCopyDst{}
 
-	err = CopyEx(&dst, &testSrc, WithUsePreheat())
+	err = Copy(&dst, &testSrc, WithUsePreheat())
 
 	var dst2 DCopyDst
 	dst2.Bool = true
@@ -370,7 +370,7 @@ func Test_StructWithStruct(t *testing.T) {
 	dst = DCopyDst_BaseStruct{}
 
 	// fmt.Printf("%v\n", cacheAllFunc)
-	err = CopyEx(&dst, &testBaseStructSrc, WithUsePreheat())
+	err = Copy(&dst, &testBaseStructSrc, WithUsePreheat())
 
 	// 直接赋值对于slice是浅拷贝，这里只是为了测试
 	dst2 := testBaseStructSrc

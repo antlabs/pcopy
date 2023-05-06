@@ -27,7 +27,7 @@ func Test_SliceToArray(t *testing.T) {
 			var need dst
 			need.A = [3]int{1, 2, 3}
 
-			Copy(&d, &s).Do()
+			Copy(&d, &s)
 			return testCase{got: d, need: need}
 		}(),
 	} {
@@ -54,7 +54,7 @@ func Test_SliceToArrayEx(t *testing.T) {
 			var need dst
 			need.A = [3]int{1, 2, 3}
 
-			err := CopyEx(&d, &s)
+			err := Copy(&d, &s)
 			assert.NoError(t, err)
 			return testCase{got: d, need: need}
 		}(),
@@ -83,7 +83,7 @@ func Test_ArrayToSlice(t *testing.T) {
 			var need dst
 			need.A = s.A[:]
 
-			Copy(&d, &s).Do()
+			Copy(&d, &s)
 			return testCase{got: d, need: need}
 		}(),
 	} {
@@ -108,14 +108,14 @@ func Test_ArraySlice_Special(t *testing.T) {
 			s := src{
 				A: [3]int{1, 2, 3},
 			}
-			Copy(&d, &s).Do()
+			Copy(&d, &s)
 			return testCase{}
 		}(),
 
 		func() testCase {
 			a1 := []int{1, 2, 3, 4, 5, 6}
 			a2 := []string{}
-			Copy(&a2, &a1).Do()
+			Copy(&a2, &a1)
 			return testCase{}
 		}(),
 	} {
@@ -140,14 +140,14 @@ func Test_ArraySlice_SpecialCopyEx(t *testing.T) {
 			s := src{
 				A: [3]int{1, 2, 3},
 			}
-			Copy(&d, &s).Do()
+			Copy(&d, &s)
 			return testCase{}
 		}(),
 
 		func() testCase {
 			a1 := []int{1, 2, 3, 4, 5, 6}
 			a2 := []string{}
-			CopyEx(&a2, &a1)
+			Copy(&a2, &a1)
 			return testCase{}
 		}(),
 	} {

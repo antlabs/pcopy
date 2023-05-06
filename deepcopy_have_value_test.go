@@ -15,6 +15,6 @@ type testHaveValue struct {
 func Test_have_value(t *testing.T) {
 	t1 := testHaveValue{Int: 3, Float32: 3.14}
 	t2 := testHaveValue{}
-	Copy(&t1, &t2).Do()
+	Copy(&t1, &t2)
 	assert.Equal(t, t1, testHaveValue{3, 3.14})
 }

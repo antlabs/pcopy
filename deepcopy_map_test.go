@@ -34,7 +34,7 @@ func Test_MapToMap(t *testing.T) {
 		A: a,
 	}
 
-	Copy(&d, &s).Do()
+	Copy(&d, &s)
 	assert.Equal(t, d, dst{A: a, B: b})
 }
 
@@ -54,7 +54,7 @@ func Test_Map_Special(t *testing.T) {
 			}
 
 			var dst map[string]mVal
-			Copy(&dst, &src).Do()
+			Copy(&dst, &src)
 			return testCase{got: dst, need: src}
 		}(),
 		// dst的地址不是指针，没有发生panic
@@ -64,7 +64,7 @@ func Test_Map_Special(t *testing.T) {
 			}
 
 			var dst map[string]mVal
-			Copy(dst, src).Do()
+			Copy(dst, src)
 			return testCase{}
 		}(),
 		func() testCase {
@@ -72,7 +72,7 @@ func Test_Map_Special(t *testing.T) {
 				"1": {ID: 1, Name: "name:1"},
 			}
 
-			Copy(new(int), &src).Do()
+			Copy(new(int), &src)
 			return testCase{}
 		}(),
 		// key相同,value不同
@@ -84,7 +84,7 @@ func Test_Map_Special(t *testing.T) {
 				1: 1,
 			}
 
-			Copy(&dst, &src).Do()
+			Copy(&dst, &src)
 			return testCase{}
 		}(),
 		// key不同，value不同
@@ -96,7 +96,7 @@ func Test_Map_Special(t *testing.T) {
 				1: 64,
 			}
 
-			Copy(&dst, &src).Do()
+			Copy(&dst, &src)
 			return testCase{}
 		}(),
 	} {

@@ -17,7 +17,7 @@ type testBetterToUse struct {
 func Test_srcPtr_DstBaseType(t *testing.T) {
 	t1 := testBetterToUse{Str: "hello", ID: 1}
 	t2 := testBetterToUse{}
-	err := Copy(&t2, t1).Do()
+	err := Copy(&t2, t1)
 	assert.NoError(t, err)
 	assert.Equal(t, t1, t2)
 }
@@ -25,6 +25,6 @@ func Test_srcPtr_DstBaseType(t *testing.T) {
 func Test_srcPtr_DstBaseType_NotPanics(t *testing.T) {
 	t1 := testBetterToUse{Str: "hello", ID: 1}
 	assert.NotPanics(t, func() {
-		Copy((*testBetterToUse)(nil), t1).Do()
+		Copy((*testBetterToUse)(nil), t1)
 	})
 }
