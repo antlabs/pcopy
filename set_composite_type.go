@@ -7,28 +7,40 @@ import (
 )
 
 var copyCompositeSliceTab = setReflectFuncTab{
-	reflect.Struct: setCompositeSliceStruct,
-	reflect.Map:    setCompositeSliceMap,
+	// 这是一个复合类型，最外层是slice
+	reflect.Slice: setCompositeSlice,
+	// 这是一个复合类型，最外层是map
+	reflect.Map: setCompositeMap,
+	// 这是一个复合类型，最外层是interface
+	reflect.Interface: setCompositeInterface,
 }
 
-func setCompositeSliceMap(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt *options) error {
+// TODO 再优化
+func setCompositeInterface(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt *options) error {
 	srcVal := reflect.NewAt(srcType, src)
-	if srcVal.Len() == 0 {
+	if srcVal.IsNil() {
 		return nil
 	}
 
 	dstVal := reflect.NewAt(dstType, dst)
-	if dstVal.Cap() < srcVal.Len() {
-	}
+	// exits := getSetFromCacheAndRun(key, dst, src, opt)
+	// if exits {
+	// }
+	return copyInner(dstVal.Interface(), srcVal.Interface(), opt)
+}
+
+func setCompositeMap(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt *options) error {
 	return nil
 }
 
-func setCompositeSliceStruct(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt *options) error {
+func setCompositeSlice(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt *options) error {
+	// src转成reflect.Value
 	srcVal := reflect.NewAt(srcType, src)
 	if srcVal.Len() == 0 {
 		return nil
 	}
 
+	// dst转成reflect.Value
 	dstVal := reflect.NewAt(dstType, dst)
 	if dstVal.Cap() < srcVal.Len() {
 		dstVal.Set(reflect.MakeSlice(dstType, srcVal.Len(), srcVal.Len()))
