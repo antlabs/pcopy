@@ -28,10 +28,7 @@ const (
 
 // deepCopy结构体
 type deepCopy struct {
-	dst reflect.Value
-	src reflect.Value
 	options
-	err error
 }
 
 func Copy(dst, src interface{}, opts ...Option) error {
@@ -82,15 +79,13 @@ func Copy(dst, src interface{}, opts ...Option) error {
 	}
 
 	d := deepCopy{
-		dst:     dstValue,
-		src:     srcValue,
 		options: opt,
 	}
 	if opt.maxDepth == 0 {
 		d.maxDepth = noDepthLimited
 	}
 
-	return d.deepCopy(d.dst, d.src, dstAddr, srcAddr, 0, offsetAndFunc{}, all)
+	return d.deepCopy(dstValue, srcValue, dstAddr, srcAddr, 0, offsetAndFunc{}, all)
 }
 
 // 需要的tag name
@@ -429,10 +424,6 @@ func (d *deepCopy) cpyDefault(dst, src reflect.Value, dstBase, srcBase unsafe.Po
 }
 
 func (d *deepCopy) deepCopy(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, depth int, of offsetAndFunc, all *allFieldFunc) error {
-	if d.err != nil {
-		return d.err
-	}
-
 	// 预热的时间一定要绕开这个判断, 默认src都有值
 	// 寻找和dst匹配的字段
 	if !(d.preheat || d.usePreheat) {
