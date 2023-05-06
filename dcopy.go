@@ -25,8 +25,8 @@ var zeroUintptr = unsafe.Pointer(uintptr(0))
 
 // 优化下面的代码，让性能变得更高
 const (
-	noDepthLimited = -1
-	noTagLimit     = ""
+	// noDepthLimited = -1
+	noTagLimit = ""
 )
 
 // dcopy结构体
