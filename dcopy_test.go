@@ -13,57 +13,57 @@ type testCase struct {
 }
 
 // 最大深度
-func Test_MaxDepth(t *testing.T) {
-	type depth struct {
-		First string
-		Data  struct {
-			Result string
-		}
-		Err struct {
-			ErrMsg struct {
-				Message string
-			}
-		}
-	}
+// func Test_MaxDepth(t *testing.T) {
+// 	type depth struct {
+// 		First string
+// 		Data  struct {
+// 			Result string
+// 		}
+// 		Err struct {
+// 			ErrMsg struct {
+// 				Message string
+// 			}
+// 		}
+// 	}
 
-	src := depth{}
-	src.First = "first"
-	src.Data.Result = "test"
-	src.Err.ErrMsg.Message = "good"
+// 	src := depth{}
+// 	src.First = "first"
+// 	src.Data.Result = "test"
+// 	src.Err.ErrMsg.Message = "good"
 
-	for _, tc := range []testCase{
-		func() testCase {
-			d := depth{}
-			err := Copy(&d, &src, WithMaxDepth(2))
-			assert.NoError(t, err)
-			if err != nil {
-				return testCase{}
-			}
-			need := depth{}
-			need.First = "first"
-			need.Data.Result = "test"
-			return testCase{got: d, need: need}
-		}(),
-		func() testCase {
-			d := depth{}
-			Copy(&d, &src, WithMaxDepth(1))
-			need := depth{}
-			need.First = "first"
-			return testCase{got: d, need: need}
-		}(),
-		func() testCase {
-			d := depth{}
-			Copy(&d, &src, WithMaxDepth(3))
-			need := depth{}
-			need.First = "first"
-			need.Data.Result = "test"
-			need.Err.ErrMsg.Message = "good"
-			return testCase{got: d, need: need}
-		}(),
-	} {
-		assert.Equal(t, tc.need, tc.got)
-	}
-}
+// 	for _, tc := range []testCase{
+// 		func() testCase {
+// 			d := depth{}
+// 			err := Copy(&d, &src, WithMaxDepth(2))
+// 			assert.NoError(t, err)
+// 			if err != nil {
+// 				return testCase{}
+// 			}
+// 			need := depth{}
+// 			need.First = "first"
+// 			need.Data.Result = "test"
+// 			return testCase{got: d, need: need}
+// 		}(),
+// 		func() testCase {
+// 			d := depth{}
+// 			Copy(&d, &src, WithMaxDepth(1))
+// 			need := depth{}
+// 			need.First = "first"
+// 			return testCase{got: d, need: need}
+// 		}(),
+// 		func() testCase {
+// 			d := depth{}
+// 			Copy(&d, &src, WithMaxDepth(3))
+// 			need := depth{}
+// 			need.First = "first"
+// 			need.Data.Result = "test"
+// 			need.Err.ErrMsg.Message = "good"
+// 			return testCase{got: d, need: need}
+// 		}(),
+// 	} {
+// 		assert.Equal(t, tc.need, tc.got)
+// 	}
+// }
 
 // 测试设置tag的情况
 func Test_TagName(t *testing.T) {

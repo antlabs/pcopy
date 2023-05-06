@@ -90,9 +90,9 @@ func copyInner(dst, src interface{}, opt *options) error {
 	d := dcopy{
 		options: *opt,
 	}
-	if opt.maxDepth == 0 {
-		d.maxDepth = noDepthLimited
-	}
+	// if opt.maxDepth == 0 {
+	// 	d.maxDepth = noDepthLimited
+	// }
 
 	return d.dcopy(dstValue, srcValue, dstAddr, srcAddr, 0, offsetAndFunc{}, all)
 }
@@ -447,10 +447,10 @@ func (d *dcopy) dcopy(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, d
 		}
 	}
 
-	// 检查递归深度
-	if d.maxDepth != noDepthLimited && depth > d.maxDepth {
-		return nil
-	}
+	// // 检查递归深度
+	// if d.maxDepth != noDepthLimited && depth > d.maxDepth {
+	// 	return nil
+	// }
 
 	switch src.Kind() {
 	case reflect.Slice, reflect.Array:
