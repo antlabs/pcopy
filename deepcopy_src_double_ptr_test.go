@@ -24,7 +24,7 @@ func Test_Src_DoublePtr_Test(t *testing.T) {
 	var m2 Msg
 	// dst(m2) 是单指针
 	// src(m1Ptr) 是双指针
-	err := Copy(&m2, &m1Ptr).Do()
+	err := Copy(&m2, &m1Ptr)
 
 	assert.NoError(t, err)
 	assert.Equal(t, m1, m2)
@@ -39,7 +39,7 @@ func Test_Src_DoublePtr_Test_CopyEx(t *testing.T) {
 	var m2 Msg
 	// dst(m2) 是单指针
 	// src(m1Ptr) 是双指针
-	err := CopyEx(&m2, &m1Ptr)
+	err := Copy(&m2, &m1Ptr)
 
 	assert.NoError(t, err)
 	assert.Equal(t, m1, m2)

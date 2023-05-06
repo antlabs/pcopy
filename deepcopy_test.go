@@ -34,7 +34,7 @@ func Test_MaxDepth(t *testing.T) {
 	for _, tc := range []testCase{
 		func() testCase {
 			d := depth{}
-			err := Copy(&d, &src).MaxDepth(2).Do()
+			err := Copy(&d, &src, WithMaxDepth(2))
 			assert.NoError(t, err)
 			if err != nil {
 				return testCase{}
@@ -46,14 +46,14 @@ func Test_MaxDepth(t *testing.T) {
 		}(),
 		func() testCase {
 			d := depth{}
-			Copy(&d, &src).MaxDepth(1).Do()
+			Copy(&d, &src, WithMaxDepth(1))
 			need := depth{}
 			need.First = "first"
 			return testCase{got: d, need: need}
 		}(),
 		func() testCase {
 			d := depth{}
-			Copy(&d, &src).MaxDepth(3).Do()
+			Copy(&d, &src, WithMaxDepth(3))
 			need := depth{}
 			need.First = "first"
 			need.Data.Result = "test"
@@ -81,7 +81,7 @@ func Test_TagName(t *testing.T) {
 	for _, tc := range []testCase{
 		func() testCase {
 			d := tagName{}
-			Copy(&d, &src).RegisterTagName("copy").Do()
+			Copy(&d, &src, WithTagName("copy"))
 			need := tagName{}
 			need.First = "first"
 			return testCase{got: d, need: need}
@@ -106,7 +106,7 @@ func Test_Special(t *testing.T) {
 
 			d := dst{}
 			s := src{Sex: "m"}
-			Copy(&d, &s).Do()
+			Copy(&d, &s)
 			return testCase{got: d, need: d}
 		}(),
 		func() testCase {
@@ -121,11 +121,11 @@ func Test_Special(t *testing.T) {
 
 			d := dst{}
 			s := src{Sex: "m"}
-			Copy(&d, &s).Do()
+			Copy(&d, &s)
 			return testCase{got: d, need: d}
 		}(),
 		func() testCase {
-			Copy(new(int), nil).Do()
+			Copy(new(int), nil)
 			return testCase{got: true, need: true}
 		}(),
 	} {
@@ -148,7 +148,7 @@ func Test_Cycle(t *testing.T) {
 			s.P1 = &s
 
 			d := src2{}
-			return Copy(&d, &s).Do()
+			return Copy(&d, &s)
 		}(),
 	} {
 		assert.Error(t, e)

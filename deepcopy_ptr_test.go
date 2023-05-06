@@ -24,7 +24,7 @@ func Test_Ptr_OK(t *testing.T) {
 
 			*src.Iptr = 3
 			*src.Fptr = 3.3
-			Copy(&d, &src).Do()
+			Copy(&d, &src)
 			return testCase{got: d, need: src}
 		}(),
 	} {
@@ -48,7 +48,7 @@ func Test_Ptr_OKCopyEx(t *testing.T) {
 
 			*src.Iptr = 3
 			*src.Fptr = 3.3
-			err := CopyEx(&d, &src)
+			err := Copy(&d, &src)
 			assert.NoError(t, err)
 			return testCase{got: d, need: src}
 		}(),
@@ -63,13 +63,13 @@ func Test_Ptr_Special(t *testing.T) {
 	for _, tc := range []testCase{
 		// dst 是空指针
 		func() testCase {
-			Copy((*int)(nil), new(int)).Do()
+			Copy((*int)(nil), new(int))
 			return testCase{}
 		}(),
 
 		// dst, src是不同类型
 		func() testCase {
-			Copy("hello", new(int)).Do()
+			Copy("hello", new(int))
 			return testCase{}
 		}(),
 		// dst 是双指针
@@ -78,7 +78,7 @@ func Test_Ptr_Special(t *testing.T) {
 			dst := 0
 			dstPtr := &dst
 			dstPtrPtr := &dstPtr
-			err := Copy(dstPtrPtr, &n).Do()
+			err := Copy(dstPtrPtr, &n)
 			assert.NoError(t, err)
 			return testCase{}
 		}(),

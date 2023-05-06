@@ -12,7 +12,7 @@ func Benchmark_BaseSlice_Unsafe_Deepcopy(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		var dst DCopyDst_BaseSlice
-		err := CopyEx(&dst, &testSrc_BaseSlice, WithUsePreheat())
+		err := Copy(&dst, &testSrc_BaseSlice, WithUsePreheat())
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -72,7 +72,7 @@ func Benchmark_BaseSlice_miniCopy(b *testing.B) {
 func Benchmark_BaseSlice_Reflect(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		var dst DCopyDst_BaseSlice
-		err := CopyEx(&dst, &testSrc_BaseSlice)
+		err := Copy(&dst, &testSrc_BaseSlice)
 		if err != nil {
 			b.Fatal(err)
 		}

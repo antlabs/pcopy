@@ -12,7 +12,7 @@ func Benchmark_BaseMap_Unsafe_Deepcopy(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		var dst DCopyDst_BaseMap
-		err := CopyEx(&dst, &testSrc_BaseMap, WithUsePreheat())
+		err := Copy(&dst, &testSrc_BaseMap, WithUsePreheat())
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -126,7 +126,7 @@ func Benchmark_BaseMap_miniCopy(b *testing.B) {
 func Benchmark_BaseMap_Reflect(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		var dst DCopyDst_BaseMap
-		err := CopyEx(&dst, &testSrc_BaseMap)
+		err := Copy(&dst, &testSrc_BaseMap)
 		if err != nil {
 			b.Fatal(err)
 		}

@@ -19,7 +19,7 @@ func Test_Struct_Special(t *testing.T) {
 
 			type src dst
 
-			Copy(&dst{}, &src{id: 3}).Do()
+			Copy(&dst{}, &src{id: 3})
 			return testCase{}
 		}(),
 		// 测试内嵌结构体的情况
@@ -39,7 +39,7 @@ func Test_Struct_Special(t *testing.T) {
 
 			var d dst
 			s := src{core: core{ID: 3, Name: "name"}}
-			Copy(&d, &s).Do()
+			Copy(&d, &s)
 			return testCase{got: d, need: (dst)(s)}
 		}(),
 	} {
@@ -58,7 +58,7 @@ func Test_Struct_SpecialCopyEx(t *testing.T) {
 
 			type src dst
 
-			Copy(&dst{}, &src{id: 3}).Do()
+			Copy(&dst{}, &src{id: 3})
 			return testCase{}
 		}(),
 		// 测试内嵌结构体的情况
@@ -78,7 +78,7 @@ func Test_Struct_SpecialCopyEx(t *testing.T) {
 
 			var d dst
 			s := src{core: core{ID: 3, Name: "name"}}
-			err := CopyEx(&d, &s)
+			err := Copy(&d, &s)
 			assert.NoError(t, err)
 			return testCase{got: d, need: (dst)(s)}
 		}(),

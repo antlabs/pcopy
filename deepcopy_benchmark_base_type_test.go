@@ -14,7 +14,7 @@ func Benchmark_BaseType_Unsafe_Deepcopy(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		var dst DCopyDst
-		err := CopyEx(&dst, &testSrc, WithUsePreheat())
+		err := Copy(&dst, &testSrc, WithUsePreheat())
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -99,7 +99,7 @@ func Benchmark_BaseType_DeepCopy(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		// var dst testData
 		var dst DCopyDst
-		err := CopyEx(&dst, &testSrc)
+		err := Copy(&dst, &testSrc)
 		if err != nil {
 			b.Fatal(err)
 		}

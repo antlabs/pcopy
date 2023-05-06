@@ -34,7 +34,7 @@ type deepCopy struct {
 	err error
 }
 
-func CopyEx(dst, src interface{}, opts ...Option) error {
+func Copy(dst, src interface{}, opts ...Option) error {
 	if dst == nil || src == nil {
 		return fmt.Errorf("%w:nil", ErrUnsupportedType)
 	}
@@ -96,11 +96,6 @@ func CopyEx(dst, src interface{}, opts ...Option) error {
 // 需要的tag name
 func haveTagName(curTabName string) bool {
 	return len(curTabName) > 0
-}
-
-// Do() 开干
-func (d *deepCopy) Do() error {
-	return d.deepCopy(d.dst, d.src, zeroUintptr, zeroUintptr, 0, offsetAndFunc{}, nil)
 }
 
 // 判断是array或slice类型
