@@ -11,21 +11,22 @@ var copyCompositeSliceTab = setReflectFuncTab{
 	reflect.Map:    setCompositeSliceMap,
 }
 
-func setCompositeSliceMap(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt *options) {
+func setCompositeSliceMap(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt *options) error {
 	srcVal := reflect.NewAt(srcType, src)
 	if srcVal.Len() == 0 {
-		return
+		return nil
 	}
 
 	dstVal := reflect.NewAt(dstType, dst)
 	if dstVal.Cap() < srcVal.Len() {
 	}
+	return nil
 }
 
-func setCompositeSliceStruct(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt *options) {
+func setCompositeSliceStruct(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt *options) error {
 	srcVal := reflect.NewAt(srcType, src)
 	if srcVal.Len() == 0 {
-		return
+		return nil
 	}
 
 	dstVal := reflect.NewAt(dstType, dst)
@@ -47,13 +48,10 @@ func setCompositeSliceStruct(dstType, srcType reflect.Type, dst, src unsafe.Poin
 				panic(fmt.Sprintf("not support type:%v", key))
 			}
 		}
-		return
+		return nil
 	}
 
-	// TODO 这里进反射逻辑
-	for i := 0; i < srcVal.Len(); i++ {
-		dstVal.Index(i).Set(srcVal.Index(i))
-	}
+	return copyInner(dstVal.Interface(), srcVal.Interface(), opt)
 }
 
 func getSetCompositeSliceFunc(t reflect.Kind) setUnsafeFunc {
