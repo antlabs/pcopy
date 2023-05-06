@@ -1,5 +1,5 @@
 // Copyright [2020-2023] [guonaihong]
-package deepcopy
+package dcopy
 
 import (
 	"reflect"

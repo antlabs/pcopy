@@ -1,5 +1,5 @@
 // Copyright [2020-2023] [guonaihong]
-package deepcopy
+package dcopy
 
 import (
 	"testing"
@@ -14,7 +14,7 @@ type Msg struct {
 }
 
 // 测试src是双指针的情况
-// 为了提升deepcopy库的兼容性, src是双指针, dst是单指针, 也可以正常拷贝
+// 为了提升dcopy库的兼容性, src是双指针, dst是单指针, 也可以正常拷贝
 func Test_Src_DoublePtr_Test(t *testing.T) {
 	m1 := Msg{FromUid: 1, ToUid: 2, Msg: "1to2"}
 

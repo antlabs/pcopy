@@ -1,4 +1,4 @@
-package deepcopy
+package dcopy
 
 import (
 	"bytes"
@@ -11,7 +11,7 @@ import (
 )
 
 var baseMapFuncTmpl = `
-package deepcopy
+package dcopy
 
 import (
 	"fmt"

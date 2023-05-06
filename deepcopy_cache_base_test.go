@@ -1,4 +1,4 @@
-package deepcopy
+package dcopy
 
 import (
 	"reflect"
@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// dcopy指优化原来deepcopy的优化版本，正式发布也行会改名为dcopy
+// dcopy指优化原来dcopy的优化版本，正式发布也行会改名为dcopy
 type DCopyDst struct {
 	// 所有基础类型
 	Bool    bool
