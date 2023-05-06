@@ -66,7 +66,7 @@ func setCompositeSlice(dstType, srcType reflect.Type, dst, src unsafe.Pointer, o
 	return copyInner(dstVal.Interface(), srcVal.Interface(), opt)
 }
 
-func getSetCompositeSliceFunc(t reflect.Kind) setUnsafeFunc {
+func getSetCompositeFunc(t reflect.Kind) setUnsafeFunc {
 	f, ok := copyBaseSliceTab[t]
 	if !ok {
 		panic(fmt.Sprintf("not support type:%T", t))
