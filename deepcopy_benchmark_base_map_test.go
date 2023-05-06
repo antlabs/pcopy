@@ -1,8 +1,8 @@
-package deepcopy
+package dcopy
 
 import "testing"
 
-func Benchmark_BaseMap_Unsafe_Deepcopy(b *testing.B) {
+func Benchmark_BaseMap_Unsafe_dcopy(b *testing.B) {
 	var dst DCopyDst_BaseMap
 	err := Preheat(&dst, &testSrc_BaseMap)
 	if err != nil {

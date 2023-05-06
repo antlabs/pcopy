@@ -1,8 +1,8 @@
-package deepcopy
+package dcopy
 
 import "testing"
 
-func Benchmark_BaseSlice_Unsafe_Deepcopy(b *testing.B) {
+func Benchmark_BaseSlice_Unsafe_dcopy(b *testing.B) {
 	var dst DCopyDst_BaseSlice
 	err := Preheat(&dst, &testSrc_BaseSlice)
 	if err != nil {

@@ -1,8 +1,8 @@
 ## 作用
-[![Go](https://github.com/antlabs/deepcopy/workflows/Go/badge.svg)](https://github.com/antlabs/deepcopy/actions)
-[![codecov](https://codecov.io/gh/antlabs/deepcopy/branch/master/graph/badge.svg)](https://codecov.io/gh/antlabs/deepcopy)
+[![Go](https://github.com/antlabs/dcopy/workflows/Go/badge.svg)](https://github.com/antlabs/dcopy/actions)
+[![codecov](https://codecov.io/gh/antlabs/dcopy/branch/master/graph/badge.svg)](https://codecov.io/gh/antlabs/dcopy)
 
-`deepcopy.CopyEx`主要用于两个类型间的深度拷贝[从零实现]-这是新文档
+`dcopy.CopyEx`主要用于两个类型间的深度拷贝[从零实现]-这是新文档
 
 本文是新文档，[旧接口文档](./README_old.md)保持兼容性
 
@@ -25,7 +25,7 @@
 - [性能压测](#benchmark)
 ## Installation
 ```
-go get github.com/antlabs/deepcopy
+go get github.com/antlabs/dcopy
 ```
 
 ## Quick start
@@ -34,7 +34,7 @@ package main
 
 import (
     "fmt"
-    "github.com/antlabs/deepcopy"
+    "github.com/antlabs/dcopy"
 )
 
 type dst struct {
@@ -48,7 +48,7 @@ type src struct{
 }
 func main() {
    d, s := dst{}, src{ID:3}
-   deepcopy.CopyEx(&d, &s)
+   dcopy.CopyEx(&d, &s)
    fmt.Printf("%#v\n", d)
    
 }
@@ -58,7 +58,7 @@ func main() {
 ## max copy depth
 如果src的结构体嵌套了两套，MaxDepth可以控制只拷贝一层
 ```go
-deepcopy.CopyEx(&dst{}, &src{}, deepcopy.WithMaxDepth(1))
+dcopy.CopyEx(&dst{}, &src{}, dcopy.WithMaxDepth(1))
 ```
 
 ## copy only the specified   tag
@@ -69,7 +69,7 @@ package main
 import (
         "fmt"
 
-        "github.com/antlabs/deepcopy"
+        "github.com/antlabs/dcopy"
 )
 
 type dst struct {
@@ -86,7 +86,7 @@ func main() {
         d := dst{}
         s := src{ID: 3, Result: "use tag"}
 
-        deepcopy.CopyEx(&d, &s, deepcopy.WithTagName("copy"))
+        dcopy.CopyEx(&d, &s, dcopy.WithTagName("copy"))
 
         fmt.Printf("%#v\n", d)
 }
@@ -99,14 +99,14 @@ package main
 import (
         "fmt"
 
-        "github.com/antlabs/deepcopy"
+        "github.com/antlabs/dcopy"
 )
 
 func main() {
         i := []int{1, 2, 3, 4, 5, 6}
         var o []int
 
-        deepcopy.CopyEx(&o, &i)
+        dcopy.CopyEx(&o, &i)
 
         fmt.Printf("%#v\n", o)
 }
@@ -120,7 +120,7 @@ package main
 import (
         "fmt"
 
-        "github.com/antlabs/deepcopy"
+        "github.com/antlabs/dcopy"
 )
 
 func main() {
@@ -132,14 +132,14 @@ func main() {
         }
 
         var o map[string]int
-        deepcopy.CopyEx(&o, &i)
+        dcopy.CopyEx(&o, &i)
 
         fmt.Printf("%#v\n", o)
 }
 
 ```
 ## simplify business code development
-经常看到，对同一个结构体的，有值更新操作，都是一堆手工if 然后赋值的代码。不仅容易出错，还累。快使用deepcopy解放双手。
+经常看到，对同一个结构体的，有值更新操作，都是一堆手工if 然后赋值的代码。不仅容易出错，还累。快使用dcopy解放双手。
 ```go
 type option struct {
         Int int
@@ -162,18 +162,18 @@ func main() {
         }
 
         //可以约化成
-        deepcopy.CopyEx(&a, &b)
+        dcopy.CopyEx(&a, &b)
 }
 ```
 # benchmark
-从零实现的deepcopy相比json序列化与反序列化方式拥有更好的性能
+从零实现的dcopy相比json序列化与反序列化方式拥有更好的性能
 ```
 goos: linux
 goarch: amd64
-pkg: github.com/antlabs/deepcopy
+pkg: github.com/antlabs/dcopy
 Benchmark_MiniCopy-16    	  159084	      6737 ns/op
-Benchmark_DeepCopy-16    	  374920	      2895 ns/op
+Benchmark_dcopy-16    	  374920	      2895 ns/op
 PASS
-ok  	github.com/antlabs/deepcopy	2.275s
+ok  	github.com/antlabs/dcopy	2.275s
 
 ```

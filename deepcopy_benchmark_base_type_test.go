@@ -1,11 +1,11 @@
-package deepcopy
+package dcopy
 
 import (
 	"encoding/json"
 	"testing"
 )
 
-func Benchmark_BaseType_Unsafe_Deepcopy(b *testing.B) {
+func Benchmark_BaseType_Unsafe_dcopy(b *testing.B) {
 	var dst DCopyDst
 	err := Preheat(&dst, &testSrc)
 	if err != nil {
@@ -69,7 +69,7 @@ var td = testData{
 	UInt64: 164,
 	UInt32: 132,
 	UInt16: 116,
-	S:      "test deepcopy",
+	S:      "test dcopy",
 	Slice:  []string{"123", "456", "789"},
 	Array:  []int{0x33, 0x44, 0x55, 0x66, 0x77, 0x88},
 }
@@ -95,7 +95,7 @@ func Benchmark_BaseType_MiniCopy(b *testing.B) {
 	}
 }
 
-func Benchmark_BaseType_DeepCopy(b *testing.B) {
+func Benchmark_BaseType_dcopy(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		// var dst testData
 		var dst DCopyDst
