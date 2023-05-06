@@ -12,6 +12,9 @@ import (
 // 不支持的类型
 var ErrUnsupportedType = errors.New("Unsupported type")
 
+// 不支持nil类型
+var ErrUnsupportedNil = errors.New("Unsupported nil type")
+
 // dst 和 src必须是指针类型
 var ErrNotPointer = errors.New("dst and src must be pointer")
 
@@ -33,12 +36,18 @@ type dcopy struct {
 
 func Copy(dst, src interface{}, opts ...Option) error {
 	if dst == nil || src == nil {
-		return fmt.Errorf("%w:nil", ErrUnsupportedType)
+		return ErrUnsupportedNil
 	}
-
 	var opt options
 	for _, o := range opts {
 		o(&opt)
+	}
+	return copyInner(dst, src, &opt)
+}
+
+func copyInner(dst, src interface{}, opt *options) error {
+	if dst == nil || src == nil {
+		return ErrUnsupportedNil
 	}
 
 	dstValue := reflect.ValueOf(dst)
@@ -68,7 +77,7 @@ func Copy(dst, src interface{}, opts ...Option) error {
 		srcValue = srcValue.Elem()
 
 		// 从cache load出类型直接执行
-		exist := getSetFromCacheAndRun(dstSrcType{dst: dstValue.Type(), src: srcValue.Type()}, dstAddr, srcAddr, &opt)
+		exist := getSetFromCacheAndRun(dstSrcType{dst: dstValue.Type(), src: srcValue.Type()}, dstAddr, srcAddr, opt)
 		if exist {
 			return nil
 		}
@@ -79,7 +88,7 @@ func Copy(dst, src interface{}, opts ...Option) error {
 	}
 
 	d := dcopy{
-		options: opt,
+		options: *opt,
 	}
 	if opt.maxDepth == 0 {
 		d.maxDepth = noDepthLimited
