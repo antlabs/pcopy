@@ -16,7 +16,7 @@ var copyCompositeSliceTab = setReflectFuncTab{
 }
 
 // TODO 再优化
-func setCompositeInterface(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt *options) error {
+func setCompositeInterface(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options) error {
 	srcVal := reflect.NewAt(srcType, src)
 	if srcVal.IsNil() {
 		return nil
@@ -29,11 +29,11 @@ func setCompositeInterface(dstType, srcType reflect.Type, dst, src unsafe.Pointe
 	return copyInner(dstVal.Interface(), srcVal.Interface(), opt)
 }
 
-func setCompositeMap(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt *options) error {
+func setCompositeMap(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options) error {
 	return nil
 }
 
-func setCompositeSlice(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt *options) error {
+func setCompositeSlice(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options) error {
 	// src转成reflect.Value
 	srcVal := reflect.NewAt(srcType, src)
 	if srcVal.Len() == 0 {

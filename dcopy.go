@@ -42,10 +42,10 @@ func Copy(dst, src interface{}, opts ...Option) error {
 	for _, o := range opts {
 		o(&opt)
 	}
-	return copyInner(dst, src, &opt)
+	return copyInner(dst, src, opt)
 }
 
-func copyInner(dst, src interface{}, opt *options) error {
+func copyInner(dst, src interface{}, opt options) error {
 	if dst == nil || src == nil {
 		return ErrUnsupportedNil
 	}
@@ -88,7 +88,7 @@ func copyInner(dst, src interface{}, opt *options) error {
 	}
 
 	d := dcopy{
-		options: *opt,
+		options: opt,
 	}
 	// if opt.maxDepth == 0 {
 	// 	d.maxDepth = noDepthLimited
@@ -290,7 +290,7 @@ func (d *dcopy) cpyStruct(dst, src reflect.Value, dstBase, srcBase unsafe.Pointe
 
 	if d.usePreheat {
 		// 从cache load出类型直接执行
-		exist := getSetFromCacheAndRun(dstSrcType{dst: dst.Type(), src: src.Type()}, dstBase, srcBase, &d.options)
+		exist := getSetFromCacheAndRun(dstSrcType{dst: dst.Type(), src: src.Type()}, dstBase, srcBase, d.options)
 		if exist {
 			return nil
 		}
