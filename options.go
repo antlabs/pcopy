@@ -7,7 +7,10 @@ type options struct {
 	// maxDepth int
 	// // TagName is the tag name to use.
 	// // If TagName is empty, it will be treated as no tag.
-	tagName string
+	// tagName string
+	// // OnlyField is the field name to copy.
+	// // If OnlyField is empty, it will be treated as no field.
+	// OnlyField string
 	preheat bool
 
 	// 使用预热cache
@@ -22,11 +25,11 @@ type Option func(*options)
 // 	}
 // }
 
-func WithTagName(tagName string) Option {
-	return func(o *options) {
-		o.tagName = tagName
-	}
-}
+// func WithTagName(tagName string) Option {
+// 	return func(o *options) {
+// 		o.tagName = tagName
+// 	}
+// }
 
 func WithUsePreheat() Option {
 	return func(o *options) {

@@ -66,30 +66,30 @@ type testCase struct {
 // }
 
 // 测试设置tag的情况
-func Test_TagName(t *testing.T) {
-	type tagName struct {
-		First string `copy:"first"`
-		Data  struct {
-			Result string
-		}
-	}
+// func Test_TagName(t *testing.T) {
+// 	type tagName struct {
+// 		First string `copy:"first"`
+// 		Data  struct {
+// 			Result string
+// 		}
+// 	}
 
-	src := tagName{}
-	src.First = "first"
-	src.Data.Result = "test"
+// 	src := tagName{}
+// 	src.First = "first"
+// 	src.Data.Result = "test"
 
-	for _, tc := range []testCase{
-		func() testCase {
-			d := tagName{}
-			Copy(&d, &src, WithTagName("copy"))
-			need := tagName{}
-			need.First = "first"
-			return testCase{got: d, need: need}
-		}(),
-	} {
-		assert.Equal(t, tc.need, tc.got)
-	}
-}
+// 	for _, tc := range []testCase{
+// 		func() testCase {
+// 			d := tagName{}
+// 			Copy(&d, &src, WithTagName("copy"))
+// 			need := tagName{}
+// 			need.First = "first"
+// 			return testCase{got: d, need: need}
+// 		}(),
+// 	} {
+// 		assert.Equal(t, tc.need, tc.got)
+// 	}
+// }
 
 // 下面的test case 确保不panic
 func Test_Special(t *testing.T) {

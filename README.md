@@ -2,7 +2,7 @@
 [![Go](https://github.com/antlabs/dcopy/workflows/Go/badge.svg)](https://github.com/antlabs/dcopy/actions)
 [![codecov](https://codecov.io/gh/antlabs/dcopy/branch/master/graph/badge.svg)](https://codecov.io/gh/antlabs/dcopy)
 
-`dcopy.CopyEx`主要用于两个类型间的深度拷贝[从零实现]-这是新文档
+`dcopy.Copy`主要用于两个类型间的深度拷贝[从零实现]-这是新文档
 
 本文是新文档，[旧接口文档](./README_old.md)保持兼容性
 
@@ -48,50 +48,13 @@ type src struct{
 }
 func main() {
    d, s := dst{}, src{ID:3}
-   dcopy.CopyEx(&d, &s)
+   dcopy.Copy(&d, &s)
    fmt.Printf("%#v\n", d)
    
 }
 
 ```
 
-## max copy depth
-如果src的结构体嵌套了两套，MaxDepth可以控制只拷贝一层
-```go
-dcopy.CopyEx(&dst{}, &src{}, dcopy.WithMaxDepth(1))
-```
-
-## copy only the specified   tag
-只拷贝结构体里面有copy tag的字段，比如下面只会拷贝ID成员
-```go
-package main
-
-import (
-        "fmt"
-
-        "github.com/antlabs/dcopy"
-)
-
-type dst struct {
-        ID     int `copy:"ID"`
-        Result string
-}
-
-type src struct {
-        ID     int `copy:"ID"`
-        Result string
-}
-
-func main() {
-        d := dst{}
-        s := src{ID: 3, Result: "use tag"}
-
-        dcopy.CopyEx(&d, &s, dcopy.WithTagName("copy"))
-
-        fmt.Printf("%#v\n", d)
-}
-
-```
 ## copy slice
 ```go
 package main
@@ -106,7 +69,7 @@ func main() {
         i := []int{1, 2, 3, 4, 5, 6}
         var o []int
 
-        dcopy.CopyEx(&o, &i)
+        dcopy.Copy(&o, &i)
 
         fmt.Printf("%#v\n", o)
 }
@@ -132,7 +95,7 @@ func main() {
         }
 
         var o map[string]int
-        dcopy.CopyEx(&o, &i)
+        dcopy.Copy(&o, &i)
 
         fmt.Printf("%#v\n", o)
 }
@@ -162,7 +125,7 @@ func main() {
         }
 
         //可以约化成
-        dcopy.CopyEx(&a, &b)
+        dcopy.Copy(&a, &b)
 }
 ```
 # benchmark
