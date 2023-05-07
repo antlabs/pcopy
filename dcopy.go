@@ -23,12 +23,6 @@ var ErrNotAddr = errors.New("dst or src type can not get address")
 
 var zeroUintptr = unsafe.Pointer(uintptr(0))
 
-// 优化下面的代码，让性能变得更高
-const (
-	// noDepthLimited = -1
-	noTagLimit = ""
-)
-
 // dcopy结构体
 type dcopy struct {
 	options
