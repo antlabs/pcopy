@@ -50,7 +50,7 @@ func saveToCache(fieldFunc *allFieldFunc, a dstSrcType) {
 	cacheAllFunc.LoadOrStore(a, fieldFunc)
 }
 
-func getSetFromCacheAndRun(a dstSrcType, dstAddr, srcAddr unsafe.Pointer, opt *options) (exist bool) {
+func getSetFromCacheAndRun(a dstSrcType, dstAddr, srcAddr unsafe.Pointer, opt options) (exist bool) {
 	v, ok := cacheAllFunc.Load(a)
 	if !ok {
 		return false
@@ -70,7 +70,7 @@ func (af *allFieldFunc) append(fieldFunc offsetAndFunc) {
 	af.fieldFuncs = append(af.fieldFuncs, fieldFunc)
 }
 
-func (c *allFieldFunc) do(dstBaseAddr, srcBaseAddr unsafe.Pointer, opt *options) {
+func (c *allFieldFunc) do(dstBaseAddr, srcBaseAddr unsafe.Pointer, opt options) {
 	for _, v := range c.fieldFuncs {
 		var kind reflect.Kind
 
