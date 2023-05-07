@@ -91,10 +91,10 @@ func copyInner(dst, src interface{}, opt options) error {
 	return d.dcopy(dstValue, srcValue, dstAddr, srcAddr, 0, offsetAndFunc{}, all)
 }
 
-// 需要的tag name
-func haveTagName(curTabName string) bool {
-	return len(curTabName) > 0
-}
+// // 需要的tag name
+// func haveTagName(curTabName string) bool {
+// 	return len(curTabName) > 0
+// }
 
 // 判断是array或slice类型
 func isArraySlice(v reflect.Value) bool {
@@ -298,9 +298,9 @@ func (d *dcopy) cpyStruct(dst, src reflect.Value, dstBase, srcBase unsafe.Pointe
 		}
 
 		// 检查是否注册tag
-		if len(d.tagName) > 0 && !haveTagName(sf.Tag.Get(d.tagName)) {
-			continue
-		}
+		// if len(d.tagName) > 0 && !haveTagName(sf.Tag.Get(d.tagName)) {
+		// 	continue
+		// }
 
 		// 使用src的字段名在dst里面取出reflect.Value值
 		dstValue := dst.FieldByName(sf.Name)
