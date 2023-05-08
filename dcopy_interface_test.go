@@ -30,6 +30,32 @@ func Test_Inteface(t *testing.T) {
 	}
 }
 
+// TODO 打开
+// func Test_Inteface_DCopy(t *testing.T) {
+// 	type interfaceTest struct {
+// 		I interface{}
+// 		S interface{}
+// 	}
+
+// 	for _, tc := range []interfaceTest{
+// 		{
+// 			I: 5,
+// 			S: "hello",
+// 		},
+// 	} {
+
+// 		var data interfaceTest
+
+// 		err := Preheat(&data, &tc)
+// 		assert.NoError(t, err)
+// 		data = interfaceTest{}
+// 		err = Copy(&data, &tc, WithUsePreheat())
+// 		assert.NoError(t, err)
+// 		fmt.Printf("#### %v\n", data)
+// 		// assert.Equal(t, tc, data)
+// 	}
+// }
+
 // 测试interface{}特殊情况
 // 只要不崩溃就是对的
 func Test_Interface_Special(t *testing.T) {

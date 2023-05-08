@@ -51,6 +51,8 @@ func copyInner(dst, src interface{}, opt options) error {
 	srcAddr := zeroUintptr
 
 	// 预热逻辑和预热cache逻辑都要走
+	var of offsetAndFunc
+
 	var all *allFieldFunc
 	if opt.preheat || opt.usePreheat {
 		if dstValue.Kind() != reflect.Ptr || srcValue.Kind() != reflect.Ptr {
@@ -70,6 +72,9 @@ func copyInner(dst, src interface{}, opt options) error {
 		dstValue = dstValue.Elem()
 		srcValue = srcValue.Elem()
 
+		of.srcType = srcValue.Type()
+		of.dstType = dstValue.Type()
+
 		// 从cache load出类型直接执行
 		exist := getSetFromCacheAndRun(dstSrcType{dst: dstValue.Type(), src: srcValue.Type()}, dstAddr, srcAddr, opt)
 		if exist {
@@ -88,7 +93,7 @@ func copyInner(dst, src interface{}, opt options) error {
 	// 	d.maxDepth = noDepthLimited
 	// }
 
-	return d.dcopy(dstValue, srcValue, dstAddr, srcAddr, 0, offsetAndFunc{}, all)
+	return d.dcopy(dstValue, srcValue, dstAddr, srcAddr, 0, of, all)
 }
 
 // // 需要的tag name
@@ -131,7 +136,7 @@ func (d *dcopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe.Po
 			// of.srcOffset = sub(src.UnsafeAddr(), uintptr(srcBase))
 			of.srcType = src.Type()
 			of.dstType = dst.Type()
-			of.set = getSetBaseSliceFunc(dst.Type().Elem().Kind())
+			of.unsafeSet = getSetBaseSliceFunc(dst.Type().Elem().Kind())
 			of.baseSlice = true
 			of.createFlag = baseSliceTypeSet
 			all.append(of)
@@ -190,7 +195,7 @@ func (d *dcopy) cpyMap(dst, src reflect.Value, depth int, of offsetAndFunc, all 
 			// of.srcOffset = sub(src.UnsafeAddr(), uintptr(srcBase))
 			of.srcType = src.Type()
 			of.dstType = dst.Type()
-			of.set = getSetBaseMapFunc(src.Type().Key().Kind(), src.Type().Elem().Kind())
+			of.unsafeSet = getSetBaseMapFunc(src.Type().Key().Kind(), src.Type().Elem().Kind())
 			of.baseMap = true
 			of.createFlag = baseMapTypeSet
 			all.append(of)
@@ -387,7 +392,7 @@ func (d *dcopy) cpyDefault(dst, src reflect.Value, dstBase, srcBase unsafe.Point
 	if d.preheat {
 		of.srcType = src.Type()
 		of.dstType = dst.Type()
-		of.set = getSetFunc(src.Kind())
+		of.unsafeSet = getSetFunc(src.Kind())
 		of.createFlag = baseTypeSet
 		all.append(of)
 	}
@@ -435,10 +440,10 @@ func (d *dcopy) dcopy(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, d
 		}
 	} else {
 		// 预热逻辑，先走白名单， 等稳定了，再走黑名单
-		if !isBaseType(src.Kind()) && src.Kind() != reflect.Struct && src.Kind() != reflect.Ptr && src.Kind() != reflect.Slice && src.Kind() != reflect.Map {
-			panic(fmt.Sprintf("遇到未知的类型:%v", src.Kind()))
-			return nil
-		}
+		// if !isBaseType(src.Kind()) && src.Kind() != reflect.Struct && src.Kind() != reflect.Ptr && src.Kind() != reflect.Slice && src.Kind() != reflect.Map {
+		// 	panic(fmt.Sprintf("遇到未知的类型:%v", src.Kind()))
+		// 	return nil
+		// }
 	}
 
 	// // 检查递归深度
@@ -475,6 +480,13 @@ func (d *dcopy) dcopy(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, d
 		return d.cpyStruct(dst, src, dstBase, srcBase, depth, of, all)
 
 	case reflect.Interface:
+		if d.preheat {
+			of.srcType = src.Type()
+			of.dstType = dst.Type()
+			of.reflectSet = getSetCompositeFunc(src.Kind())
+			all.append(of)
+			// defer saveToCache(all, dstSrcType{dst.Type(), src.Type()})
+		}
 		return d.cpyInterface(dst, src, depth, of, all)
 
 	case reflect.Ptr:
@@ -489,8 +501,8 @@ func addNextComposite(all *allFieldFunc, of offsetAndFunc) (newAll *allFieldFunc
 	of.nextComposite = newAllFieldFunc()
 	of.createFlag = sliceTypeSet
 	all.append(of)
-	of.createFlag = debugTypeSet
 	// 重置all
+	of.createFlag = debugTypeSet
 	newAll = of.nextComposite
 	of.nextComposite = nil
 	return
