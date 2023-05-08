@@ -7,6 +7,24 @@ import (
 	"unsafe"
 )
 
+type (
+	setUnsafeFunc  func(dstAddr, srcAddr unsafe.Pointer)
+	setReflectFunc func(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options) error
+	// setReflectFunc    func(dstType, srcType reflect.Type, dstValType, srcValType reflect.Type, dst, src unsafe.Pointer, opt options) error
+	setUnsafeFuncTab  map[reflect.Kind]setUnsafeFunc
+	setReflectFuncTab map[reflect.Kind]setReflectFunc
+	setBaseMapFuncTab map[baseMapKind]setUnsafeFunc
+)
+
+type baseMapKind struct {
+	key reflect.Kind
+	val reflect.Kind
+}
+
+type baseMapTypeTmpl struct {
+	TypeName []string
+}
+
 // cacheAllFunc map[dstSrcType]*allFieldFunc = make(map[dstSrcType]*allFieldFunc)
 var cacheAllFunc sync.Map // rdlock       sync.RWMutex
 
@@ -33,11 +51,12 @@ const (
 )
 
 type offsetAndFunc struct {
-	dstType   reflect.Type
-	srcType   reflect.Type
-	dstOffset int
-	srcOffset int
-	set       setUnsafeFunc
+	dstType    reflect.Type
+	srcType    reflect.Type
+	dstOffset  int
+	srcOffset  int
+	unsafeSet  setUnsafeFunc
+	reflectSet setReflectFunc
 
 	// 找到一个复合类型
 	nextComposite *allFieldFunc
@@ -74,7 +93,7 @@ func (c *allFieldFunc) do(dstBaseAddr, srcBaseAddr unsafe.Pointer, opt options) 
 	for _, v := range c.fieldFuncs {
 		var kind reflect.Kind
 
-		if v.set == nil {
+		if v.unsafeSet == nil {
 			goto next
 		}
 
@@ -84,18 +103,18 @@ func (c *allFieldFunc) do(dstBaseAddr, srcBaseAddr unsafe.Pointer, opt options) 
 		case kind == reflect.Slice:
 			if v.baseSlice {
 				// 基础类型的slice直接一把函数搞定
-				v.set(add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset))
+				v.unsafeSet(add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset))
 				continue
 			}
 		case kind == reflect.Map:
 			if v.baseMap {
 				// 基础类型的map直接一把函数搞定
-				v.set(add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset))
+				v.unsafeSet(add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset))
 				continue
 			}
 
 		case isBaseType(kind):
-			v.set(add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset))
+			v.unsafeSet(add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset))
 		}
 
 	next:

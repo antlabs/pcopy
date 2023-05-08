@@ -6,17 +6,20 @@ import (
 	"unsafe"
 )
 
-var copyCompositeSliceTab = setReflectFuncTab{
+var copyCompositeTab = map[reflect.Kind]setReflectFunc{}
+
+func init() {
 	// 这是一个复合类型，最外层是slice
-	reflect.Slice: setCompositeSlice,
+	copyCompositeTab[reflect.Slice] = setCompositeSlice
 	// 这是一个复合类型，最外层是map
-	reflect.Map: setCompositeMap,
+	copyCompositeTab[reflect.Map] = setCompositeMap
 	// 这是一个复合类型，最外层是interface
-	reflect.Interface: setCompositeInterface,
+	copyCompositeTab[reflect.Interface] = setCompositeInterface
 }
 
 // TODO 再优化
-func setCompositeInterface(dstType, srcType reflect.Type, dstValType, srcValType reflect.Type, dst, src unsafe.Pointer, opt options) error {
+// func setCompositeInterface(dstType, srcType reflect.Type, dstValType, srcValType reflect.Type, dst, src unsafe.Pointer, opt options) error {
+func setCompositeInterface(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options) error {
 	srcVal := reflect.NewAt(srcType, src)
 	if srcVal.IsNil() {
 		return nil
@@ -29,7 +32,8 @@ func setCompositeInterface(dstType, srcType reflect.Type, dstValType, srcValType
 	return copyInner(dstVal.Interface(), srcVal.Interface(), opt)
 }
 
-func setCompositeMap(dstType, srcType reflect.Type, dstValType, srcValType reflect.Type, dst, src unsafe.Pointer, opt options) error {
+// func setCompositeMap(dstType, srcType reflect.Type, dstValType, srcValType reflect.Type, dst, src unsafe.Pointer, opt options) error {
+func setCompositeMap(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options) (err error) {
 	srcMapVal := reflect.NewAt(srcType, src)
 	if srcMapVal.Len() == 0 {
 		return nil
@@ -61,6 +65,7 @@ func setCompositeMap(dstType, srcType reflect.Type, dstValType, srcValType refle
 			key := dstSrcType{dst: mapValueType, src: srcVal.Type()}
 			keyExits = getSetFromCacheAndRun(key, dst, src, opt)
 		} else {
+			err = copyInner(newVal.Interface(), srcVal.Interface(), opt)
 		}
 
 		if valExits {
@@ -69,12 +74,14 @@ func setCompositeMap(dstType, srcType reflect.Type, dstValType, srcValType refle
 			key := dstSrcType{dst: mapValueType, src: srcVal.Type()}
 			keyExits = getSetFromCacheAndRun(key, dst, src, opt)
 		} else {
+			err = copyInner(newKey.Interface(), srcKey.Interface(), opt)
 		}
 	}
-	return nil
+	return err
 }
 
-func setCompositeSlice(dstType, srcType reflect.Type, dstValType, srcValType reflect.Type, dst, src unsafe.Pointer, opt options) error {
+// func setCompositeSlice(dstType, srcType reflect.Type, dstValType, srcValType reflect.Type, dst, src unsafe.Pointer, opt options) error {
+func setCompositeSlice(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options) error {
 	// src转成reflect.Value
 	srcVal := reflect.NewAt(srcType, src)
 	if srcVal.Len() == 0 {
@@ -107,8 +114,8 @@ func setCompositeSlice(dstType, srcType reflect.Type, dstValType, srcValType ref
 	return copyInner(dstVal.Interface(), srcVal.Interface(), opt)
 }
 
-func getSetCompositeFunc(t reflect.Kind) setUnsafeFunc {
-	f, ok := copyBaseSliceTab[t]
+func getSetCompositeFunc(t reflect.Kind) setReflectFunc {
+	f, ok := copyCompositeTab[t]
 	if !ok {
 		panic(fmt.Sprintf("not support type:%T", t))
 	}
