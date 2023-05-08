@@ -30,6 +30,20 @@ func setCompositeInterface(dstType, srcType reflect.Type, dst, src unsafe.Pointe
 }
 
 func setCompositeMap(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options) error {
+	srcVal := reflect.NewAt(srcType, src)
+	if srcVal.Len() == 0 {
+		return nil
+	}
+
+	dstVal := reflect.NewAt(dstType, dst)
+	if dstVal.IsNil() {
+		dstVal.Set(reflect.MakeMap(dstType))
+	}
+
+	keyType := dstVal.Elem().Type().Key()
+	valueType := dstVal.Elem().Type().Elem()
+	// key := dstSrcType{dst: keyType, src: valueType}
+
 	return nil
 }
 
