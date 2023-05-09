@@ -75,7 +75,7 @@ func getSetFromCacheAndRun(a dstSrcType, dstAddr, srcAddr unsafe.Pointer, opt op
 		return false
 	}
 
-	v.(*allFieldFunc).do(dstAddr, srcAddr, opt)
+	_ = v.(*allFieldFunc).do(dstAddr, srcAddr, opt)
 	// cacheFunc.do(dstAddr, srcAddr)
 	return true
 }
@@ -89,40 +89,55 @@ func (af *allFieldFunc) append(fieldFunc offsetAndFunc) {
 	af.fieldFuncs = append(af.fieldFuncs, fieldFunc)
 }
 
-func (c *allFieldFunc) do(dstBaseAddr, srcBaseAddr unsafe.Pointer, opt options) {
+func (c *allFieldFunc) do(dstBaseAddr, srcBaseAddr unsafe.Pointer, opt options) (err error) {
 	for _, v := range c.fieldFuncs {
 		var kind reflect.Kind
 
-		if v.unsafeSet == nil {
+		if v.unsafeSet == nil && v.reflectSet == nil {
 			goto next
 		}
 
 		kind = v.srcType.Kind()
 		switch {
-
+		// 处理slice
 		case kind == reflect.Slice:
+			// 由基础类型组成的slice
 			if v.baseSlice {
 				// 基础类型的slice直接一把函数搞定
 				v.unsafeSet(add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset))
 				continue
 			}
+			// 处理map
 		case kind == reflect.Map:
+			// 基础类型的map直接一把函数搞定
 			if v.baseMap {
-				// 基础类型的map直接一把函数搞定
 				v.unsafeSet(add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset))
 				continue
 			}
 
+			// 基础类型
 		case isBaseType(kind):
 			v.unsafeSet(add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset))
+
+			// 处理interface
+		case kind == reflect.Interface:
+			if v.reflectSet != nil {
+				if err := v.reflectSet(v.dstType, v.srcType, add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset), opt); err != nil {
+					return err
+				}
+			}
+
 		}
 
 	next:
 		if v.nextComposite != nil {
-			v.nextComposite.do(dstBaseAddr, srcBaseAddr, opt)
+			if err := v.nextComposite.do(dstBaseAddr, srcBaseAddr, opt); err != nil {
+				return err
+			}
 			continue
 		}
 	}
+	return nil
 }
 
 func addOffset(addr unsafe.Pointer, offset uintptr, i int) unsafe.Pointer {
