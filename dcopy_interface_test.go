@@ -2,6 +2,7 @@
 package dcopy
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -30,31 +31,82 @@ func Test_Inteface(t *testing.T) {
 	}
 }
 
+func Test_Interface_DCopy2(t *testing.T) {
+	// local := interfaceSrcTest{
+	// 	A: uint(1),
+	// 	B: uint8(2),
+	// 	C: uint16(3),
+	// 	D: uint32(4),
+	// 	E: uint64(5),
+	// 	F: int(6),
+	// 	G: int8(7),
+	// 	H: int16(8),
+	// 	I: int32(9),
+	// 	J: int64(10),
+	// 	K: float32(11),
+	// 	L: float64(12),
+	// 	M: "13",
+	// 	N: true,
+	// }
+	err := Preheat(&interfaceDstTest{}, &interfaceSrcTest{})
+	// err := Preheat(&interfaceDstTest{}, &local)
+	assert.NoError(t, err)
+	for _, tc := range []interfaceSrcTest{
+		{
+			A: uint(1),
+			B: uint8(2),
+			C: uint16(3),
+			D: uint32(4),
+			E: uint64(5),
+			F: int(6),
+			G: int8(7),
+			H: int16(8),
+			I: int32(9),
+			J: int64(10),
+			K: float32(11),
+			L: float64(12),
+			M: "13",
+			N: true,
+		},
+	} {
+
+		var data interfaceDstTest
+
+		err = Copy(&data, &tc, WithUsePreheat())
+		assert.NoError(t, err)
+		fmt.Print(tc.A.(uint))
+		assert.Equal(t, interfaceDstTest(tc), data)
+	}
+}
+
 // TODO 打开
-// func Test_Inteface_DCopy(t *testing.T) {
-// 	type interfaceTest struct {
-// 		I interface{}
-// 		S interface{}
-// 	}
+func Test_Interface_DCopy(t *testing.T) {
+	type interfaceTest struct {
+		I interface{}
+		S interface{}
+	}
 
-// 	for _, tc := range []interfaceTest{
-// 		{
-// 			I: 5,
-// 			S: "hello",
-// 		},
-// 	} {
+	err := Preheat(&interfaceTest{}, &interfaceTest{})
+	assert.NoError(t, err)
+	for _, tc := range []interfaceTest{
+		{
+			I: 5,
+			S: "hello",
+		},
+		{
+			I: "world",
+			S: 5,
+		},
+	} {
 
-// 		var data interfaceTest
+		var data interfaceTest
 
-// 		err := Preheat(&data, &tc)
-// 		assert.NoError(t, err)
-// 		data = interfaceTest{}
-// 		err = Copy(&data, &tc, WithUsePreheat())
-// 		assert.NoError(t, err)
-// 		fmt.Printf("#### %v\n", data)
-// 		// assert.Equal(t, tc, data)
-// 	}
-// }
+		err = Copy(&data, &tc, WithUsePreheat())
+		assert.NoError(t, err)
+		fmt.Printf("%v, %v\n", data, tc)
+		assert.Equal(t, tc, data)
+	}
+}
 
 // 测试interface{}特殊情况
 // 只要不崩溃就是对的

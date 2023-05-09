@@ -25,7 +25,7 @@ var copyTab = setUnsafeFuncTab{
 	reflect.Complex128: setComplex128,
 }
 
-func getSetFunc(t reflect.Kind) setUnsafeFunc {
+func getSetBaseFunc(t reflect.Kind) setUnsafeFunc {
 	f, ok := copyTab[t]
 	if !ok {
 		panic(fmt.Sprintf("not support type:%T", t))

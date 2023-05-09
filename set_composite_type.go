@@ -17,19 +17,54 @@ func init() {
 	copyCompositeTab[reflect.Interface] = setCompositeInterface
 }
 
+type emptyInterface struct {
+	typ unsafe.Pointer
+	// typ  *rtype
+	word unsafe.Pointer
+}
+
 // TODO 再优化
 // func setCompositeInterface(dstType, srcType reflect.Type, dstValType, srcValType reflect.Type, dst, src unsafe.Pointer, opt options) error {
 func setCompositeInterface(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options) error {
-	srcVal := reflect.NewAt(srcType, src)
-	if srcVal.IsNil() {
+	// 暂不支持带方法的interface
+	if srcType.NumMethod() > 0 {
 		return nil
 	}
 
-	dstVal := reflect.NewAt(dstType, dst)
-	// exits := getSetFromCacheAndRun(key, dst, src, opt)
-	// if exits {
-	// }
-	return copyInner(dstVal.Interface(), srcVal.Interface(), opt)
+	// 暂不支持带方法的interface
+	srcUnsafe := (*emptyInterface)(src)
+	if srcUnsafe.typ == nil {
+		return nil
+	}
+
+	sh := (*reflect.SliceHeader)(srcUnsafe.word)
+	if sh.Len == 0 {
+		return nil
+	}
+	dstUnsafe := (*emptyInterface)(dst)
+
+	srcInter := (*interface{})(src)
+	srcType = reflect.TypeOf(*srcInter)
+	srcTypeKind := srcType.Kind()
+
+	var unsafeSet setUnsafeFunc
+
+	if isBaseType(srcType.Kind()) {
+		unsafeSet = getSetBaseFunc(srcTypeKind)
+		dstUnsafe.typ = srcUnsafe.typ
+		dstUnsafe.word = getNewBaseType(srcType.Kind())
+	} else if srcTypeKind == reflect.Slice && isBaseType(srcType.Elem().Kind()) {
+		dstUnsafe.typ = srcUnsafe.typ
+		unsafeSet = getSetBaseSliceFunc(srcTypeKind)
+		dstUnsafe.word = getNewBaseSliceType(srcType.Kind(), sh.Len)
+	}
+
+	if unsafeSet != nil {
+		unsafeSet(unsafe.Pointer(dstUnsafe.word), unsafe.Pointer(srcUnsafe.word))
+		return nil
+	}
+
+	return copyInner((*interface{})(dst), (*interface{})(src), opt)
 }
 
 // func setCompositeMap(dstType, srcType reflect.Type, dstValType, srcValType reflect.Type, dst, src unsafe.Pointer, opt options) error {

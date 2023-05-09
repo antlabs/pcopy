@@ -392,7 +392,7 @@ func (d *dcopy) cpyDefault(dst, src reflect.Value, dstBase, srcBase unsafe.Point
 	if d.preheat {
 		of.srcType = src.Type()
 		of.dstType = dst.Type()
-		of.unsafeSet = getSetFunc(src.Kind())
+		of.unsafeSet = getSetBaseFunc(src.Kind())
 		of.createFlag = baseTypeSet
 		all.append(of)
 	}
@@ -485,7 +485,9 @@ func (d *dcopy) dcopy(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, d
 			of.dstType = dst.Type()
 			of.reflectSet = getSetCompositeFunc(src.Kind())
 			all.append(of)
-			// defer saveToCache(all, dstSrcType{dst.Type(), src.Type()})
+			// interface是可变类型。cache加速是把类型关系固化，所以这里只需要知道这个offset是interface就行
+			// 后需要的类型是可变的，就没有必要缓存
+			return nil
 		}
 		return d.cpyInterface(dst, src, depth, of, all)
 
