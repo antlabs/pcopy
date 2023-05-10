@@ -76,7 +76,7 @@ func copyInner(dst, src interface{}, opt options) error {
 		of.dstType = dstValue.Type()
 
 		// 从cache load出类型直接执行
-		exist := getSetFromCacheAndRun(dstSrcType{dst: dstValue.Type(), src: srcValue.Type()}, dstAddr, srcAddr, opt)
+		exist := getFromCacheSetAndRun(dstSrcType{dst: dstValue.Type(), src: srcValue.Type()}, dstAddr, srcAddr, opt)
 		if exist {
 			return nil
 		}
@@ -149,12 +149,18 @@ func (d *dcopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe.Po
 		// of.set = getSetCompositeSliceFunc(dst.Type().Elem())
 		of.baseSlice = false
 		all.append(of)
+		of.resetFlag()
 
-		// 判断元素在转换表中是否存在
-		// if _, ok := d.convertMap[dst.Type().Elem()]; !ok {
-		// 	// 如果不存在, 则创建一个新的转换表
-		// }
-		return nil
+		dstElemType := dst.Type().Elem()
+		srcElemType := src.Type().Elem()
+		exits := hasSetFromCache(dstSrcType{dst: dstElemType, src: srcElemType})
+		// 已经存在穿上类型的转换表，直接返回
+		if exits {
+			return nil
+		}
+
+		// 元素不存在转换表，需要创建
+		return copyInner(reflect.New(dstElemType).Interface(), reflect.New(srcElemType).Interface(), d.options)
 	}
 
 	for i := 0; i < l; i++ {
@@ -292,7 +298,7 @@ func (d *dcopy) cpyStruct(dst, src reflect.Value, dstBase, srcBase unsafe.Pointe
 
 	if d.usePreheat {
 		// 从cache load出类型直接执行
-		exist := getSetFromCacheAndRun(dstSrcType{dst: dst.Type(), src: src.Type()}, dstBase, srcBase, d.options)
+		exist := getFromCacheSetAndRun(dstSrcType{dst: dst.Type(), src: src.Type()}, dstBase, srcBase, d.options)
 		if exist {
 			return nil
 		}
@@ -441,12 +447,6 @@ func (d *dcopy) dcopy(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, d
 		if src.IsZero() {
 			return nil
 		}
-	} else {
-		// 预热逻辑，先走白名单， 等稳定了，再走黑名单
-		// if !isBaseType(src.Kind()) && src.Kind() != reflect.Struct && src.Kind() != reflect.Ptr && src.Kind() != reflect.Slice && src.Kind() != reflect.Map {
-		// 	panic(fmt.Sprintf("遇到未知的类型:%v", src.Kind()))
-		// 	return nil
-		// }
 	}
 
 	// // 检查递归深度

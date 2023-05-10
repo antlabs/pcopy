@@ -95,7 +95,7 @@ func setCompositeMap(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt
 			src = unsafe.Pointer(newVal.UnsafeAddr())
 			dst = unsafe.Pointer(srcVal.UnsafeAddr())
 			key := dstSrcType{dst: mapValueType, src: srcVal.Type()}
-			keyExits = getSetFromCacheAndRun(key, dst, src, opt)
+			keyExits = getFromCacheSetAndRun(key, dst, src, opt)
 		}
 
 		if !keyExits {
@@ -106,7 +106,7 @@ func setCompositeMap(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt
 			src = unsafe.Pointer(newKey.UnsafeAddr())
 			dst = unsafe.Pointer(srcKey.UnsafeAddr())
 			key := dstSrcType{dst: mapValueType, src: srcVal.Type()}
-			valExits = getSetFromCacheAndRun(key, dst, src, opt)
+			valExits = getFromCacheSetAndRun(key, dst, src, opt)
 		}
 		if !valExits {
 			err = copyInner(newKey.Interface(), srcKey.Interface(), opt)
@@ -135,10 +135,10 @@ func setCompositeSlice(dstType, srcType reflect.Type, dst, src unsafe.Pointer, o
 	key := dstSrcType{dst: subDstType, src: subSrcType}
 
 	// 子元素项目如果是已经缓存的类型，直接调用缓存的函数
-	exits := getSetFromCacheAndRun(key, dst, src, opt)
+	exits := getFromCacheSetAndRun(key, dst, src, opt)
 	if exits {
 		for i := 1; i < srcVal.Len(); i++ {
-			exits = getSetFromCacheAndRun(key, addOffset(dst, offset, i), addOffset(src, offset, i), opt)
+			exits = getFromCacheSetAndRun(key, addOffset(dst, offset, i), addOffset(src, offset, i), opt)
 			if !exits {
 				panic(fmt.Sprintf("not support type:%v", key))
 			}
