@@ -355,7 +355,16 @@ func (d *dcopy) cpyInterface(dst, src reflect.Value, depth int, of offsetAndFunc
 	src = src.Elem()
 	newDst := reflect.New(src.Type()).Elem()
 
-	if err := d.dcopy(newDst, src, zeroUintptr, zeroUintptr, depth, of, all); err != nil {
+	newDstAddr := zeroUintptr
+	if d.usePreheat {
+		newDstAddr = unsafe.Pointer(newDst.UnsafeAddr())
+	}
+
+	newSrcAddr := zeroUintptr
+	if d.usePreheat {
+		newSrcAddr = unsafe.Pointer(src.UnsafeAddr())
+	}
+	if err := d.dcopy(newDst, src, newDstAddr, newSrcAddr, depth, of, all); err != nil {
 		return err
 	}
 
