@@ -18,14 +18,14 @@ func init() {
 }
 
 type emptyInterface struct {
-	typ unsafe.Pointer
-	// typ  *rtype
+	typ  unsafe.Pointer
 	word unsafe.Pointer
 }
 
-// TODO 再优化
-// func setCompositeInterface(dstType, srcType reflect.Type, dstValType, srcValType reflect.Type, dst, src unsafe.Pointer, opt options) error {
 func setCompositeInterface(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options) error {
+	if dstType.Kind() != reflect.Interface {
+		panic("dstType is not interface")
+	}
 	// 暂不支持带方法的interface
 	if srcType.NumMethod() > 0 {
 		return nil
@@ -33,41 +33,38 @@ func setCompositeInterface(dstType, srcType reflect.Type, dst, src unsafe.Pointe
 
 	// 暂不支持带方法的interface
 	srcUnsafe := (*emptyInterface)(src)
-	if srcUnsafe.typ == nil {
+	if srcUnsafe.typ == nil || srcUnsafe.word == nil {
 		return nil
 	}
-
-	sh := (*reflect.SliceHeader)(srcUnsafe.word)
-	if sh.Len == 0 {
-		return nil
-	}
-	dstUnsafe := (*emptyInterface)(dst)
 
 	srcInter := (*interface{})(src)
 	srcType = reflect.TypeOf(*srcInter)
 	srcTypeKind := srcType.Kind()
 
-	var unsafeSet setUnsafeFunc
-
 	if isBaseType(srcType.Kind()) {
-		unsafeSet = getSetBaseFunc(srcTypeKind)
-		dstUnsafe.typ = srcUnsafe.typ
-		dstUnsafe.word = getNewBaseType(srcType.Kind())
-	} else if srcTypeKind == reflect.Slice && isBaseType(srcType.Elem().Kind()) {
-		dstUnsafe.typ = srcUnsafe.typ
-		unsafeSet = getSetBaseSliceFunc(srcTypeKind)
-		dstUnsafe.word = getNewBaseSliceType(srcType.Kind(), sh.Len)
-	}
-
-	if unsafeSet != nil {
-		unsafeSet(unsafe.Pointer(dstUnsafe.word), unsafe.Pointer(srcUnsafe.word))
+		// unsafeSet = getSetBaseFunc(srcTypeKind)
+		*(*interface{})(dst) = getNewBaseType(srcTypeKind, *(*interface{})(src))
 		return nil
 	}
+
+	if srcTypeKind == reflect.Slice {
+		sh := (*reflect.SliceHeader)(srcUnsafe.word)
+		if sh.Len == 0 {
+			return nil
+		}
+		elemKind := srcType.Elem().Kind()
+		if isBaseType(elemKind) {
+			*(*interface{})(dst) = getNewBaseSliceType(elemKind, sh)
+			return nil
+		}
+	}
+
+	// TODO 这里也可以细化出map的情况
+	// 以后再优化
 
 	return copyInner((*interface{})(dst), (*interface{})(src), opt)
 }
 
-// func setCompositeMap(dstType, srcType reflect.Type, dstValType, srcValType reflect.Type, dst, src unsafe.Pointer, opt options) error {
 func setCompositeMap(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options) (err error) {
 	srcMapVal := reflect.NewAt(srcType, src)
 	if srcMapVal.Len() == 0 {
@@ -99,7 +96,9 @@ func setCompositeMap(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt
 			dst = unsafe.Pointer(srcVal.UnsafeAddr())
 			key := dstSrcType{dst: mapValueType, src: srcVal.Type()}
 			keyExits = getSetFromCacheAndRun(key, dst, src, opt)
-		} else {
+		}
+
+		if !keyExits {
 			err = copyInner(newVal.Interface(), srcVal.Interface(), opt)
 		}
 
@@ -107,8 +106,9 @@ func setCompositeMap(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt
 			src = unsafe.Pointer(newKey.UnsafeAddr())
 			dst = unsafe.Pointer(srcKey.UnsafeAddr())
 			key := dstSrcType{dst: mapValueType, src: srcVal.Type()}
-			keyExits = getSetFromCacheAndRun(key, dst, src, opt)
-		} else {
+			valExits = getSetFromCacheAndRun(key, dst, src, opt)
+		}
+		if !valExits {
 			err = copyInner(newKey.Interface(), srcKey.Interface(), opt)
 		}
 	}

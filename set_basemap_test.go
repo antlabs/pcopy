@@ -7,10 +7,10 @@ import (
 )
 
 // 生成set_basemap_func.go文件
-func Test_Gen_setBasemap(t *testing.T) {
-	err := saveBaseMapFuncToFile("./set_basemap_func.go")
-	assert.NoError(t, err)
-}
+// func Test_Gen_setBasemap(t *testing.T) {
+// 	err := saveBaseMapFuncToFile("./set_basemap_func.go")
+// 	assert.NoError(t, err)
+// }
 
 type DCopyDst_BaseMap struct {
 	A map[string]string

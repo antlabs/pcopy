@@ -5,79 +5,95 @@ import (
 	"unsafe"
 )
 
-func newInt() unsafe.Pointer {
-	return unsafe.Pointer(new(int))
+func newUint(dst interface{}) interface{} {
+	d := *(*uint)((*emptyInterface)(unsafe.Pointer(&dst)).word)
+	return d
 }
 
-func newInt8() unsafe.Pointer {
-	return unsafe.Pointer(new(int8))
+func newUint8(dst interface{}) interface{} {
+	d := *(*uint8)((*emptyInterface)(unsafe.Pointer(&dst)).word)
+	return d
 }
 
-func newInt16() unsafe.Pointer {
-	return unsafe.Pointer(new(int16))
+func newUint16(dst interface{}) interface{} {
+	d := *(*uint16)((*emptyInterface)(unsafe.Pointer(&dst)).word)
+	return d
 }
 
-func newInt32() unsafe.Pointer {
-	return unsafe.Pointer(new(int32))
+func newUint32(dst interface{}) interface{} {
+	d := *(*uint32)((*emptyInterface)(unsafe.Pointer(&dst)).word)
+	return d
 }
 
-func newInt64() unsafe.Pointer {
-	return unsafe.Pointer(new(int64))
+func newUint64(dst interface{}) interface{} {
+	d := *(*uint64)((*emptyInterface)(unsafe.Pointer(&dst)).word)
+	return d
 }
 
-func newUint() unsafe.Pointer {
-	return unsafe.Pointer(new(uint))
+func newInt(dst interface{}) interface{} {
+	d := *(*int)((*emptyInterface)(unsafe.Pointer(&dst)).word)
+	return d
 }
 
-func newUint8() unsafe.Pointer {
-	return unsafe.Pointer(new(uint8))
+func newInt8(dst interface{}) interface{} {
+	d := *(*int8)((*emptyInterface)(unsafe.Pointer(&dst)).word)
+	return d
 }
 
-func newUint16() unsafe.Pointer {
-	return unsafe.Pointer(new(uint16))
+func newInt16(dst interface{}) interface{} {
+	d := *(*int16)((*emptyInterface)(unsafe.Pointer(&dst)).word)
+	return d
 }
 
-func newUint32() unsafe.Pointer {
-	return unsafe.Pointer(new(uint32))
+func newInt32(dst interface{}) interface{} {
+	d := *(*int32)((*emptyInterface)(unsafe.Pointer(&dst)).word)
+	return d
 }
 
-func newUint64() unsafe.Pointer {
-	return unsafe.Pointer(new(uint64))
+func newInt64(dst interface{}) interface{} {
+	d := *(*int64)((*emptyInterface)(unsafe.Pointer(&dst)).word)
+	return d
 }
 
-func newString() unsafe.Pointer {
-	return unsafe.Pointer(new(string))
+func newString(dst interface{}) interface{} {
+	d := *(*string)((*emptyInterface)(unsafe.Pointer(&dst)).word)
+	return d
 }
 
-func newFloat32() unsafe.Pointer {
-	return unsafe.Pointer(new(float32))
+func newFloat32(dst interface{}) interface{} {
+	d := *(*float32)((*emptyInterface)(unsafe.Pointer(&dst)).word)
+	return d
 }
 
-func newFloat64() unsafe.Pointer {
-	return unsafe.Pointer(new(float64))
+func newFloat64(dst interface{}) interface{} {
+	d := *(*float64)((*emptyInterface)(unsafe.Pointer(&dst)).word)
+	return d
 }
 
-func newBool() unsafe.Pointer {
-	return unsafe.Pointer(new(bool))
+func newBool(dst interface{}) interface{} {
+	d := *(*bool)((*emptyInterface)(unsafe.Pointer(&dst)).word)
+	return d
 }
 
-func newComplex64() unsafe.Pointer {
-	return unsafe.Pointer(new(complex64))
+func newComplex64(dst interface{}) interface{} {
+	d := *(*complex64)((*emptyInterface)(unsafe.Pointer(&dst)).word)
+	return d
 }
 
-func newComplex128() unsafe.Pointer {
-	return unsafe.Pointer(new(complex128))
+func newComplex128(dst interface{}) interface{} {
+	d := *(*complex128)((*emptyInterface)(unsafe.Pointer(&dst)).word)
+	return d
 }
 
-func getNewBaseType(k reflect.Kind) unsafe.Pointer {
+func getNewBaseType(k reflect.Kind, dst interface{}) interface{} {
 	newBaseType, ok := newBaseTypeTable[k]
 	if ok {
-		return newBaseType()
+		return newBaseType(dst)
 	}
 	return nil
 }
 
-var newBaseTypeTable = map[reflect.Kind]func() unsafe.Pointer{
+var newBaseTypeTable = map[reflect.Kind]func(interface{}) interface{}{
 	reflect.Int:        newInt,
 	reflect.Int8:       newInt8,
 	reflect.Int16:      newInt16,
