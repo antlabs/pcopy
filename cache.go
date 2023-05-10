@@ -25,8 +25,7 @@ type baseMapTypeTmpl struct {
 	TypeName []string
 }
 
-// cacheAllFunc map[dstSrcType]*allFieldFunc = make(map[dstSrcType]*allFieldFunc)
-var cacheAllFunc sync.Map // rdlock       sync.RWMutex
+var cacheAllFunc sync.Map
 
 type dstSrcType struct {
 	dst reflect.Type
@@ -65,11 +64,21 @@ type offsetAndFunc struct {
 	createFlag    flag // 记录offsetAndFunc这个对象生成的触发点
 }
 
+func (o *offsetAndFunc) resetFlag() {
+	o.baseMap = false
+	o.baseSlice = false
+}
+
 func saveToCache(fieldFunc *allFieldFunc, a dstSrcType) {
 	cacheAllFunc.LoadOrStore(a, fieldFunc)
 }
 
-func getSetFromCacheAndRun(a dstSrcType, dstAddr, srcAddr unsafe.Pointer, opt options) (exist bool) {
+func hasSetFromCache(a dstSrcType) (exist bool) {
+	_, ok := cacheAllFunc.Load(a)
+	return ok
+}
+
+func getFromCacheSetAndRun(a dstSrcType, dstAddr, srcAddr unsafe.Pointer, opt options) (exist bool) {
 	v, ok := cacheAllFunc.Load(a)
 	if !ok {
 		return false

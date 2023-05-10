@@ -19,6 +19,8 @@ import (
 	"unsafe"
 )
 	// 自动生成的代码， 不要修改
+	// 生成的代码位于，如下位置
+  // set_basemap_tmpl.go
 	// 生成命令位于 set_basemap_test.go
 {{$TypeName := .TypeName}}
 {{range $_, $TypeKey := .TypeName}}
