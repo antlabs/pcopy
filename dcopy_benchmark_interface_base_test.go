@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-type interfaceSrcTest struct {
+type interfaceBaseSrcTest struct {
 	A interface{}
 	B interface{}
 	C interface{}
@@ -19,13 +19,11 @@ type interfaceSrcTest struct {
 	L interface{}
 	M interface{}
 	N interface{}
-	// O interface{}
-	// P interface{}
 }
 
-type interfaceDstTest interfaceSrcTest
+type interfaceDstTest interfaceBaseSrcTest
 
-var localInterfaceSrcTest = interfaceSrcTest{
+var localInterfaceSrcTest = interfaceBaseSrcTest{
 	A: uint(1),
 	B: uint8(2),
 	C: uint16(3),

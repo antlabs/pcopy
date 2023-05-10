@@ -149,12 +149,15 @@ func (d *dcopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe.Po
 		// of.set = getSetCompositeSliceFunc(dst.Type().Elem())
 		of.baseSlice = false
 		all.append(of)
+
+		// 判断元素在转换表中是否存在
+		// if _, ok := d.convertMap[dst.Type().Elem()]; !ok {
+		// 	// 如果不存在, 则创建一个新的转换表
+		// }
 		return nil
 	}
 
 	for i := 0; i < l; i++ {
-		// 基地址+ i*类型大小
-		// TODO
 		if err := d.dcopy(dst.Index(i), src.Index(i), dstBase, srcBase, depth, of, all); err != nil {
 			return err
 		}

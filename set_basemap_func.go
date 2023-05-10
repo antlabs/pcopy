@@ -2950,7 +2950,6 @@ func setBaseMapBoolBool(dstAddr, srcAddr unsafe.Pointer) {
 }
 
 var baseMapTab = setBaseMapFuncTab{
-
 	baseMapKind{key: reflect.Int, val: reflect.Int}: setBaseMapIntInt,
 
 	baseMapKind{key: reflect.Int, val: reflect.Int8}: setBaseMapIntInt8,
