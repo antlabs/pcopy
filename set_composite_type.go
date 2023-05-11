@@ -66,16 +66,17 @@ func setCompositeInterface(dstType, srcType reflect.Type, dst, src unsafe.Pointe
 }
 
 func setCompositeMap(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options) (err error) {
-	srcMapVal := reflect.NewAt(srcType, src)
+	srcMapVal := reflect.NewAt(srcType, src).Elem()
 	if srcMapVal.Len() == 0 {
 		return nil
 	}
 
-	dstMapVal := reflect.NewAt(dstType, dst)
+	dstMapVal := reflect.NewAt(dstType, dst).Elem()
 	if dstMapVal.IsNil() {
-		dstMapVal.Set(reflect.MakeMap(dstType))
+		dstMapVal.Set(reflect.MakeMapWithSize(dstType, srcMapVal.Len()))
 	}
 
+	// fmt.Printf("type %T", dstMapVal)
 	mapKeyType := dstMapVal.Elem().Type().Key()
 	mapValueType := dstMapVal.Elem().Type().Elem()
 	// key := dstSrcType{dst: mapKeyType, src: mapValueType}
@@ -99,7 +100,9 @@ func setCompositeMap(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt
 		}
 
 		if !keyExits {
-			err = copyInner(newVal.Interface(), srcVal.Interface(), opt)
+			if err = copyInner(newVal.Interface(), srcVal.Interface(), opt); err != nil {
+				return err
+			}
 		}
 
 		if valExits {
@@ -108,8 +111,11 @@ func setCompositeMap(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt
 			key := dstSrcType{dst: mapValueType, src: srcVal.Type()}
 			valExits = getFromCacheSetAndRun(key, dst, src, opt)
 		}
+
 		if !valExits {
-			err = copyInner(newKey.Interface(), srcKey.Interface(), opt)
+			if err = copyInner(newKey.Interface(), srcKey.Interface(), opt); err != nil {
+				return err
+			}
 		}
 	}
 	return err
@@ -118,29 +124,33 @@ func setCompositeMap(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt
 // func setCompositeSlice(dstType, srcType reflect.Type, dstValType, srcValType reflect.Type, dst, src unsafe.Pointer, opt options) error {
 func setCompositeSlice(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options) error {
 	// src转成reflect.Value
-	srcVal := reflect.NewAt(srcType, src)
+	srcVal := reflect.NewAt(srcType, src).Elem()
 	if srcVal.Len() == 0 {
 		return nil
 	}
 
 	// dst转成reflect.Value
-	dstVal := reflect.NewAt(dstType, dst)
+	dstVal := reflect.NewAt(dstType, dst).Elem()
 	if dstVal.Cap() < srcVal.Len() {
 		dstVal.Set(reflect.MakeSlice(dstType, srcVal.Len(), srcVal.Len()))
 	}
 
-	offset := dstVal.Elem().Type().Size()
-	subDstType := dstVal.Elem().Type().Elem()
-	subSrcType := srcVal.Elem().Type().Elem()
+	offset := dstVal.Type().Elem().Size()
+	subDstType := dstVal.Type().Elem()
+	subSrcType := srcVal.Type().Elem()
+
 	key := dstSrcType{dst: subDstType, src: subSrcType}
 
-	// 子元素项目如果是已经缓存的类型，直接调用缓存的函数
-	exits := getFromCacheSetAndRun(key, dst, src, opt)
+	dstSliceAddr := unsafe.Pointer((*reflect.SliceHeader)(unsafe.Pointer(dst)).Data)
+	srcSliceAddr := unsafe.Pointer((*reflect.SliceHeader)(unsafe.Pointer(src)).Data)
+
+	exits := getFromCacheSetAndRun(key, dstSliceAddr, srcSliceAddr, opt)
 	if exits {
 		for i := 1; i < srcVal.Len(); i++ {
-			exits = getFromCacheSetAndRun(key, addOffset(dst, offset, i), addOffset(src, offset, i), opt)
+			exits = getFromCacheSetAndRun(key, addOffset(dstSliceAddr, offset, i), addOffset(srcSliceAddr, offset, i), opt)
 			if !exits {
-				panic(fmt.Sprintf("not support type:%v", key))
+				// 这里不可能出现exits为false的情况， 除非进程空间被unsafe.Pointer指针写坏了
+				panic(fmt.Sprintf("not support type:subDstType(%v) subSrcType(%v)", key.dst, key.src))
 			}
 		}
 		return nil
