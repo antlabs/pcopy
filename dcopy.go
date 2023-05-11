@@ -117,6 +117,7 @@ func (d *dcopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe.Po
 		return nil
 	}
 
+	// 保存类型缓存
 	l := src.Len()
 	if dst.Len() > 0 && dst.Len() < src.Len() {
 		l = dst.Len()
@@ -130,12 +131,12 @@ func (d *dcopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe.Po
 	}
 
 	if d.preheat {
+		of.srcType = src.Type()
+		of.dstType = dst.Type()
 		// 如果是基础类型的slice
 		if isBaseType(dst.Type().Elem().Kind()) && isBaseType(src.Type().Elem().Kind()) {
 			// of.dstOffset = sub(dst.UnsafeAddr(), uintptr(dstBase))
 			// of.srcOffset = sub(src.UnsafeAddr(), uintptr(srcBase))
-			of.srcType = src.Type()
-			of.dstType = dst.Type()
 			of.unsafeSet = getSetBaseSliceFunc(dst.Type().Elem().Kind())
 			of.baseSlice = true
 			of.createFlag = baseSliceTypeSet
@@ -143,13 +144,10 @@ func (d *dcopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe.Po
 			return nil
 		}
 
-		// 如果是结构体类型的slice, 也即是复合slice
-		of.srcType = src.Type()
-		of.dstType = dst.Type()
-		// of.set = getSetCompositeSliceFunc(dst.Type().Elem())
-		of.baseSlice = false
-		all.append(of)
+		// 处理复合类型的slice
+		of.reflectSet = getSetCompositeFunc(dst.Type().Kind())
 		of.resetFlag()
+		all.append(of)
 
 		dstElemType := dst.Type().Elem()
 		srcElemType := src.Type().Elem()
@@ -199,17 +197,31 @@ func (d *dcopy) cpyMap(dst, src reflect.Value, depth int, of offsetAndFunc, all 
 
 	if d.preheat {
 		// 如果是基础类型的slice
+		of.srcType = src.Type()
+		of.dstType = dst.Type()
 		if isBaseType(dst.Type().Elem().Kind()) && isBaseType(src.Type().Elem().Kind()) {
-			// of.dstOffset = sub(dst.UnsafeAddr(), uintptr(dstBase))
-			// of.srcOffset = sub(src.UnsafeAddr(), uintptr(srcBase))
-			of.srcType = src.Type()
-			of.dstType = dst.Type()
 			of.unsafeSet = getSetBaseMapFunc(src.Type().Key().Kind(), src.Type().Elem().Kind())
 			of.baseMap = true
 			of.createFlag = baseMapTypeSet
 			all.append(of)
 			return nil
 		}
+
+		of.reflectSet = getSetCompositeFunc(dst.Type().Kind())
+
+		of.resetFlag()
+		all.append(of)
+
+		dstElemType := dst.Type().Elem()
+		srcElemType := src.Type().Elem()
+		exits := hasSetFromCache(dstSrcType{dst: dstElemType, src: srcElemType})
+		// 已经存在穿上类型的转换表，直接返回
+		if exits {
+			return nil
+		}
+
+		// 元素不存在转换表，需要创建
+		return copyInner(reflect.New(dstElemType).Interface(), reflect.New(srcElemType).Interface(), d.options)
 	}
 
 	iter := src.MapRange()
@@ -465,18 +477,9 @@ func (d *dcopy) dcopy(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, d
 
 	switch src.Kind() {
 	case reflect.Slice, reflect.Array:
-		// 保存类型缓存
-		if d.preheat {
-			all = addNextComposite(all, of)
-			defer saveToCache(all, dstSrcType{dst.Type(), src.Type()})
-		}
 		return d.cpySliceArray(dst, src, dstBase, srcBase, depth, of, all)
 
 	case reflect.Map:
-		if d.preheat {
-			all = addNextComposite(all, of)
-			defer saveToCache(all, dstSrcType{dst.Type(), src.Type()})
-		}
 		return d.cpyMap(dst, src, depth, of, all)
 
 	case reflect.Func:
@@ -484,10 +487,9 @@ func (d *dcopy) dcopy(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, d
 
 	case reflect.Struct:
 		// 保存类型缓存
-		// var all *allFieldFunc
 		if d.preheat {
 			all = addNextComposite(all, of)
-			defer saveToCache(all, dstSrcType{dst.Type(), src.Type()})
+			defer saveToCache(dstSrcType{dst.Type(), src.Type()}, all)
 		}
 		return d.cpyStruct(dst, src, dstBase, srcBase, depth, of, all)
 

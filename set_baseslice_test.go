@@ -87,20 +87,9 @@ func TestDCopy_BaseWithSlice(t *testing.T) {
 	dst = DCopyDst_BaseSlice{}
 	assert.NoError(t, err)
 
-	// fmt.Printf("%v\n", cacheAllFunc)
-	// fmt.Printf("%x\n", getSliceHeaderPtr(unsafe.Pointer(&dst.SliceBool)).Data)
-	// fmt.Printf("%d\n", getSliceHeaderPtr(unsafe.Pointer(&dst.SliceBool)).Len)
-	// fmt.Printf("%d\n", getSliceHeaderPtr(unsafe.Pointer(&dst.SliceBool)).Cap)
-
 	err = Copy(&dst, &testSrc_BaseSlice, WithUsePreheat())
 	assert.NoError(t, err)
 
 	var dst2 DCopyDst_BaseSlice = DCopyDst_BaseSlice(testSrc_BaseSlice)
 	assert.Equal(t, dst, dst2)
-	// fmt.Printf("%x\n", getSliceHeaderPtr(unsafe.Pointer(&dst.SliceBool)).Data)
-	// fmt.Printf("%d\n", getSliceHeaderPtr(unsafe.Pointer(&dst.SliceBool)).Len)
-	// fmt.Printf("%d\n", getSliceHeaderPtr(unsafe.Pointer(&dst.SliceBool)).Cap)
-	// fmt.Printf("%x\n", getSliceHeaderPtr(unsafe.Pointer(&testSrc_BaseSlice.SliceBool)).Data)
-	// fmt.Printf("%d\n", getSliceHeaderPtr(unsafe.Pointer(&testSrc_BaseSlice.SliceBool)).Len)
-	// fmt.Printf("%d\n", getSliceHeaderPtr(unsafe.Pointer(&testSrc_BaseSlice.SliceBool)).Cap)
 }

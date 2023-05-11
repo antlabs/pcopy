@@ -7,6 +7,88 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type test_MapWithMap_Item struct {
+	A string
+	B string
+}
+
+type test_MapWithMap_Dst struct {
+	A map[string]string
+	B map[string]map[string]string
+	C map[string]test_MapWithMap_Item
+}
+
+type test_MapWithMap_Src test_MapWithMap_Dst
+
+var local_MapWithMap_Src = test_MapWithMap_Src{
+	A: map[string]string{
+		"1": "1",
+		"2": "2",
+	},
+	B: map[string]map[string]string{
+		"1": {
+			"1": "1",
+			"2": "2",
+		},
+		"2": {
+			"1": "1",
+			"2": "2",
+		},
+	},
+	C: map[string]test_MapWithMap_Item{
+		"1": {
+			A: "1",
+			B: "2",
+		},
+		"2": {
+			A: "1",
+			B: "2",
+		},
+	},
+}
+
+func Test_MapWithMap(t *testing.T) {
+	// err := Preheat(&test_MapWithMap_Dst{}, &test_MapWithMap_Src{})
+	// assert.NoError(t, err)
+
+	// d := test_MapWithMap_Dst{}
+	// Copy(&d, &local_MapWithMap_Src, WithUsePreheat())
+	// assert.Equal(t, d, test_MapWithMap_Dst(local_MapWithMap_Src))
+}
+
+func Test_MapToMap2(t *testing.T) {
+	type dst struct {
+		A map[int]int
+		B map[string]string
+	}
+
+	type src struct {
+		B map[string]string
+		A map[int]int
+	}
+
+	var d dst
+	b := map[string]string{
+		"testA": "testA",
+		"testB": "testB",
+	}
+
+	a := map[int]int{
+		1: 1,
+		2: 2,
+	}
+
+	s := src{
+		B: b,
+		A: a,
+	}
+
+	err := Preheat(&dst{}, &src{})
+	assert.NoError(t, err)
+	Copy(&d, &s, WithUsePreheat())
+	assert.Equal(t, d, dst{A: a, B: b})
+}
+
 func Test_MapToMap(t *testing.T) {
 	type dst struct {
 		A map[int]int

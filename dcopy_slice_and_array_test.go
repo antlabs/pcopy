@@ -2,7 +2,9 @@
 package dcopy
 
 import (
+	"fmt"
 	"testing"
+	"unsafe"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -31,7 +33,17 @@ type test_SliceWithStruct_Dst struct {
 
 type test_SliceWithStruct_Src test_SliceWithStruct_Dst
 
+var local_SliceWithStruct_Src = test_SliceWithStruct_Src{
+	A: []test_SliceWithStruct_Dst_Item1{
+		{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11.1, 12.2, "13", true},
+		{14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24.2, 25.3, "26", false},
+		{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11.1, 12.2, "12", true},
+	},
+	B: []int{1, 2, 3, 4, 5},
+}
+
 func Test_SliceWithStruct(t *testing.T) {
+	fmt.Printf("%d\n", unsafe.Sizeof(test_SliceWithStruct_Dst_Item1{}))
 	for _, tc := range []test_SliceWithStruct_Src{
 		{
 			A: []test_SliceWithStruct_Dst_Item1{
@@ -44,7 +56,10 @@ func Test_SliceWithStruct(t *testing.T) {
 		var d test_SliceWithStruct_Dst
 		Preheat(&d, &tc)
 		d = test_SliceWithStruct_Dst{}
-		Copy(&d, &tc)
+		fmt.Printf("Test_SliceWithStruct:d. %p tc.base %p \n", &d, &tc)
+		fmt.Printf("Test_SliceWithStruct:d.A %p tc.A %p \n", &d.A, &tc.A)
+		fmt.Printf("Test_SliceWithStruct:d.B %p tc.B %p \n", &d.B, &tc.B)
+		Copy(&d, &tc, WithUsePreheat())
 		assert.Equal(t, tc, test_SliceWithStruct_Src(d))
 	}
 }
