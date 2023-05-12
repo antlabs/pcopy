@@ -59,7 +59,7 @@ func Test_Interface_DCopy2(t *testing.T) {
 
 		err = Copy(&data, &tc, WithUsePreheat())
 		// (&data).printAddress()
-		fmt.Printf("data: %x: data.A: %T, data.A: %d\n", data, data.A, data.A)
+		// fmt.Printf("data: %x: data.A: %T, data.A: %d\n", data, data.A, data.A)
 		assert.NoError(t, err)
 		assert.Equal(t, interfaceDstTest(tc), data)
 	}
@@ -91,7 +91,7 @@ func Test_Interface_DCopy3(t *testing.T) {
 
 		err = Copy(&data, &tc, WithUsePreheat())
 		// (&data).printAddress()
-		fmt.Printf("data: %x: data.A: %T, data.A: %d\n", data, data.A, data.A)
+		// fmt.Printf("data: %x: data.A: %T, data.A: %d\n", data, data.A, data.A)
 		assert.NoError(t, err)
 		assert.Equal(t, interfaceSliceDstTest(tc), data)
 	}

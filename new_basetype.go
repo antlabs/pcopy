@@ -55,6 +55,11 @@ func newInt64(dst interface{}) interface{} {
 	return d
 }
 
+// func newString(dst interface{}) interface{} {
+// 	d := *(*string)((*emptyInterface)(unsafe.Pointer(&dst)).word)
+// 	return d
+// }
+
 func newString(dst interface{}) interface{} {
 	d := *(*string)((*emptyInterface)(unsafe.Pointer(&dst)).word)
 	return d
@@ -93,7 +98,7 @@ func getNewBaseType(k reflect.Kind, dst interface{}) interface{} {
 	return nil
 }
 
-var newBaseTypeTable = map[reflect.Kind]func(interface{}) interface{}{
+var newBaseTypeTable = map[reflect.Kind]newBaseTypeFunc{
 	reflect.Int:        newInt,
 	reflect.Int8:       newInt8,
 	reflect.Int16:      newInt16,

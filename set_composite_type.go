@@ -42,7 +42,6 @@ func setCompositeInterface(dstType, srcType reflect.Type, dst, src unsafe.Pointe
 	srcTypeKind := srcType.Kind()
 
 	if isBaseType(srcType.Kind()) {
-		// unsafeSet = getSetBaseFunc(srcTypeKind)
 		*(*interface{})(dst) = getNewBaseType(srcTypeKind, *(*interface{})(src))
 		return nil
 	}
@@ -62,66 +61,121 @@ func setCompositeInterface(dstType, srcType reflect.Type, dst, src unsafe.Pointe
 	// TODO 这里也可以细化出map的情况
 	// 以后再优化
 
-	return copyInner((*interface{})(dst), (*interface{})(src), opt)
+	return dcopyInner((*interface{})(dst), (*interface{})(src), opt)
 }
 
+// map 拿不到UnsafeAddr指针，所以只能用reflect.Value来做
 func setCompositeMap(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options) (err error) {
-	srcMapVal := reflect.NewAt(srcType, src).Elem()
-	if srcMapVal.Len() == 0 {
+	srcMap := reflect.NewAt(srcType, src).Elem()
+	if srcMap.Len() == 0 {
 		return nil
 	}
 
-	dstMapVal := reflect.NewAt(dstType, dst).Elem()
-	if dstMapVal.IsNil() {
-		dstMapVal.Set(reflect.MakeMapWithSize(dstType, srcMapVal.Len()))
+	dstMap := reflect.NewAt(dstType, dst).Elem()
+	if dstMap.IsNil() {
+		dstMap.Set(reflect.MakeMapWithSize(dstType, srcMap.Len()))
 	}
 
-	// fmt.Printf("type %T", dstMapVal)
-	mapKeyType := dstMapVal.Elem().Type().Key()
-	mapValueType := dstMapVal.Elem().Type().Elem()
-	// key := dstSrcType{dst: mapKeyType, src: mapValueType}
+	mapKeyType := dstMap.Type().Key()
+	mapValType := dstMap.Type().Elem()
 
-	keyExits := true
-	valExits := true
 	// 获取src map的值
-	for _, srcKey := range srcMapVal.MapKeys() {
-		srcVal := srcMapVal.MapIndex(srcKey)
+	iter := srcMap.MapRange()
 
-		newVal := reflect.New(mapValueType)
+	isBaseKeyType := isBaseType(mapKeyType.Kind())
+	isBaseValType := isBaseType(mapValType.Kind())
+
+	// 对map进行反射得到的值不能取地址，所以这里要关闭preheat和usePreheat
+	opt.preheat = false
+	opt.usePreheat = false
+
+	for iter.Next() {
+		srcMapKey := iter.Key()
+		srcMapVal := iter.Value()
+
+		newVal := reflect.New(mapValType)
 		newKey := reflect.New(mapKeyType)
 
-		dstMapVal.SetMapIndex(newKey, newVal)
-
-		if keyExits {
-			src = unsafe.Pointer(newVal.UnsafeAddr())
-			dst = unsafe.Pointer(srcVal.UnsafeAddr())
-			key := dstSrcType{dst: mapValueType, src: srcVal.Type()}
-			keyExits = getFromCacheSetAndRun(key, dst, src, opt)
-		}
-
-		if !keyExits {
-			if err = copyInner(newVal.Interface(), srcVal.Interface(), opt); err != nil {
+		if isBaseKeyType {
+			newKey2 := getNewBaseType(mapKeyType.Kind(), srcMapKey.Interface())
+			newKey.Elem().Set(reflect.ValueOf(newKey2))
+		} else {
+			if err = dcopyInner(newKey.Interface(), srcMapKey.Interface(), opt); err != nil {
 				return err
 			}
 		}
 
-		if valExits {
-			src = unsafe.Pointer(newKey.UnsafeAddr())
-			dst = unsafe.Pointer(srcKey.UnsafeAddr())
-			key := dstSrcType{dst: mapValueType, src: srcVal.Type()}
-			valExits = getFromCacheSetAndRun(key, dst, src, opt)
+		if isBaseValType {
+			newVal2 := getNewBaseType(mapValType.Kind(), srcMapVal.Interface())
+			newVal.Elem().Set(reflect.ValueOf(newVal2))
+			goto next
 		}
 
-		if !valExits {
-			if err = copyInner(newKey.Interface(), srcKey.Interface(), opt); err != nil {
-				return err
-			}
+		if err = dcopyInner(newVal.Interface(), srcMapVal.Interface(), opt); err != nil {
+			return err
 		}
+	next:
+		dstMap.SetMapIndex(newKey.Elem(), newVal.Elem())
 	}
 	return err
 }
 
-// func setCompositeSlice(dstType, srcType reflect.Type, dstValType, srcValType reflect.Type, dst, src unsafe.Pointer, opt options) error {
+// func setCompositeMap(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options) (err error) {
+// 	srcMap := reflect.NewAt(srcType, src).Elem()
+// 	if srcMap.Len() == 0 {
+// 		return nil
+// 	}
+
+// 	dstMap := reflect.NewAt(dstType, dst).Elem()
+// 	if dstMap.IsNil() {
+// 		dstMap.Set(reflect.MakeMapWithSize(dstType, srcMap.Len()))
+// 	}
+
+// 	mapKeyType := dstMap.Type().Key()
+// 	mapValueType := dstMap.Type().Elem()
+
+// 	keyExits := true
+// 	valExits := true
+// 	// 获取src map的值
+// 	for _, srcMapKey := range srcMap.MapKeys() {
+// 		srcMapVal := srcMap.MapIndex(srcMapKey)
+
+// 		newVal := reflect.New(mapValueType).Elem()
+// 		newKey := reflect.New(mapKeyType).Elem()
+
+// 		reflect.New(mapValueType).UnsafeAddr()
+
+// 		dstMap.SetMapIndex(newKey, newVal)
+
+// 		if valExits {
+// 			src = unsafe.Pointer(newKey.UnsafeAddr())
+// 			dst = unsafe.Pointer(srcMapKey.UnsafeAddr())
+// 			key := dstSrcType{dst: mapValueType, src: srcMapVal.Type()}
+// 			valExits = getFromCacheSetAndRun(key, dst, src, opt)
+// 		}
+
+// 		if !valExits {
+// 			if err = copyInner(newKey.Interface(), srcMapKey.Interface(), opt); err != nil {
+// 				return err
+// 			}
+// 		}
+
+// 		if keyExits {
+// 			src = unsafe.Pointer(newVal.UnsafeAddr())
+// 			dst = unsafe.Pointer(srcMapVal.UnsafeAddr())
+// 			key := dstSrcType{dst: mapValueType, src: srcMapVal.Type()}
+// 			keyExits = getFromCacheSetAndRun(key, dst, src, opt)
+// 		}
+
+// 		if !keyExits {
+// 			if err = copyInner(newVal.Interface(), srcMapVal.Interface(), opt); err != nil {
+// 				return err
+// 			}
+// 		}
+// 	}
+// 	return err
+// }
+
 func setCompositeSlice(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options) error {
 	// src转成reflect.Value
 	srcVal := reflect.NewAt(srcType, src).Elem()
@@ -144,10 +198,16 @@ func setCompositeSlice(dstType, srcType reflect.Type, dst, src unsafe.Pointer, o
 	dstSliceAddr := unsafe.Pointer((*reflect.SliceHeader)(unsafe.Pointer(dst)).Data)
 	srcSliceAddr := unsafe.Pointer((*reflect.SliceHeader)(unsafe.Pointer(src)).Data)
 
-	exits := getFromCacheSetAndRun(key, dstSliceAddr, srcSliceAddr, opt)
+	exits, err := getFromCacheSetAndRun(key, dstSliceAddr, srcSliceAddr, opt)
+	if err != nil {
+		return err
+	}
 	if exits {
 		for i := 1; i < srcVal.Len(); i++ {
-			exits = getFromCacheSetAndRun(key, addOffset(dstSliceAddr, offset, i), addOffset(srcSliceAddr, offset, i), opt)
+			exits, err = getFromCacheSetAndRun(key, addOffset(dstSliceAddr, offset, i), addOffset(srcSliceAddr, offset, i), opt)
+			if err != nil {
+				return err
+			}
 			if !exits {
 				// 这里不可能出现exits为false的情况， 除非进程空间被unsafe.Pointer指针写坏了
 				panic(fmt.Sprintf("not support type:subDstType(%v) subSrcType(%v)", key.dst, key.src))
@@ -156,7 +216,7 @@ func setCompositeSlice(dstType, srcType reflect.Type, dst, src unsafe.Pointer, o
 		return nil
 	}
 
-	return copyInner(dstVal.Interface(), srcVal.Interface(), opt)
+	return dcopyInner(dstVal.Interface(), srcVal.Interface(), opt)
 }
 
 func getSetCompositeFunc(t reflect.Kind) setReflectFunc {
