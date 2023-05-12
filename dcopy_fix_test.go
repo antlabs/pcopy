@@ -2,7 +2,6 @@
 package dcopy
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -48,8 +47,8 @@ func TestCopy(t *testing.T) {
 	rsp := AllTopicResp2{Data: &AllTopicResp_AllTopicRespData{}}
 	Copy(rsp.Data, resp)
 
-	fmt.Printf("%#v\n", resp)
-	fmt.Printf("%#v\n", rsp.Data)
+	// fmt.Printf("%#v\n", resp)
+	// fmt.Printf("%#v\n", rsp.Data)
 	assert.NotNil(t, rsp.Data)
 	assert.Equal(t, rsp.Data.Total, resp.Total)
 	assert.Equal(t, len(rsp.Data.TopicItem), len(resp.TopicItem))

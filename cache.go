@@ -8,8 +8,9 @@ import (
 )
 
 type (
-	setUnsafeFunc  func(dstAddr, srcAddr unsafe.Pointer)
-	setReflectFunc func(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options) error
+	newBaseTypeFunc func(interface{}) interface{}
+	setUnsafeFunc   func(dstAddr, srcAddr unsafe.Pointer)
+	setReflectFunc  func(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options) error
 	// setReflectFunc    func(dstType, srcType reflect.Type, dstValType, srcValType reflect.Type, dst, src unsafe.Pointer, opt options) error
 	setUnsafeFuncTab  map[reflect.Kind]setUnsafeFunc
 	setReflectFuncTab map[reflect.Kind]setReflectFunc
@@ -61,7 +62,7 @@ type offsetAndFunc struct {
 	nextComposite *allFieldFunc
 	baseSlice     bool // 是否是基础类型的slice
 	baseMap       bool // 是否是基础类型的map
-	createFlag    flag // 记录offsetAndFunc这个对象生成的触发点
+	createFlag    flag // 记录offsetAndFunc这个对象生成的触发点, debug时用
 }
 
 func (o *offsetAndFunc) resetFlag() {
@@ -70,6 +71,7 @@ func (o *offsetAndFunc) resetFlag() {
 }
 
 func saveToCache(a dstSrcType, fieldFunc *allFieldFunc) {
+	// fmt.Printf("saveToCache: dst = %v, src = %v\n", a.dst, a.src)
 	cacheAllFunc.LoadOrStore(a, fieldFunc)
 }
 
@@ -78,15 +80,15 @@ func hasSetFromCache(a dstSrcType) (exist bool) {
 	return ok
 }
 
-func getFromCacheSetAndRun(a dstSrcType, dstAddr, srcAddr unsafe.Pointer, opt options) (exist bool) {
+func getFromCacheSetAndRun(a dstSrcType, dstAddr, srcAddr unsafe.Pointer, opt options) (exist bool, err error) {
 	v, ok := cacheAllFunc.Load(a)
 	if !ok {
-		return false
+		return false, nil
 	}
 
-	_ = v.(*allFieldFunc).do(dstAddr, srcAddr, opt)
+	err = v.(*allFieldFunc).do(dstAddr, srcAddr, opt)
 	// cacheFunc.do(dstAddr, srcAddr)
-	return true
+	return true, err
 }
 
 func newAllFieldFunc() (rv *allFieldFunc) {

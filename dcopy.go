@@ -36,10 +36,10 @@ func Copy(dst, src interface{}, opts ...Option) error {
 	for _, o := range opts {
 		o(&opt)
 	}
-	return copyInner(dst, src, opt)
+	return dcopyInner(dst, src, opt)
 }
 
-func copyInner(dst, src interface{}, opt options) error {
+func dcopyInner(dst, src interface{}, opt options) error {
 	if dst == nil || src == nil {
 		return ErrUnsupportedNil
 	}
@@ -76,9 +76,9 @@ func copyInner(dst, src interface{}, opt options) error {
 		of.dstType = dstValue.Type()
 
 		// 从cache load出类型直接执行
-		exist := getFromCacheSetAndRun(dstSrcType{dst: dstValue.Type(), src: srcValue.Type()}, dstAddr, srcAddr, opt)
-		if exist {
-			return nil
+		exist, err := getFromCacheSetAndRun(dstSrcType{dst: dstValue.Type(), src: srcValue.Type()}, dstAddr, srcAddr, opt)
+		if exist || err != nil {
+			return err
 		}
 
 		if opt.preheat {
@@ -89,10 +89,6 @@ func copyInner(dst, src interface{}, opt options) error {
 	d := dcopy{
 		options: opt,
 	}
-	// if opt.maxDepth == 0 {
-	// 	d.maxDepth = noDepthLimited
-	// }
-
 	return d.dcopy(dstValue, srcValue, dstAddr, srcAddr, 0, of, all)
 }
 
@@ -158,7 +154,7 @@ func (d *dcopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe.Po
 		}
 
 		// 元素不存在转换表，需要创建
-		return copyInner(reflect.New(dstElemType).Interface(), reflect.New(srcElemType).Interface(), d.options)
+		return dcopyInner(reflect.New(dstElemType).Interface(), reflect.New(srcElemType).Interface(), d.options)
 	}
 
 	for i := 0; i < l; i++ {
@@ -170,7 +166,11 @@ func (d *dcopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe.Po
 }
 
 // 拷贝map
-func (d *dcopy) cpyMap(dst, src reflect.Value, depth int, of offsetAndFunc, all *allFieldFunc) error {
+func (d *dcopy) cpyMap(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, depth int, of offsetAndFunc, all *allFieldFunc) error {
+	if dst.Kind() == reflect.Ptr {
+		return d.cpyPtr(dst, src, dstBase, srcBase, depth, of, all)
+	}
+
 	if dst.Kind() != src.Kind() {
 		return nil
 	}
@@ -220,8 +220,9 @@ func (d *dcopy) cpyMap(dst, src reflect.Value, depth int, of offsetAndFunc, all 
 			return nil
 		}
 
+		// fmt.Printf("dstElemType: %v, srcElemType: %v, d.options:%#v\n", dstElemType, srcElemType, d.options)
 		// 元素不存在转换表，需要创建
-		return copyInner(reflect.New(dstElemType).Interface(), reflect.New(srcElemType).Interface(), d.options)
+		return dcopyInner(reflect.New(dstElemType).Interface(), reflect.New(srcElemType).Interface(), d.options)
 	}
 
 	iter := src.MapRange()
@@ -310,8 +311,8 @@ func (d *dcopy) cpyStruct(dst, src reflect.Value, dstBase, srcBase unsafe.Pointe
 
 	if d.usePreheat {
 		// 从cache load出类型直接执行
-		exist := getFromCacheSetAndRun(dstSrcType{dst: dst.Type(), src: src.Type()}, dstBase, srcBase, d.options)
-		if exist {
+		exist, err := getFromCacheSetAndRun(dstSrcType{dst: dst.Type(), src: src.Type()}, dstBase, srcBase, d.options)
+		if exist || err != nil {
 			return nil
 		}
 	}
@@ -425,6 +426,7 @@ func (d *dcopy) cpyDefault(dst, src reflect.Value, dstBase, srcBase unsafe.Point
 		of.unsafeSet = getSetBaseFunc(src.Kind())
 		of.createFlag = baseTypeSet
 		all.append(of)
+		return nil
 	}
 
 	switch src.Kind() {
@@ -470,17 +472,12 @@ func (d *dcopy) dcopy(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, d
 		}
 	}
 
-	// // 检查递归深度
-	// if d.maxDepth != noDepthLimited && depth > d.maxDepth {
-	// 	return nil
-	// }
-
 	switch src.Kind() {
 	case reflect.Slice, reflect.Array:
 		return d.cpySliceArray(dst, src, dstBase, srcBase, depth, of, all)
 
 	case reflect.Map:
-		return d.cpyMap(dst, src, depth, of, all)
+		return d.cpyMap(dst, src, dstBase, srcBase, depth, of, all)
 
 	case reflect.Func:
 		return d.cpyFunc(dst, src, depth)

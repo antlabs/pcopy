@@ -48,12 +48,14 @@ var local_MapWithMap_Src = test_MapWithMap_Src{
 }
 
 func Test_MapWithMap(t *testing.T) {
-	// err := Preheat(&test_MapWithMap_Dst{}, &test_MapWithMap_Src{})
-	// assert.NoError(t, err)
+	err := Preheat(&test_MapWithMap_Dst{}, &test_MapWithMap_Src{})
+	assert.NoError(t, err)
 
-	// d := test_MapWithMap_Dst{}
-	// Copy(&d, &local_MapWithMap_Src, WithUsePreheat())
-	// assert.Equal(t, d, test_MapWithMap_Dst(local_MapWithMap_Src))
+	d := test_MapWithMap_Dst{}
+	err = Copy(&d, &local_MapWithMap_Src, WithUsePreheat())
+	assert.NoError(t, err)
+	// Copy(&d, &local_MapWithMap_Src)
+	assert.Equal(t, d, test_MapWithMap_Dst(local_MapWithMap_Src))
 }
 
 func Test_MapToMap2(t *testing.T) {
