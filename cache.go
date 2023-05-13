@@ -10,7 +10,7 @@ import (
 type (
 	newBaseTypeFunc func(interface{}) interface{}
 	setUnsafeFunc   func(dstAddr, srcAddr unsafe.Pointer)
-	setReflectFunc  func(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options) error
+	setReflectFunc  func(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options, of *offsetAndFunc) error
 	// setReflectFunc    func(dstType, srcType reflect.Type, dstValType, srcValType reflect.Type, dst, src unsafe.Pointer, opt options) error
 	setUnsafeFuncTab  map[reflect.Kind]setUnsafeFunc
 	setReflectFuncTab map[reflect.Kind]setReflectFunc
@@ -60,14 +60,15 @@ type offsetAndFunc struct {
 
 	// 找到一个复合类型
 	nextComposite *allFieldFunc
-	baseSlice     bool // 是否是基础类型的slice
-	baseMap       bool // 是否是基础类型的map
+	isBaseType    bool
+	isBaseSlice   bool // 是否是基础类型的slice
+	isBaseMap     bool // 是否是基础类型的map
 	createFlag    flag // 记录offsetAndFunc这个对象生成的触发点, debug时用
 }
 
 func (o *offsetAndFunc) resetFlag() {
-	o.baseMap = false
-	o.baseSlice = false
+	o.isBaseMap = false
+	o.isBaseSlice = false
 }
 
 func saveToCache(a dstSrcType, fieldFunc *allFieldFunc) {
@@ -104,17 +105,18 @@ func (c *allFieldFunc) do(dstBaseAddr, srcBaseAddr unsafe.Pointer, opt options) 
 	for _, v := range c.fieldFuncs {
 		var kind reflect.Kind
 
-		// fmt.Printf("v = %#v\n", v)
 		if v.unsafeSet == nil && v.reflectSet == nil {
 			goto next
 		}
 
 		kind = v.srcType.Kind()
 		switch {
+		case kind == reflect.Ptr:
+			v.unsafeSet(add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset))
 		// 处理slice
 		case kind == reflect.Slice:
 			// 由基础类型组成的slice
-			if v.baseSlice {
+			if v.isBaseSlice {
 				// 基础类型的slice直接一把函数搞定
 				v.unsafeSet(add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset))
 				continue
@@ -122,22 +124,21 @@ func (c *allFieldFunc) do(dstBaseAddr, srcBaseAddr unsafe.Pointer, opt options) 
 
 			// 复合类型的slice
 			if v.reflectSet != nil {
-				// fmt.Printf("base:%p, %p, offset:%d, offset:%d\n", dstBaseAddr, srcBaseAddr, v.dstOffset, v.srcOffset)
-				if err := v.reflectSet(v.dstType, v.srcType, add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset), opt); err != nil {
+				if err := v.reflectSet(v.dstType, v.srcType, add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset), opt, &v); err != nil {
 					return err
 				}
 			}
 			// 处理map
 		case kind == reflect.Map:
 			// 基础类型的map直接一把函数搞定
-			if v.baseMap {
+			if v.isBaseMap {
 				v.unsafeSet(add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset))
 				continue
 			}
 
 			// 复合类型的map
 			if v.reflectSet != nil {
-				if err := v.reflectSet(v.dstType, v.srcType, add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset), opt); err != nil {
+				if err := v.reflectSet(v.dstType, v.srcType, add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset), opt, &v); err != nil {
 					return err
 				}
 			}
@@ -150,7 +151,7 @@ func (c *allFieldFunc) do(dstBaseAddr, srcBaseAddr unsafe.Pointer, opt options) 
 
 			if v.reflectSet != nil {
 				//  interface{}里面存放基础类型还是复合类型都由reflectSet函数处理
-				if err := v.reflectSet(v.dstType, v.srcType, add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset), opt); err != nil {
+				if err := v.reflectSet(v.dstType, v.srcType, add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset), opt, &v); err != nil {
 					return err
 				}
 			}
