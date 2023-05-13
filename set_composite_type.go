@@ -93,29 +93,29 @@ func setCompositeMap(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt
 		srcMapKey := iter.Key()
 		srcMapVal := iter.Value()
 
-		newVal := reflect.New(mapValType)
-		newKey := reflect.New(mapKeyType)
+		newDstVal := reflect.New(mapValType)
+		newDstKey := reflect.New(mapKeyType)
 
 		if isBaseKeyType {
 			newKey2 := getNewBaseType(mapKeyType.Kind(), srcMapKey.Interface())
-			newKey.Elem().Set(reflect.ValueOf(newKey2))
+			newDstKey.Elem().Set(reflect.ValueOf(newKey2))
 		} else {
-			if err = dcopyInner(newKey.Interface(), srcMapKey.Interface(), opt); err != nil {
+			if err = dcopyInner(newDstKey.Interface(), srcMapKey.Interface(), opt); err != nil {
 				return err
 			}
 		}
 
 		if isBaseValType {
 			newVal2 := getNewBaseType(mapValType.Kind(), srcMapVal.Interface())
-			newVal.Elem().Set(reflect.ValueOf(newVal2))
+			newDstVal.Elem().Set(reflect.ValueOf(newVal2))
 			goto next
 		}
 
-		if err = dcopyInner(newVal.Interface(), srcMapVal.Interface(), opt); err != nil {
+		if err = dcopyInner(newDstVal.Interface(), srcMapVal.Interface(), opt); err != nil {
 			return err
 		}
 	next:
-		dstMap.SetMapIndex(newKey.Elem(), newVal.Elem())
+		dstMap.SetMapIndex(newDstKey.Elem(), newDstVal.Elem())
 	}
 	return err
 }
