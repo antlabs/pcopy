@@ -411,9 +411,8 @@ func (d *dcopy) preheatPtr(dst, src reflect.Value, depth int, of offsetAndFunc, 
 	}
 
 	if isBaseType(src.Kind()) {
-		// of.isBaseType = true
 		of.unsafeSet = getSetBaseFunc(src.Kind())
-	} else if src.Kind() == reflect.Slice {
+	} else if src.Kind() == reflect.Slice && isBaseType(src.Type().Elem().Kind()) {
 		of.unsafeSet = getSetBaseSliceFunc(src.Type().Elem().Kind())
 	} else if src.Kind() == reflect.Map {
 		of.unsafeSet = getSetBaseMapFunc(src.Type().Key().Kind(), src.Type().Elem().Kind(), false)
