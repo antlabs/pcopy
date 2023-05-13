@@ -61,14 +61,10 @@ type offsetAndFunc struct {
 	// 找到一个复合类型
 	nextComposite *allFieldFunc
 	isBaseType    bool
-	isBaseSlice   bool // 是否是基础类型的slice
-	isBaseMap     bool // 是否是基础类型的map
 	createFlag    flag // 记录offsetAndFunc这个对象生成的触发点, debug时用
 }
 
 func (o *offsetAndFunc) resetFlag() {
-	o.isBaseMap = false
-	o.isBaseSlice = false
 }
 
 func saveToCache(a dstSrcType, fieldFunc *allFieldFunc) {
@@ -116,7 +112,7 @@ func (c *allFieldFunc) do(dstBaseAddr, srcBaseAddr unsafe.Pointer, opt options) 
 		// 处理slice
 		case kind == reflect.Slice:
 			// 由基础类型组成的slice
-			if v.isBaseSlice {
+			if v.unsafeSet != nil {
 				// 基础类型的slice直接一把函数搞定
 				v.unsafeSet(add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset))
 				continue
@@ -131,7 +127,7 @@ func (c *allFieldFunc) do(dstBaseAddr, srcBaseAddr unsafe.Pointer, opt options) 
 			// 处理map
 		case kind == reflect.Map:
 			// 基础类型的map直接一把函数搞定
-			if v.isBaseMap {
+			if v.unsafeSet != nil {
 				v.unsafeSet(add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset))
 				continue
 			}
