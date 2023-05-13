@@ -117,10 +117,10 @@ var baseMapTab = setBaseMapFuncTab{
 {{end}}
 }
 
-func getSetBaseMapFunc(key reflect.Kind, val reflect.Kind) setUnsafeFunc {
+func getSetBaseMapFunc(key reflect.Kind, val reflect.Kind, p bool) setUnsafeFunc {
 	k := baseMapKind{key: key, val: val}
 	f, ok := baseMapTab[k]
-	if !ok {
+	if p && !ok {
 		panic(fmt.Sprintf("not support type:key %v val: %v", key, val))
 	}
 	return f

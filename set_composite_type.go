@@ -15,6 +15,8 @@ func init() {
 	copyCompositeTab[reflect.Map] = setCompositeMap
 	// 这是一个复合类型，最外层是interface
 	copyCompositeTab[reflect.Interface] = setCompositeInterface
+	// 这是一个复全类型, 最外层是ptr
+	copyCompositeTab[reflect.Ptr] = setCompositePtr
 }
 
 type emptyInterface struct {
@@ -22,7 +24,29 @@ type emptyInterface struct {
 	word unsafe.Pointer
 }
 
-func setCompositeInterface(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options) error {
+func setCompositePtr(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options, of *offsetAndFunc) (err error) {
+	// 基础类型的指针
+	if of.isBaseType {
+		return nil
+	}
+
+	// 基础slice的指针
+	if of.isBaseSlice {
+		return nil
+	}
+
+	// 基础map的指针
+	if of.isBaseMap {
+		return nil
+	}
+
+	// 已缓存的复合类型的指针
+
+	// 未缓存的复合类型的指针，使用反射
+	return
+}
+
+func setCompositeInterface(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options, of *offsetAndFunc) error {
 	if dstType.Kind() != reflect.Interface {
 		panic("dstType is not interface")
 	}
@@ -65,7 +89,7 @@ func setCompositeInterface(dstType, srcType reflect.Type, dst, src unsafe.Pointe
 }
 
 // map 拿不到UnsafeAddr指针，所以只能用reflect.Value来做
-func setCompositeMap(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options) (err error) {
+func setCompositeMap(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options, of *offsetAndFunc) (err error) {
 	srcMap := reflect.NewAt(srcType, src).Elem()
 	if srcMap.Len() == 0 {
 		return nil
@@ -176,7 +200,7 @@ func setCompositeMap(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt
 // 	return err
 // }
 
-func setCompositeSlice(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options) error {
+func setCompositeSlice(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options, of *offsetAndFunc) error {
 	// src转成reflect.Value
 	srcVal := reflect.NewAt(srcType, src).Elem()
 	if srcVal.Len() == 0 {

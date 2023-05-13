@@ -134,7 +134,7 @@ func (d *dcopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe.Po
 			// of.dstOffset = sub(dst.UnsafeAddr(), uintptr(dstBase))
 			// of.srcOffset = sub(src.UnsafeAddr(), uintptr(srcBase))
 			of.unsafeSet = getSetBaseSliceFunc(dst.Type().Elem().Kind())
-			of.baseSlice = true
+			of.isBaseSlice = true
 			of.createFlag = baseSliceTypeSet
 			all.append(of)
 			return nil
@@ -200,8 +200,8 @@ func (d *dcopy) cpyMap(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, 
 		of.srcType = src.Type()
 		of.dstType = dst.Type()
 		if isBaseType(dst.Type().Elem().Kind()) && isBaseType(src.Type().Elem().Kind()) {
-			of.unsafeSet = getSetBaseMapFunc(src.Type().Key().Kind(), src.Type().Elem().Kind())
-			of.baseMap = true
+			of.unsafeSet = getSetBaseMapFunc(src.Type().Key().Kind(), src.Type().Elem().Kind(), true)
+			of.isBaseMap = true
 			of.createFlag = baseMapTypeSet
 			all.append(of)
 			return nil
@@ -369,14 +369,12 @@ func (d *dcopy) cpyInterface(dst, src reflect.Value, depth int, of offsetAndFunc
 	newDst := reflect.New(src.Type()).Elem()
 
 	newDstAddr := zeroUintptr
-	if d.usePreheat {
-		newDstAddr = unsafe.Pointer(newDst.UnsafeAddr())
-	}
-
 	newSrcAddr := zeroUintptr
 	if d.usePreheat {
+		newDstAddr = unsafe.Pointer(newDst.UnsafeAddr())
 		newSrcAddr = unsafe.Pointer(src.UnsafeAddr())
 	}
+
 	if err := d.dcopy(newDst, src, newDstAddr, newSrcAddr, depth, of, all); err != nil {
 		return err
 	}
@@ -385,8 +383,70 @@ func (d *dcopy) cpyInterface(dst, src reflect.Value, depth int, of offsetAndFunc
 	return nil
 }
 
+func (d *dcopy) preheatPtr(dst, src reflect.Value, depth int, of offsetAndFunc, all *allFieldFunc) error {
+	bkDst := dst
+	bkSrc := src
+	for {
+		if dst.Kind() == reflect.Ptr && dst.IsNil() {
+			// dst.CanSet必须放到dst.IsNil判断里面
+			// 不然会影响到struct或者map类型的指针
+			if !dst.CanSet() {
+				return nil
+			}
+			p := reflect.New(dst.Type().Elem())
+			dst.Set(p)
+		}
+
+		if src.Kind() == reflect.Ptr {
+			src = src.Elem()
+		}
+
+		if dst.Kind() == reflect.Ptr {
+			dst = dst.Elem()
+		}
+
+		if src.Kind() != reflect.Ptr && dst.Kind() != reflect.Ptr {
+			break
+		}
+	}
+
+	if src.Kind() != dst.Kind() {
+		return nil
+	}
+
+	if isBaseType(src.Kind()) {
+		of.isBaseType = true
+		of.unsafeSet = getSetBaseFunc(src.Kind())
+	} else if src.Kind() == reflect.Slice {
+		of.isBaseSlice = isBaseType(src.Type().Elem().Kind())
+		of.unsafeSet = getSetBaseSliceFunc(src.Type().Elem().Kind())
+	} else if src.Kind() == reflect.Map {
+		of.unsafeSet = getSetBaseMapFunc(src.Type().Key().Kind(), src.Type().Elem().Kind(), false)
+		// of.isBaseMap =
+	}
+	of.dstType = bkDst.Type()
+	of.srcType = bkSrc.Type()
+	of.reflectSet = getSetCompositeFunc(reflect.Ptr)
+	of.resetFlag()
+	all.append(of)
+
+	if src.Kind() == reflect.Struct {
+		exits := hasSetFromCache(dstSrcType{dst: dst.Type(), src: src.Type()})
+		if exits {
+			return nil
+		}
+		return dcopyInner(dst.Interface(), src.Interface(), d.options)
+	}
+	return nil
+}
+
 // 拷贝指针
 func (d *dcopy) cpyPtr(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, depth int, of offsetAndFunc, all *allFieldFunc) error {
+	// 解引用之后的类型如果不一样，直接返回
+	if d.preheat {
+		return d.preheatPtr(dst, src, depth, of, all)
+	}
+
 	if dst.Kind() == reflect.Ptr && dst.IsNil() {
 		// dst.CanSet必须放到dst.IsNil判断里面
 		// 不然会影响到struct或者map类型的指针
@@ -405,11 +465,6 @@ func (d *dcopy) cpyPtr(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, 
 		dst = dst.Elem()
 	}
 
-	if d.preheat {
-		// dstPtr = unsafe.Pointer(dst.UnsafeAddr())
-		// srcPtr = unsafe.Pointer(src.UnsafeAddr())
-		// fmt.Printf("#### %p:%p\n", dstPtr, srcPtr)
-	}
 	return d.dcopy(dst, src, dstBase, srcBase, depth, of, all)
 }
 
@@ -497,7 +552,7 @@ func (d *dcopy) dcopy(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, d
 			of.reflectSet = getSetCompositeFunc(src.Kind())
 			all.append(of)
 			// interface是可变类型。cache加速是把类型关系固化，所以这里只需要知道这个offset是interface就行
-			// 后需要的类型是可变的，就没有必要缓存
+			// 后需要的类型是可变的，就没有必要分析现在interface存放的类型
 			return nil
 		}
 		return d.cpyInterface(dst, src, depth, of, all)
