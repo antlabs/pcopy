@@ -25,19 +25,10 @@ type emptyInterface struct {
 }
 
 func setCompositePtr(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options, of *offsetAndFunc) (err error) {
-	// 基础类型的指针
-	if of.isBaseType {
-		return nil
-	}
-
-	// 基础slice的指针
-	if of.isBaseSlice {
-		return nil
-	}
-
-	// 基础map的指针
-	if of.isBaseMap {
-		return nil
+	// 1.基础类型的指针
+	// 2.基础slice的指针
+	// 3.基础map的指针
+	if of.unsafeSet != nil {
 	}
 
 	// 已缓存的复合类型的指针

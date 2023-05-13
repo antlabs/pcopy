@@ -134,7 +134,6 @@ func (d *dcopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe.Po
 			// of.dstOffset = sub(dst.UnsafeAddr(), uintptr(dstBase))
 			// of.srcOffset = sub(src.UnsafeAddr(), uintptr(srcBase))
 			of.unsafeSet = getSetBaseSliceFunc(dst.Type().Elem().Kind())
-			of.isBaseSlice = true
 			of.createFlag = baseSliceTypeSet
 			all.append(of)
 			return nil
@@ -142,7 +141,6 @@ func (d *dcopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe.Po
 
 		// 处理复合类型的slice
 		of.reflectSet = getSetCompositeFunc(dst.Type().Kind())
-		of.resetFlag()
 		all.append(of)
 
 		dstElemType := dst.Type().Elem()
@@ -201,7 +199,6 @@ func (d *dcopy) cpyMap(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, 
 		of.dstType = dst.Type()
 		if isBaseType(dst.Type().Elem().Kind()) && isBaseType(src.Type().Elem().Kind()) {
 			of.unsafeSet = getSetBaseMapFunc(src.Type().Key().Kind(), src.Type().Elem().Kind(), true)
-			of.isBaseMap = true
 			of.createFlag = baseMapTypeSet
 			all.append(of)
 			return nil
@@ -209,7 +206,6 @@ func (d *dcopy) cpyMap(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, 
 
 		of.reflectSet = getSetCompositeFunc(dst.Type().Kind())
 
-		of.resetFlag()
 		all.append(of)
 
 		dstElemType := dst.Type().Elem()
@@ -415,19 +411,16 @@ func (d *dcopy) preheatPtr(dst, src reflect.Value, depth int, of offsetAndFunc, 
 	}
 
 	if isBaseType(src.Kind()) {
-		of.isBaseType = true
+		// of.isBaseType = true
 		of.unsafeSet = getSetBaseFunc(src.Kind())
 	} else if src.Kind() == reflect.Slice {
-		of.isBaseSlice = isBaseType(src.Type().Elem().Kind())
 		of.unsafeSet = getSetBaseSliceFunc(src.Type().Elem().Kind())
 	} else if src.Kind() == reflect.Map {
 		of.unsafeSet = getSetBaseMapFunc(src.Type().Key().Kind(), src.Type().Elem().Kind(), false)
-		// of.isBaseMap =
 	}
 	of.dstType = bkDst.Type()
 	of.srcType = bkSrc.Type()
 	of.reflectSet = getSetCompositeFunc(reflect.Ptr)
-	of.resetFlag()
 	all.append(of)
 
 	if src.Kind() == reflect.Struct {
