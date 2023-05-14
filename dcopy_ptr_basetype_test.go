@@ -7,6 +7,83 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// 测试基础类型的指针
+type test_BaseType_ptr_Dst struct {
+	A *int
+	B *int8
+	C *int16
+	D *int32
+	E *int64
+	F *uint
+	G *uint8
+	H *uint16
+	I *uint32
+	J *uint64
+	K *uintptr
+	L *float32
+	M *float64
+	N *complex64
+	O *complex128
+	P *bool
+	Q *string
+	R *interface{}
+}
+
+type test_BaseType_ptr_Src struct {
+	A int
+	B int8
+	C int16
+	D int32
+	E int64
+	F uint
+	G uint8
+	H uint16
+	I uint32
+	J uint64
+	K uintptr
+	L float32
+	M float64
+	N complex64
+	O complex128
+	P bool
+	Q string
+	// R interface{}
+}
+
+func newDef[T any](t T) (rv *T) {
+	return &t
+}
+
+var local_test_BaseType_ptr_Dst = test_BaseType_ptr_Dst{
+	A: newDef(1),
+	B: newDef(int8(2)),
+	C: newDef(int16(3)),
+	D: newDef(int32(4)),
+	E: newDef(int64(5)),
+	F: newDef(uint(6)),
+	G: newDef(uint8(7)),
+	H: newDef(uint16(8)),
+	I: newDef(uint32(9)),
+	J: newDef(uint64(10)),
+	K: newDef(uintptr(11)),
+	L: newDef(float32(12.12)),
+	M: newDef(float64(13.13)),
+	N: newDef(complex64(14.14)),
+	O: newDef(complex128(15.15)),
+	P: newDef(true),
+	Q: newDef("hello"),
+	// R: newDef("world"),
+}
+
+func Test_Ptr_BaseType(t *testing.T) {
+	Preheat(&test_BaseType_ptr_Dst{}, &test_BaseType_ptr_Dst{})
+	// Preheat(&test_BaseType_ptr_Src{}, &test_BaseType_ptr_Dst{})
+	// Preheat(&test_BaseType_ptr_Dst{}, &test_BaseType_ptr_Src{})
+
+	var d test_BaseType_ptr_Dst
+	Copy(&d, &local_test_BaseType_ptr_Dst, WithUsePreheat())
+}
+
 // 测试指针
 func Test_Ptr_OK(t *testing.T) {
 	type interfaceTest struct {
