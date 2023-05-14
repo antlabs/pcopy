@@ -28,13 +28,42 @@ func setCompositePtr(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt
 	// 1.基础类型的指针
 	// 2.基础slice的指针
 	// 3.基础map的指针
-	if of.unsafeSet != nil {
+	srcVal := reflect.NewAt(srcType, src)
+	dstVal := reflect.NewAt(dstType, dst)
+	for {
+		if srcVal.IsNil() {
+			return nil
+		}
+		srcVal = srcVal.Elem()
+
+		if dstVal.IsNil() {
+			dstVal.Set(reflect.New(dstType.Elem()))
+		}
+
+		if srcVal.Type().Kind() != reflect.Ptr && dstVal.Type().Kind() != reflect.Ptr {
+			break
+		}
 	}
 
-	// 已缓存的复合类型的指针
+	if of.unsafeSet != nil {
+		of.unsafeSet(dstVal.UnsafePointer(), srcVal.UnsafePointer())
+		return nil
+	}
 
-	// 未缓存的复合类型的指针，使用反射
-	return
+	if dstVal.Kind() == reflect.Interface && srcVal.Kind() == reflect.Interface {
+		return setCompositeInterface(dstVal.Type(), srcVal.Type(), dstVal.UnsafePointer(), srcVal.UnsafePointer(), opt, of)
+	} else if dstVal.Kind() == reflect.Slice && srcVal.Kind() == reflect.Slice {
+		return setCompositeSlice(dstVal.Type(), srcVal.Type(), dstVal.UnsafePointer(), srcVal.UnsafePointer(), opt, of)
+	} else if dstVal.Kind() == reflect.Map && srcVal.Kind() == reflect.Map {
+		return setCompositeMap(dstVal.Type(), srcVal.Type(), dstVal.UnsafePointer(), srcVal.UnsafePointer(), opt, of)
+	}
+
+	exits, err := getFromCacheSetAndRun(dstSrcType{dst: dstVal.Type(), src: srcVal.Type()}, dstVal.UnsafePointer(), srcVal.UnsafePointer(), opt)
+	if err != nil || exits {
+		return err
+	}
+
+	return dcopyInner(dstVal.Interface(), srcVal.Interface(), opt)
 }
 
 func setCompositeInterface(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options, of *offsetAndFunc) error {
