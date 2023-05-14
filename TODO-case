@@ -11,3 +11,5 @@
 
 3. 特殊类型
 map[interface{}]interface{}
+time.Time
+[]byte
