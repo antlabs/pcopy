@@ -46,19 +46,19 @@ func setCompositePtr(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt
 	}
 
 	if of.unsafeSet != nil {
-		of.unsafeSet(dstVal.UnsafePointer(), srcVal.UnsafePointer())
+		of.unsafeSet(unsafe.Pointer(dstVal.UnsafeAddr()), unsafe.Pointer(srcVal.UnsafeAddr()))
 		return nil
 	}
 
 	if dstVal.Kind() == reflect.Interface && srcVal.Kind() == reflect.Interface {
-		return setCompositeInterface(dstVal.Type(), srcVal.Type(), dstVal.UnsafePointer(), srcVal.UnsafePointer(), opt, of)
+		return setCompositeInterface(dstVal.Type(), srcVal.Type(), unsafe.Pointer(dstVal.UnsafeAddr()), unsafe.Pointer(srcVal.UnsafeAddr()), opt, of)
 	} else if dstVal.Kind() == reflect.Slice && srcVal.Kind() == reflect.Slice {
-		return setCompositeSlice(dstVal.Type(), srcVal.Type(), dstVal.UnsafePointer(), srcVal.UnsafePointer(), opt, of)
+		return setCompositeSlice(dstVal.Type(), srcVal.Type(), unsafe.Pointer(dstVal.UnsafeAddr()), unsafe.Pointer(srcVal.UnsafeAddr()), opt, of)
 	} else if dstVal.Kind() == reflect.Map && srcVal.Kind() == reflect.Map {
-		return setCompositeMap(dstVal.Type(), srcVal.Type(), dstVal.UnsafePointer(), srcVal.UnsafePointer(), opt, of)
+		return setCompositeMap(dstVal.Type(), srcVal.Type(), unsafe.Pointer(dstVal.UnsafeAddr()), unsafe.Pointer(srcVal.UnsafeAddr()), opt, of)
 	}
 
-	exits, err := getFromCacheSetAndRun(dstSrcType{dst: dstVal.Type(), src: srcVal.Type()}, dstVal.UnsafePointer(), srcVal.UnsafePointer(), opt)
+	exits, err := getFromCacheSetAndRun(dstSrcType{dst: dstVal.Type(), src: srcVal.Type()}, unsafe.Pointer(dstVal.UnsafeAddr()), unsafe.Pointer(srcVal.UnsafeAddr()), opt)
 	if err != nil || exits {
 		return err
 	}
