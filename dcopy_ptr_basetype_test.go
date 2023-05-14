@@ -26,7 +26,7 @@ type test_BaseType_ptr_Dst struct {
 	O *complex128
 	P *bool
 	Q *string
-	R *interface{}
+	// R *interface{} TODO
 }
 
 type test_BaseType_ptr_Src struct {
@@ -75,13 +75,52 @@ var local_test_BaseType_ptr_Dst = test_BaseType_ptr_Dst{
 	// R: newDef("world"),
 }
 
-func Test_Ptr_BaseType(t *testing.T) {
-	Preheat(&test_BaseType_ptr_Dst{}, &test_BaseType_ptr_Dst{})
+func Test_Ptr_BaseType1_1(t *testing.T) {
+	err := Preheat(&test_BaseType_ptr_Dst{}, &local_test_BaseType_ptr_Dst)
+	assert.NoError(t, err, "Preheat(&test_BaseType_ptr_Dst{}, &local_test_BaseType_ptr_Dst)")
+
+	var dst test_BaseType_ptr_Dst
+	err = Copy(&dst, &local_test_BaseType_ptr_Dst, WithUsePreheat())
+	assert.NoError(t, err, "Copy(&dst, &local_test_BaseType_ptr_Dst, WithUsePreheat()")
+	assert.Equal(t, local_test_BaseType_ptr_Dst, dst)
+}
+
+func Test_Ptr_BaseType1_2(t *testing.T) {
+	err := Preheat(&test_BaseType_ptr_Dst{}, &test_BaseType_ptr_Dst{})
+	assert.NoError(t, err)
 	// Preheat(&test_BaseType_ptr_Src{}, &test_BaseType_ptr_Dst{})
 	// Preheat(&test_BaseType_ptr_Dst{}, &test_BaseType_ptr_Src{})
 
-	var d test_BaseType_ptr_Dst
-	Copy(&d, &local_test_BaseType_ptr_Dst, WithUsePreheat())
+	var dst test_BaseType_ptr_Dst
+	err = Copy(&dst, &local_test_BaseType_ptr_Dst, WithUsePreheat())
+	assert.NoError(t, err)
+	assert.Equal(t, local_test_BaseType_ptr_Dst, dst)
+}
+
+// TODO
+func Test_Ptr_BaseType2(t *testing.T) {
+	err := Preheat(&test_BaseType_ptr_Dst{}, &test_BaseType_ptr_Dst{})
+	// Preheat(&test_BaseType_ptr_Src{}, &test_BaseType_ptr_Dst{})
+	assert.NoError(t, err)
+	// Preheat(&test_BaseType_ptr_Dst{}, &test_BaseType_ptr_Src{})
+
+	var dst test_BaseType_ptr_Dst
+	err = Copy(&dst, &local_test_BaseType_ptr_Dst, WithUsePreheat())
+	assert.NoError(t, err)
+	assert.Equal(t, local_test_BaseType_ptr_Dst, dst)
+}
+
+// TODO
+func Test_Ptr_BaseType3(t *testing.T) {
+	err := Preheat(&test_BaseType_ptr_Dst{}, &test_BaseType_ptr_Dst{})
+	// Preheat(&test_BaseType_ptr_Src{}, &test_BaseType_ptr_Dst{})
+	assert.NoError(t, err)
+	// Preheat(&test_BaseType_ptr_Dst{}, &test_BaseType_ptr_Src{})
+
+	var dst test_BaseType_ptr_Dst
+	err = Copy(&dst, &local_test_BaseType_ptr_Dst, WithUsePreheat())
+	assert.NoError(t, err)
+	assert.Equal(t, local_test_BaseType_ptr_Dst, dst)
 }
 
 // 测试指针

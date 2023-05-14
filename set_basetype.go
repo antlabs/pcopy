@@ -23,6 +23,7 @@ var copyTab = setUnsafeFuncTab{
 	reflect.Float64:    setFloat64,
 	reflect.Complex64:  setComplex64,
 	reflect.Complex128: setComplex128,
+	reflect.Uintptr:    setUintptr,
 }
 
 func getSetBaseFunc(t reflect.Kind) setUnsafeFunc {
@@ -31,6 +32,10 @@ func getSetBaseFunc(t reflect.Kind) setUnsafeFunc {
 		panic(fmt.Sprintf("not support type:%T", t))
 	}
 	return f
+}
+
+func setUintptr(dstAddr, srcAddr unsafe.Pointer) {
+	*(*uintptr)(dstAddr) = *(*uintptr)(srcAddr)
 }
 
 func setBool(dstAddr, srcAddr unsafe.Pointer) {

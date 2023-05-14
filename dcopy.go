@@ -407,6 +407,7 @@ func (d *dcopy) preheatPtr(dst, src reflect.Value, depth int, of offsetAndFunc, 
 	}
 
 	if src.Kind() != dst.Kind() {
+		fmt.Printf("src.Kind() = %v, dst.Kind() = %v\n", src.Kind(), dst.Kind())
 		return nil
 	}
 
