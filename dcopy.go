@@ -392,6 +392,15 @@ func (d *dcopy) preheatPtr(dst, src reflect.Value, depth int, of offsetAndFunc, 
 			p := reflect.New(dst.Type().Elem())
 			dst.Set(p)
 		}
+		if src.Kind() == reflect.Ptr && src.IsNil() {
+			// dst.CanSet必须放到dst.IsNil判断里面
+			// 不然会影响到struct或者map类型的指针
+			if !src.CanSet() {
+				return nil
+			}
+			p := reflect.New(src.Type().Elem())
+			src.Set(p)
+		}
 
 		if src.Kind() == reflect.Ptr {
 			src = src.Elem()
