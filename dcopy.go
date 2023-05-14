@@ -89,7 +89,7 @@ func dcopyInner(dst, src interface{}, opt options) error {
 	d := dcopy{
 		options: opt,
 	}
-	return d.dcopy(dstValue, srcValue, dstAddr, srcAddr, 0, of, all)
+	return d.dcopy(dstValue, srcValue, dstAddr, srcAddr, of, all)
 }
 
 // // 需要的tag name
@@ -107,7 +107,7 @@ func isArraySlice(v reflect.Value) bool {
 }
 
 // 拷贝slice array
-func (d *dcopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, depth int, of offsetAndFunc, all *allFieldFunc) error {
+func (d *dcopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, of offsetAndFunc, all *allFieldFunc) error {
 	// dst只能是slice和array类型
 	if !isArraySlice(dst) {
 		return nil
@@ -156,7 +156,7 @@ func (d *dcopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe.Po
 	}
 
 	for i := 0; i < l; i++ {
-		if err := d.dcopy(dst.Index(i), src.Index(i), dstBase, srcBase, depth, of, all); err != nil {
+		if err := d.dcopy(dst.Index(i), src.Index(i), dstBase, srcBase, of, all); err != nil {
 			return err
 		}
 	}
@@ -164,9 +164,9 @@ func (d *dcopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe.Po
 }
 
 // 拷贝map
-func (d *dcopy) cpyMap(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, depth int, of offsetAndFunc, all *allFieldFunc) error {
+func (d *dcopy) cpyMap(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, of offsetAndFunc, all *allFieldFunc) error {
 	if dst.Kind() == reflect.Ptr {
-		return d.cpyPtr(dst, src, dstBase, srcBase, depth, of, all)
+		return d.cpyPtr(dst, src, dstBase, srcBase, of, all)
 	}
 
 	if dst.Kind() != src.Kind() {
@@ -227,7 +227,7 @@ func (d *dcopy) cpyMap(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, 
 		v := iter.Value()
 
 		newVal := reflect.New(v.Type()).Elem()
-		if err := d.dcopy(newVal, v, zeroUintptr, zeroUintptr, depth, of, all); err != nil {
+		if err := d.dcopy(newVal, v, zeroUintptr, zeroUintptr, of, all); err != nil {
 			return err
 		}
 
@@ -237,7 +237,7 @@ func (d *dcopy) cpyMap(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, 
 }
 
 // 拷贝函数
-func (d *dcopy) cpyFunc(dst, src reflect.Value, depth int) error {
+func (d *dcopy) cpyFunc(dst, src reflect.Value) error {
 	if dst.Kind() != src.Kind() {
 		return nil
 	}
@@ -275,12 +275,12 @@ func (d *dcopy) checkCycle(sField reflect.Value) error {
 */
 
 // 拷贝结构体
-func (d *dcopy) cpyStruct(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, depth int, of offsetAndFunc, all *allFieldFunc) error {
+func (d *dcopy) cpyStruct(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, of offsetAndFunc, all *allFieldFunc) error {
 	if dst.Kind() != src.Kind() {
 		if dst.Kind() == reflect.Ptr {
 			// 不是空指针，直接解引用
 			if !dst.IsNil() {
-				return d.cpyStruct(dst.Elem(), src, dstBase, srcBase, depth, of, all)
+				return d.cpyStruct(dst.Elem(), src, dstBase, srcBase, of, all)
 			}
 
 			// 被拷贝结构体是指针类型，值是空，
@@ -290,7 +290,7 @@ func (d *dcopy) cpyStruct(dst, src reflect.Value, dstBase, srcBase unsafe.Pointe
 				if dst.CanSet() {
 					p := reflect.New(dst.Type().Elem())
 					dst.Set(p)
-					return d.cpyStruct(dst.Elem(), src, dstBase, srcBase, depth, of, all)
+					return d.cpyStruct(dst.Elem(), src, dstBase, srcBase, of, all)
 				}
 			}
 		}
@@ -347,7 +347,7 @@ func (d *dcopy) cpyStruct(dst, src reflect.Value, dstBase, srcBase unsafe.Pointe
 			of.srcOffset = sub(sField.UnsafeAddr(), uintptr(srcBase))
 		}
 
-		if err := d.dcopy(dstValue, sField, dstBase, srcBase, depth+1, of, all); err != nil {
+		if err := d.dcopy(dstValue, sField, dstBase, srcBase, of, all); err != nil {
 			return err
 		}
 	}
@@ -356,7 +356,7 @@ func (d *dcopy) cpyStruct(dst, src reflect.Value, dstBase, srcBase unsafe.Pointe
 }
 
 // 拷贝interface{}
-func (d *dcopy) cpyInterface(dst, src reflect.Value, depth int, of offsetAndFunc, all *allFieldFunc) error {
+func (d *dcopy) cpyInterface(dst, src reflect.Value, of offsetAndFunc, all *allFieldFunc) error {
 	if dst.Kind() != src.Kind() {
 		return nil
 	}
@@ -371,7 +371,7 @@ func (d *dcopy) cpyInterface(dst, src reflect.Value, depth int, of offsetAndFunc
 		newSrcAddr = unsafe.Pointer(src.UnsafeAddr())
 	}
 
-	if err := d.dcopy(newDst, src, newDstAddr, newSrcAddr, depth, of, all); err != nil {
+	if err := d.dcopy(newDst, src, newDstAddr, newSrcAddr, of, all); err != nil {
 		return err
 	}
 
@@ -379,7 +379,7 @@ func (d *dcopy) cpyInterface(dst, src reflect.Value, depth int, of offsetAndFunc
 	return nil
 }
 
-func (d *dcopy) preheatPtr(dst, src reflect.Value, depth int, of offsetAndFunc, all *allFieldFunc) error {
+func (d *dcopy) preheatPtr(dst, src reflect.Value, of offsetAndFunc, all *allFieldFunc) error {
 	bkDst := dst
 	bkSrc := src
 	for {
@@ -416,7 +416,6 @@ func (d *dcopy) preheatPtr(dst, src reflect.Value, depth int, of offsetAndFunc, 
 	}
 
 	if src.Kind() != dst.Kind() {
-		fmt.Printf("src.Kind() = %v, dst.Kind() = %v\n", src.Kind(), dst.Kind())
 		return nil
 	}
 
@@ -433,6 +432,7 @@ func (d *dcopy) preheatPtr(dst, src reflect.Value, depth int, of offsetAndFunc, 
 	all.append(of)
 
 	if src.Kind() == reflect.Struct {
+		// 预热下这个结构体
 		exits := hasSetFromCache(dstSrcType{dst: dst.Type(), src: src.Type()})
 		if exits {
 			return nil
@@ -443,10 +443,10 @@ func (d *dcopy) preheatPtr(dst, src reflect.Value, depth int, of offsetAndFunc, 
 }
 
 // 拷贝指针
-func (d *dcopy) cpyPtr(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, depth int, of offsetAndFunc, all *allFieldFunc) error {
+func (d *dcopy) cpyPtr(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, of offsetAndFunc, all *allFieldFunc) error {
 	// 解引用之后的类型如果不一样，直接返回
 	if d.preheat {
-		return d.preheatPtr(dst, src, depth, of, all)
+		return d.preheatPtr(dst, src, of, all)
 	}
 
 	if dst.Kind() == reflect.Ptr && dst.IsNil() {
@@ -467,11 +467,11 @@ func (d *dcopy) cpyPtr(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, 
 		dst = dst.Elem()
 	}
 
-	return d.dcopy(dst, src, dstBase, srcBase, depth, of, all)
+	return d.dcopy(dst, src, dstBase, srcBase, of, all)
 }
 
 // 其他类型
-func (d *dcopy) cpyDefault(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, depth int, of offsetAndFunc, all *allFieldFunc) error {
+func (d *dcopy) cpyDefault(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, of offsetAndFunc, all *allFieldFunc) error {
 	if dst.Kind() != src.Kind() {
 		// panic(fmt.Sprintf("%v, %v", dst.Kind(), src.Kind()))
 		return nil
@@ -520,7 +520,7 @@ func (d *dcopy) cpyDefault(dst, src reflect.Value, dstBase, srcBase unsafe.Point
 	return nil
 }
 
-func (d *dcopy) dcopy(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, depth int, of offsetAndFunc, all *allFieldFunc) error {
+func (d *dcopy) dcopy(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, of offsetAndFunc, all *allFieldFunc) error {
 	// 预热的时间一定要绕开这个判断, 默认src都有值
 	// 寻找和dst匹配的字段
 	if !(d.preheat || d.usePreheat) {
@@ -529,15 +529,19 @@ func (d *dcopy) dcopy(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, d
 		}
 	}
 
+	if dst.Kind() == reflect.Ptr {
+		return d.cpyPtr(dst, src, dstBase, srcBase, of, all)
+	}
+
 	switch src.Kind() {
 	case reflect.Slice, reflect.Array:
-		return d.cpySliceArray(dst, src, dstBase, srcBase, depth, of, all)
+		return d.cpySliceArray(dst, src, dstBase, srcBase, of, all)
 
 	case reflect.Map:
-		return d.cpyMap(dst, src, dstBase, srcBase, depth, of, all)
+		return d.cpyMap(dst, src, dstBase, srcBase, of, all)
 
 	case reflect.Func:
-		return d.cpyFunc(dst, src, depth)
+		return d.cpyFunc(dst, src)
 
 	case reflect.Struct:
 		// 保存类型缓存
@@ -545,7 +549,7 @@ func (d *dcopy) dcopy(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, d
 			all = addNextComposite(all, of)
 			defer saveToCache(dstSrcType{dst.Type(), src.Type()}, all)
 		}
-		return d.cpyStruct(dst, src, dstBase, srcBase, depth, of, all)
+		return d.cpyStruct(dst, src, dstBase, srcBase, of, all)
 
 	case reflect.Interface:
 		if d.preheat {
@@ -557,13 +561,13 @@ func (d *dcopy) dcopy(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, d
 			// 后需要的类型是可变的，就没有必要分析现在interface存放的类型
 			return nil
 		}
-		return d.cpyInterface(dst, src, depth, of, all)
+		return d.cpyInterface(dst, src, of, all)
 
 	case reflect.Ptr:
-		return d.cpyPtr(dst, src, dstBase, srcBase, depth, of, all)
+		return d.cpyPtr(dst, src, dstBase, srcBase, of, all)
 
 	default:
-		return d.cpyDefault(dst, src, dstBase, srcBase, depth, of, all)
+		return d.cpyDefault(dst, src, dstBase, srcBase, of, all)
 	}
 }
 
