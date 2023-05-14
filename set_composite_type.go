@@ -31,18 +31,25 @@ func setCompositePtr(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt
 	srcVal := reflect.NewAt(srcType, src)
 	dstVal := reflect.NewAt(dstType, dst)
 	for {
-		if srcVal.IsNil() {
+		if srcVal.Kind() == reflect.Ptr && srcVal.IsNil() {
 			return nil
 		}
-		srcVal = srcVal.Elem()
 
-		if dstVal.IsNil() {
+		if dstVal.Kind() == reflect.Ptr && dstVal.IsNil() {
 			dstVal.Set(reflect.New(dstType.Elem()))
 		}
 
+		if srcVal.Kind() == reflect.Ptr {
+			srcVal = srcVal.Elem()
+		}
+
+		if dstVal.Kind() == reflect.Ptr {
+			dstVal = dstVal.Elem()
+		}
 		if srcVal.Type().Kind() != reflect.Ptr && dstVal.Type().Kind() != reflect.Ptr {
 			break
 		}
+
 	}
 
 	if of.unsafeSet != nil {
