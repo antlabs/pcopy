@@ -103,6 +103,10 @@ func (c *allFieldFunc) do(dstBaseAddr, srcBaseAddr unsafe.Pointer, opt options) 
 
 		kind = v.srcType.Kind()
 		switch {
+		case v.dstType.Kind() == reflect.Ptr:
+			if err := v.reflectSet(v.dstType, v.srcType, add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset), opt, &v); err != nil {
+				return err
+			}
 		case kind == reflect.Ptr:
 			if err := v.reflectSet(v.dstType, v.srcType, add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset), opt, &v); err != nil {
 				return err
