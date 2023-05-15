@@ -105,11 +105,23 @@ func (c *allFieldFunc) do(dstBaseAddr, srcBaseAddr unsafe.Pointer, opt options) 
 		switch {
 		// dst如果是ptr
 		// 修改这里的代码，也要修改dcopy()函数里面的代码
+		// 这里必须要放在第一
 		case v.dstType.Kind() == reflect.Ptr:
 			if err := v.reflectSet(v.dstType, v.srcType, add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset), opt, &v); err != nil {
 				return err
 			}
+			// 这里必须放在第二
 		case kind == reflect.Ptr:
+			if err := v.reflectSet(v.dstType, v.srcType, add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset), opt, &v); err != nil {
+				return err
+			}
+			// 特殊类型的struct才会进这里, 正常情况一个struct对应一个allFieldFunc
+		case v.dstType.Kind() == reflect.Struct:
+			if v.unsafeSet != nil {
+				v.unsafeSet(add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset))
+				continue
+			}
+			// 目前是空的，预留下
 			if err := v.reflectSet(v.dstType, v.srcType, add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset), opt, &v); err != nil {
 				return err
 			}

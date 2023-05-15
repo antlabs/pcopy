@@ -3,6 +3,7 @@ package dcopy
 import (
 	"fmt"
 	"reflect"
+	"time"
 	"unsafe"
 )
 
@@ -100,4 +101,8 @@ func setComplex64(dstAddr, srcAddr unsafe.Pointer) {
 
 func setComplex128(dstAddr, srcAddr unsafe.Pointer) {
 	*(*complex128)(dstAddr) = *(*complex128)(srcAddr)
+}
+
+func setTime(dstAddr, srcAddr unsafe.Pointer) {
+	*(*time.Time)(dstAddr) = *(*time.Time)(srcAddr)
 }

@@ -23,12 +23,13 @@ var copyBaseSliceTab = setUnsafeFuncTab{
 	reflect.Float64:    setBaseSliceFloat64,
 	reflect.Complex64:  setBaseSliceComplex64,
 	reflect.Complex128: setBaseSliceComplex128,
+	reflect.Uintptr:    setBaseSliceUintptr,
 }
 
 func getSetBaseSliceFunc(t reflect.Kind) setUnsafeFunc {
 	f, ok := copyBaseSliceTab[t]
 	if !ok {
-		panic(fmt.Sprintf("not support type:%T", t))
+		panic(fmt.Sprintf("not support type:%v", t))
 	}
 	return f
 }
@@ -189,6 +190,16 @@ func setBaseSliceComplex128(dstAddr, srcAddr unsafe.Pointer) {
 	if cap(dstSlice) < len(srcSlice) {
 		*(*[]complex128)(dstAddr) = make([]complex128, len(srcSlice))
 		dstSlice = *(*[]complex128)(dstAddr)
+	}
+	copy(dstSlice, srcSlice)
+}
+
+func setBaseSliceUintptr(dstAddr, srcAddr unsafe.Pointer) {
+	dstSlice := *(*[]uintptr)(dstAddr)
+	srcSlice := *(*[]uintptr)(srcAddr)
+	if cap(dstSlice) < len(srcSlice) {
+		*(*[]uintptr)(dstAddr) = make([]uintptr, len(srcSlice))
+		dstSlice = *(*[]uintptr)(dstAddr)
 	}
 	copy(dstSlice, srcSlice)
 }

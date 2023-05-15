@@ -130,6 +130,5 @@ func Benchmark_BaseMap_Reflect(b *testing.B) {
 		if err != nil {
 			b.Fatal(err)
 		}
-
 	}
 }

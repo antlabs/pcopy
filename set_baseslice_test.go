@@ -38,6 +38,8 @@ type DCopyDst_BaseSlice struct {
 	SliceString  []string
 	SliceFloat32 []float32
 	SliceFloat64 []float64
+
+	Bytes []byte
 	// SliceComplex64  []complex64
 	// SliceComplex128 []complex128
 }
@@ -75,6 +77,8 @@ var testSrc_BaseSlice = DCopySrc_BaseSlice{
 	SliceString:  []string{"21", "22"},
 	SliceFloat32: []float32{23.0, 24.0},
 	SliceFloat64: []float64{25.0, 26.0},
+
+	Bytes: []byte{27, 28, 29, 30, 31, 32, 33, 34},
 	// SliceComplex64:  []complex64{27.0, 28.0},
 	// SliceComplex128: []complex128{29.0, 30.0},
 }

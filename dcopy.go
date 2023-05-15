@@ -83,6 +83,13 @@ func dcopyInner(dst, src interface{}, opt options) error {
 
 		if opt.preheat {
 			all = newAllFieldFunc()
+			// if dstValue.Type().Kind() != reflect.Struct && srcValue.Type().Kind() != reflect.Struct {
+			// 	saveToCache(dstSrcType{
+			// 		dst: dstValue.Type(),
+			// 		src: srcValue.Type(),
+			// 	},
+			// 		all)
+			// }
 		}
 	}
 
@@ -131,8 +138,6 @@ func (d *dcopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe.Po
 		of.dstType = dst.Type()
 		// 如果是基础类型的slice
 		if isBaseType(dst.Type().Elem().Kind()) && isBaseType(src.Type().Elem().Kind()) {
-			// of.dstOffset = sub(dst.UnsafeAddr(), uintptr(dstBase))
-			// of.srcOffset = sub(src.UnsafeAddr(), uintptr(srcBase))
 			of.unsafeSet = getSetBaseSliceFunc(dst.Type().Elem().Kind())
 			of.createFlag = baseSliceTypeSet
 			all.append(of)
@@ -151,6 +156,10 @@ func (d *dcopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe.Po
 			return nil
 		}
 
+		// TODO 我为什么这样写的？
+		if dstElemType.Kind() == reflect.Ptr && srcElemType.Kind() == reflect.Ptr {
+			saveToCache(dstSrcType{dst.Type(), src.Type()}, all)
+		}
 		// 元素不存在转换表，需要创建
 		return dcopyInner(reflect.New(dstElemType).Interface(), reflect.New(srcElemType).Interface(), d.options)
 	}
@@ -277,31 +286,21 @@ func (d *dcopy) checkCycle(sField reflect.Value) error {
 // 拷贝结构体
 func (d *dcopy) cpyStruct(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, of offsetAndFunc, all *allFieldFunc) error {
 	if dst.Kind() != src.Kind() {
-		if dst.Kind() == reflect.Ptr {
-			// 不是空指针，直接解引用
-			if !dst.IsNil() {
-				return d.cpyStruct(dst.Elem(), src, dstBase, srcBase, of, all)
-			}
-
-			// 被拷贝结构体是指针类型，值是空，
-			// 并且dst可以被设置值
-			// 直接malloc一块内存
-			if dst.Type().Elem().Kind() == reflect.Struct {
-				if dst.CanSet() {
-					p := reflect.New(dst.Type().Elem())
-					dst.Set(p)
-					return d.cpyStruct(dst.Elem(), src, dstBase, srcBase, of, all)
-				}
-			}
-		}
 		return nil
 	}
 
-	// time.Time类型
 	if dst.CanSet() {
 		if _, ok := src.Interface().(time.Time); ok {
+			if d.preheat {
+				of.srcType = src.Type()
+				of.dstType = dst.Type()
+				of.unsafeSet = setTime
+				of.createFlag = baseTypeSet
+				all.append(of)
+				return nil
+			}
+
 			dst.Set(src)
-			return nil
 		}
 	}
 
@@ -320,11 +319,6 @@ func (d *dcopy) cpyStruct(dst, src reflect.Value, dstBase, srcBase unsafe.Pointe
 			continue
 		}
 
-		// 检查是否注册tag
-		// if len(d.tagName) > 0 && !haveTagName(sf.Tag.Get(d.tagName)) {
-		// 	continue
-		// }
-
 		// 使用src的字段名在dst里面取出reflect.Value值
 		dstValue := dst.FieldByName(sf.Name)
 
@@ -335,11 +329,6 @@ func (d *dcopy) cpyStruct(dst, src reflect.Value, dstBase, srcBase unsafe.Pointe
 
 		// 检查结构体里面的字段是否有循环引用
 		sField := src.Field(i)
-		/*
-			if err := d.checkCycle(sField); err != nil {
-				return err
-			}
-		*/
 
 		if d.preheat {
 			// 更新这个类型的offset
@@ -437,7 +426,7 @@ func (d *dcopy) preheatPtr(dst, src reflect.Value, of offsetAndFunc, all *allFie
 		if exits {
 			return nil
 		}
-		return dcopyInner(dst.Interface(), src.Interface(), d.options)
+		return dcopyInner(dst.Addr().Interface(), src.Addr().Interface(), d.options)
 	}
 	return nil
 }
