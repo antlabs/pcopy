@@ -101,6 +101,12 @@ func newBoolSlice(sh *reflect.SliceHeader) interface{} {
 	return rv
 }
 
+func newUintptrSlice(sh *reflect.SliceHeader) interface{} {
+	rv := make([]uintptr, sh.Len)
+	copy(rv, *(*[]uintptr)(unsafe.Pointer(sh)))
+	return rv
+}
+
 func getNewBaseSliceType(k reflect.Kind, sh *reflect.SliceHeader) interface{} {
 	newBaseSliceType, ok := newBaseSliceTypeTable[k]
 	if ok {
@@ -126,4 +132,5 @@ var newBaseSliceTypeTable = map[reflect.Kind]func(sh *reflect.SliceHeader) inter
 	reflect.Bool:       newBoolSlice,
 	reflect.Complex64:  newComplex64Slice,
 	reflect.Complex128: newComplex128Slice,
+	reflect.Uintptr:    newUintptrSlice,
 }

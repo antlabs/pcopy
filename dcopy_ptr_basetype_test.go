@@ -102,24 +102,40 @@ func Test_Ptr_BaseType1_1(t *testing.T) {
 	err := Preheat(&test_BaseType_ptr_Dst{}, &local_test_BaseType_ptr_Dst)
 	assert.NoError(t, err, "Preheat(&test_BaseType_ptr_Dst{}, &local_test_BaseType_ptr_Dst)")
 
-	var dst test_BaseType_ptr_Dst
-	err = Copy(&dst, &local_test_BaseType_ptr_Dst, WithUsePreheat())
-	assert.NoError(t, err, "Copy(&dst, &local_test_BaseType_ptr_Dst, WithUsePreheat()")
-	assert.Equal(t, local_test_BaseType_ptr_Dst, dst)
-	assert.NotEqual(t, unsafe.Pointer(local_test_BaseType_ptr_Dst.A), unsafe.Pointer(dst.A), fmt.Sprintf("local_test_BaseType_ptr_Dst.A: %p, dst.A: %p", local_test_BaseType_ptr_Dst.A, dst.A))
-	assert.Equal(t, *local_test_BaseType_ptr_Dst.A, *dst.A)
+	var opts []Option
+	for _, b := range []bool{true, false} {
+		if b {
+			opts = append(opts, WithUsePreheat())
+		} else {
+			opts = []Option{}
+		}
+		var dst test_BaseType_ptr_Dst
+		err = Copy(&dst, &local_test_BaseType_ptr_Dst, opts...)
+		assert.NoError(t, err, "Copy(&dst, &local_test_BaseType_ptr_Dst, WithUsePreheat()")
+		assert.Equal(t, local_test_BaseType_ptr_Dst, dst)
+		assert.NotEqual(t, unsafe.Pointer(local_test_BaseType_ptr_Dst.A), unsafe.Pointer(dst.A), fmt.Sprintf("local_test_BaseType_ptr_Dst.A: %p, dst.A: %p", local_test_BaseType_ptr_Dst.A, dst.A))
+		assert.Equal(t, *local_test_BaseType_ptr_Dst.A, *dst.A)
+	}
 }
 
 func Test_Ptr_BaseType1_2(t *testing.T) {
 	err := Preheat(&test_BaseType_ptr_Dst{}, &test_BaseType_ptr_Dst{})
 	assert.NoError(t, err)
 
-	var dst test_BaseType_ptr_Dst
-	err = Copy(&dst, &local_test_BaseType_ptr_Dst, WithUsePreheat())
-	assert.NoError(t, err)
-	assert.Equal(t, local_test_BaseType_ptr_Dst, dst)
-	assert.NotEqual(t, unsafe.Pointer(local_test_BaseType_ptr_Dst.A), unsafe.Pointer(dst.A))
-	assert.Equal(t, *local_test_BaseType_ptr_Dst.A, *dst.A)
+	var opts []Option
+	for _, b := range []bool{true, false} {
+		if b {
+			opts = append(opts, WithUsePreheat())
+		} else {
+			opts = []Option{}
+		}
+		var dst test_BaseType_ptr_Dst
+		err = Copy(&dst, &local_test_BaseType_ptr_Dst, opts...)
+		assert.NoError(t, err)
+		assert.Equal(t, local_test_BaseType_ptr_Dst, dst)
+		assert.NotEqual(t, unsafe.Pointer(local_test_BaseType_ptr_Dst.A), unsafe.Pointer(dst.A))
+		assert.Equal(t, *local_test_BaseType_ptr_Dst.A, *dst.A)
+	}
 }
 
 func Test_Ptr_BaseType2(t *testing.T) {
@@ -127,22 +143,38 @@ func Test_Ptr_BaseType2(t *testing.T) {
 	assert.NoError(t, err)
 	// Preheat(&test_BaseType_ptr_Dst{}, &test_BaseType_ptr_Src{})
 
-	var dst test_BaseType_ptr_Src
-	err = Copy(&dst, &local_test_BaseType_ptr_Dst, WithUsePreheat())
-	assert.NoError(t, err)
-	assert.Equal(t, local_test_BaseType_ptr_Src, dst)
+	var opts []Option
+	for _, b := range []bool{true, false} {
+		if b {
+			opts = append(opts, WithUsePreheat())
+		} else {
+			opts = []Option{}
+		}
+		var dst test_BaseType_ptr_Src
+		err = Copy(&dst, &local_test_BaseType_ptr_Dst, opts...)
+		assert.NoError(t, err)
+		assert.Equal(t, local_test_BaseType_ptr_Src, dst)
+	}
 }
 
 func Test_Ptr_BaseType3(t *testing.T) {
 	err := Preheat(&test_BaseType_ptr_Dst{}, &test_BaseType_ptr_Src{})
 	assert.NoError(t, err)
 
-	var dst test_BaseType_ptr_Dst
-	err = Copy(&dst, &local_test_BaseType_ptr_Src, WithUsePreheat())
-	assert.NoError(t, err)
-	fmt.Printf("dst: %+v\n", dst)
-	fmt.Printf(".A %p\n", dst.A)
-	assert.Equal(t, local_test_BaseType_ptr_Dst, dst)
+	var opts []Option
+	for _, b := range []bool{true, false} {
+		if b {
+			opts = append(opts, WithUsePreheat())
+		} else {
+			opts = []Option{}
+		}
+		var dst test_BaseType_ptr_Dst
+		err = Copy(&dst, &local_test_BaseType_ptr_Src, opts...)
+		assert.NoError(t, err)
+		fmt.Printf("dst: %+v\n", dst)
+		fmt.Printf(".A %p\n", dst.A)
+		assert.Equal(t, local_test_BaseType_ptr_Dst, dst)
+	}
 }
 
 // 测试指针

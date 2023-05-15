@@ -90,6 +90,11 @@ func newComplex128(dst interface{}) interface{} {
 	return d
 }
 
+func newUintptr(dst interface{}) interface{} {
+	d := *(*uintptr)((*emptyInterface)(unsafe.Pointer(&dst)).word)
+	return d
+}
+
 func getNewBaseType(k reflect.Kind, dst interface{}) interface{} {
 	newBaseType, ok := newBaseTypeTable[k]
 	if ok {
@@ -115,4 +120,5 @@ var newBaseTypeTable = map[reflect.Kind]newBaseTypeFunc{
 	reflect.Bool:       newBool,
 	reflect.Complex64:  newComplex64,
 	reflect.Complex128: newComplex128,
+	reflect.Uintptr:    newUintptr,
 }

@@ -37,7 +37,7 @@ func setCompositePtr(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt
 		}
 
 		if dstVal.Kind() == reflect.Ptr && dstVal.IsNil() {
-			dstVal.Set(reflect.New(dstType.Elem()))
+			dstVal.Set(reflect.New(dstVal.Type().Elem()))
 		}
 
 		if srcVal.Kind() == reflect.Ptr {
