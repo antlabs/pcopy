@@ -37,6 +37,12 @@
 2. time.Time-结构体，特殊处理了 (done) 
 3. []byte 和[]uint8处理一样 (done) 
 
+### 4. slice类型
+1. 基础slice
+1.1 dst的元素是指针slice src元素不是(done)
+1.2 dst的元素不是指针 slice的元素是指针(done)
+1.3 dst的元素是指针, src的元素指针(done)
+
 // 1。slice里面套基础map
 // type sliceMap struct {
 // 	// 1.1 slice里面套基础map，map里面套基础类型

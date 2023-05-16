@@ -1,6 +1,8 @@
+// Copyright [2020-2023] [guonaihong]
 package dcopy
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -119,12 +121,24 @@ var local_GetMessageLikeFavoritedResp_GetMessageLikeFavoritedRespData = GetMessa
 	},
 }
 
-func Test_GetMessageLikeFavorited(t *testing.T) {
+func Test_GetMessageLikeFavorited_1(t *testing.T) {
 	err := Preheat(&GetMessageLikeFavoritedResp_GetMessageLikeFavoritedRespData{}, &GetMessageLikeFavoritedResp_GetMessageLikeFavoritedRespData{})
 	assert.NoError(t, err)
 
-	rv := GetMessageLikeFavoritedResp{}
-	err = Copy(&rv.Data, &local_GetMessageLikeFavoritedResp_GetMessageLikeFavoritedRespData, WithUsePreheat())
+	var dst GetMessageLikeFavoritedResp_GetMessageLikeFavoritedRespData
+	err = Copy(&dst, &local_GetMessageLikeFavoritedResp_GetMessageLikeFavoritedRespData, WithUsePreheat())
 	assert.NoError(t, err)
-	assert.Equal(t, local_GetMessageLikeFavoritedResp_GetMessageLikeFavoritedRespData, *rv.Data)
+	fmt.Printf("%d\n", len(dst.Items))
+	assert.Equal(t, local_GetMessageLikeFavoritedResp_GetMessageLikeFavoritedRespData, dst)
+}
+
+// 左边传参数是个二级指针
+func Test_GetMessageLikeFavorited_2(t *testing.T) {
+	err := Preheat(&GetMessageLikeFavoritedResp_GetMessageLikeFavoritedRespData{}, &GetMessageLikeFavoritedResp_GetMessageLikeFavoritedRespData{})
+	assert.NoError(t, err)
+	var resp GetMessageLikeFavoritedResp
+	// var dst GetMessageLikeFavoritedResp_GetMessageLikeFavoritedRespData
+	err = Copy(&resp.Data, &local_GetMessageLikeFavoritedResp_GetMessageLikeFavoritedRespData, WithUsePreheat())
+	assert.NoError(t, err)
+	assert.Equal(t, local_GetMessageLikeFavoritedResp_GetMessageLikeFavoritedRespData, *resp.Data)
 }

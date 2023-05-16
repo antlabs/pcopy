@@ -21,7 +21,7 @@ var ErrNotPointer = errors.New("dst and src must be pointer")
 // 不能获取指针地址
 var ErrNotAddr = errors.New("dst or src type can not get address")
 
-var zeroUintptr = unsafe.Pointer(uintptr(0))
+var zeroUintptr unsafe.Pointer
 
 // dcopy结构体
 type dcopy struct {
@@ -136,10 +136,18 @@ func (d *dcopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe.Po
 	if d.preheat {
 		of.srcType = src.Type()
 		of.dstType = dst.Type()
-		// 如果是基础类型的slice
+		// 如果是基础类型的slice, []int []string 这种
 		if isBaseType(dst.Type().Elem().Kind()) && isBaseType(src.Type().Elem().Kind()) {
 			of.unsafeSet = getSetBaseSliceFunc(dst.Type().Elem().Kind())
+			all.append(of)
 			of.createFlag = baseSliceTypeSet
+			return nil
+		}
+		// 如果任一类型是基础类型的指针类型, *[]int *[]string 这种，和基础类型的slice的组合
+		var k reflect.Kind
+		if isBaseSliceOrBaseSlicePtr(dst.Type(), &k) && isBaseSliceOrBaseSlicePtr(src.Type(), &k) {
+			of.reflectSet = getSetSliceElemIsBaseTypeOrPtrFunc(k, false)
+			of.createFlag = baseMapTypeSet
 			all.append(of)
 			return nil
 		}
@@ -156,10 +164,6 @@ func (d *dcopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe.Po
 			return nil
 		}
 
-		// TODO 我为什么这样写的？
-		if dstElemType.Kind() == reflect.Ptr && srcElemType.Kind() == reflect.Ptr {
-			saveToCache(dstSrcType{dst.Type(), src.Type()}, all)
-		}
 		// 元素不存在转换表，需要创建
 		return dcopyInner(reflect.New(dstElemType).Interface(), reflect.New(srcElemType).Interface(), d.options)
 	}
@@ -225,7 +229,6 @@ func (d *dcopy) cpyMap(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, 
 			return nil
 		}
 
-		// fmt.Printf("dstElemType: %v, srcElemType: %v, d.options:%#v\n", dstElemType, srcElemType, d.options)
 		// 元素不存在转换表，需要创建
 		return dcopyInner(reflect.New(dstElemType).Interface(), reflect.New(srcElemType).Interface(), d.options)
 	}
@@ -251,37 +254,9 @@ func (d *dcopy) cpyFunc(dst, src reflect.Value) error {
 		return nil
 	}
 
-	/*
-		结构体成员如果是一个函数变量, dst.IsNil()会返回true
-		if dst.IsNil() {
-			fmt.Printf("hell world\n")
-			newFunc := reflect.New(src.Type())
-			dst = newFunc.Elem()
-		}
-	*/
-
 	dst.Set(src)
 	return nil
 }
-
-// 检查循环引用
-/*
-func (d *dcopy) checkCycle(sField reflect.Value) error {
-	if sField.CanAddr() {
-
-		addr := sField.UnsafeAddr()
-		v := visit{addr: addr, typ: sField.Type()}
-
-		if _, ok := d.visited[v]; ok {
-			return ErrCircularReference
-		}
-
-		d.visited[v] = struct{}{}
-	}
-
-	return nil
-}
-*/
 
 // 拷贝结构体
 func (d *dcopy) cpyStruct(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, of offsetAndFunc, all *allFieldFunc) error {
@@ -450,10 +425,12 @@ func (d *dcopy) cpyPtr(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, 
 
 	if src.Kind() == reflect.Ptr {
 		src = src.Elem()
+		srcBase = unsafe.Pointer(src.UnsafeAddr())
 	}
 
 	if dst.Kind() == reflect.Ptr {
 		dst = dst.Elem()
+		dstBase = unsafe.Pointer(dst.UnsafeAddr())
 	}
 
 	return d.dcopy(dst, src, dstBase, srcBase, of, all)

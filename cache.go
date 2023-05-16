@@ -22,7 +22,7 @@ type baseMapKind struct {
 	val reflect.Kind
 }
 
-type baseMapTypeTmpl struct {
+type baseTypeTmpl struct {
 	TypeName []string
 }
 
