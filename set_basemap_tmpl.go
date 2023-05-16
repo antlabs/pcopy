@@ -1,3 +1,4 @@
+// Copyright [2020-2023] [guonaihong]
 package dcopy
 
 import (
@@ -11,6 +12,7 @@ import (
 )
 
 var baseMapFuncTmpl = `
+// Copyright [2020-2024] [guonaihong]
 package dcopy
 
 import (
@@ -152,7 +154,7 @@ func saveBaseMapFuncToFile(fileName string) error {
 		return fmt.Errorf("build setBaseMapFunc fail:%w", err)
 	}
 
-	err = tmpl.Execute(&out, baseMapTypeTmpl{TypeName: baseTypeTable})
+	err = tmpl.Execute(&out, baseTypeTmpl{TypeName: baseTypeTable})
 	if err != nil {
 		return err
 	}
@@ -160,7 +162,7 @@ func saveBaseMapFuncToFile(fileName string) error {
 	if err != nil {
 		return fmt.Errorf("build setBaseMapTable fail:%w", err)
 	}
-	err = tmpl.Execute(&out, baseMapTypeTmpl{TypeName: baseTypeTable})
+	err = tmpl.Execute(&out, baseTypeTmpl{TypeName: baseTypeTable})
 	if err != nil {
 		return err
 	}

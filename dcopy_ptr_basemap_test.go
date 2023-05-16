@@ -10,7 +10,7 @@ import (
 )
 
 // 测试基础类型的指针
-type test_BaseMapType_ptr_Dst struct {
+type test_Ptr_BaseMapType_Dst struct {
 	A *map[int]int
 	B *map[int8]int8
 	C *map[int16]int16
@@ -31,7 +31,7 @@ type test_BaseMapType_ptr_Dst struct {
 	// R *interface{} TODO
 }
 
-type test_BaseMapType_ptr_Src struct {
+type test_Ptr_BaseMapType_Src struct {
 	A map[int]int
 	B map[int8]int8
 	C map[int16]int16
@@ -51,7 +51,7 @@ type test_BaseMapType_ptr_Src struct {
 	Q map[string]string
 }
 
-var local_test_BaseMapType_ptr_Dst = test_BaseMapType_ptr_Dst{
+var local_test_Ptr_BaseMapType_Dst = test_Ptr_BaseMapType_Dst{
 	A: newDef(map[int]int{1: 1, 2: 2}),
 	B: newDef(map[int8]int8{3: 3, 4: 4}),
 	C: newDef(map[int16]int16{5: 5, 6: 6}),
@@ -71,7 +71,7 @@ var local_test_BaseMapType_ptr_Dst = test_BaseMapType_ptr_Dst{
 	Q: newDef(map[string]string{"a": "a", "b": "b"}),
 }
 
-var local_test_BaseMapType_ptr_Src = test_BaseMapType_ptr_Src{
+var local_test_Ptr_BaseMapType_Src = test_Ptr_BaseMapType_Src{
 	A: map[int]int{1: 1, 2: 2},
 	B: map[int8]int8{3: 3, 4: 4},
 	C: map[int16]int16{5: 5, 6: 6},
@@ -92,65 +92,65 @@ var local_test_BaseMapType_ptr_Src = test_BaseMapType_ptr_Src{
 }
 
 func Test_Ptr_BaseMapType1_1(t *testing.T) {
-	err := Preheat(&test_BaseMapType_ptr_Dst{}, &local_test_BaseMapType_ptr_Dst)
+	err := Preheat(&test_Ptr_BaseMapType_Dst{}, &local_test_Ptr_BaseMapType_Dst)
 	assert.NoError(t, err, "Preheat(&test_BaseMapType_ptr_Dst{}, &local_test_BaseMapType_ptr_Dst)")
 
 	var opts []Option
 	for _, b := range []bool{true, false} {
-		var dst test_BaseMapType_ptr_Dst
+		var dst test_Ptr_BaseMapType_Dst
 		if b {
 			opts = append(opts, WithUsePreheat())
 		} else {
 			opts = []Option{}
 		}
-		err = Copy(&dst, &local_test_BaseMapType_ptr_Dst, opts...)
+		err = Copy(&dst, &local_test_Ptr_BaseMapType_Dst, opts...)
 		assert.NoError(t, err, "Copy(&dst, &local_test_BaseMapType_ptr_Dst, WithUsePreheat()")
-		assert.Equal(t, local_test_BaseMapType_ptr_Dst, dst)
-		assert.NotEqual(t, unsafe.Pointer(local_test_BaseMapType_ptr_Dst.A), unsafe.Pointer(dst.A), fmt.Sprintf("local_test_BaseMapType_ptr_Dst.A: %p, dst.A: %p", local_test_BaseMapType_ptr_Dst.A, dst.A))
-		assert.Equal(t, *local_test_BaseMapType_ptr_Dst.A, *dst.A)
+		assert.Equal(t, local_test_Ptr_BaseMapType_Dst, dst)
+		assert.NotEqual(t, unsafe.Pointer(local_test_Ptr_BaseMapType_Dst.A), unsafe.Pointer(dst.A), fmt.Sprintf("local_test_BaseMapType_ptr_Dst.A: %p, dst.A: %p", local_test_Ptr_BaseMapType_Dst.A, dst.A))
+		assert.Equal(t, *local_test_Ptr_BaseMapType_Dst.A, *dst.A)
 	}
 }
 
 func Test_Ptr_BaseMapType1_2(t *testing.T) {
-	err := Preheat(&test_BaseMapType_ptr_Dst{}, &test_BaseMapType_ptr_Dst{})
+	err := Preheat(&test_Ptr_BaseMapType_Dst{}, &test_Ptr_BaseMapType_Dst{})
 	assert.NoError(t, err)
 
 	var opts []Option
 	for _, b := range []bool{true, false} {
-		var dst test_BaseMapType_ptr_Dst
+		var dst test_Ptr_BaseMapType_Dst
 		if b {
 			opts = append(opts, WithUsePreheat())
 		} else {
 			opts = []Option{}
 		}
-		err = Copy(&dst, &local_test_BaseMapType_ptr_Dst, opts...)
+		err = Copy(&dst, &local_test_Ptr_BaseMapType_Dst, opts...)
 		assert.NoError(t, err)
-		assert.Equal(t, local_test_BaseMapType_ptr_Dst, dst)
-		assert.NotEqual(t, unsafe.Pointer(local_test_BaseMapType_ptr_Dst.A), unsafe.Pointer(dst.A))
-		assert.Equal(t, *local_test_BaseMapType_ptr_Dst.A, *dst.A)
+		assert.Equal(t, local_test_Ptr_BaseMapType_Dst, dst)
+		assert.NotEqual(t, unsafe.Pointer(local_test_Ptr_BaseMapType_Dst.A), unsafe.Pointer(dst.A))
+		assert.Equal(t, *local_test_Ptr_BaseMapType_Dst.A, *dst.A)
 	}
 }
 
 func Test_Ptr_BaseMapType2(t *testing.T) {
-	err := Preheat(&test_BaseMapType_ptr_Src{}, &test_BaseMapType_ptr_Dst{})
+	err := Preheat(&test_Ptr_BaseMapType_Src{}, &test_Ptr_BaseMapType_Dst{})
 	assert.NoError(t, err)
 
 	var opts []Option
 	for _, b := range []bool{true, false} {
-		var dst test_BaseMapType_ptr_Src
+		var dst test_Ptr_BaseMapType_Src
 		if b {
 			opts = append(opts, WithUsePreheat())
 		} else {
 			opts = []Option{}
 		}
-		err = Copy(&dst, &local_test_BaseMapType_ptr_Dst, opts...)
+		err = Copy(&dst, &local_test_Ptr_BaseMapType_Dst, opts...)
 		assert.NoError(t, err)
-		assert.Equal(t, local_test_BaseMapType_ptr_Src, dst)
+		assert.Equal(t, local_test_Ptr_BaseMapType_Src, dst)
 	}
 }
 
 func Test_Ptr_BaseMapType3(t *testing.T) {
-	err := Preheat(&test_BaseMapType_ptr_Dst{}, &test_BaseMapType_ptr_Src{})
+	err := Preheat(&test_Ptr_BaseMapType_Dst{}, &test_Ptr_BaseMapType_Src{})
 	assert.NoError(t, err)
 
 	var opts []Option
@@ -160,11 +160,11 @@ func Test_Ptr_BaseMapType3(t *testing.T) {
 		} else {
 			opts = []Option{}
 		}
-		var dst test_BaseMapType_ptr_Dst
-		err = Copy(&dst, &local_test_BaseMapType_ptr_Src, opts...)
+		var dst test_Ptr_BaseMapType_Dst
+		err = Copy(&dst, &local_test_Ptr_BaseMapType_Src, opts...)
 		assert.NoError(t, err)
 		fmt.Printf("dst: %+v\n", dst)
 		fmt.Printf(".A %p\n", dst.A)
-		assert.Equal(t, local_test_BaseMapType_ptr_Dst, dst)
+		assert.Equal(t, local_test_Ptr_BaseMapType_Dst, dst)
 	}
 }

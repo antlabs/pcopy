@@ -1,3 +1,4 @@
+// Copyright [2020-2023] [guonaihong]
 package dcopy
 
 import (
@@ -28,8 +29,8 @@ func setCompositePtr(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt
 	// 1.基础类型的指针
 	// 2.基础slice的指针
 	// 3.基础map的指针
-	srcVal := reflect.NewAt(srcType, src)
 	dstVal := reflect.NewAt(dstType, dst)
+	srcVal := reflect.NewAt(srcType, src)
 	for {
 
 		if srcVal.Kind() == reflect.Ptr && srcVal.IsNil() {
@@ -51,7 +52,6 @@ func setCompositePtr(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt
 		if srcVal.Type().Kind() != reflect.Ptr && dstVal.Type().Kind() != reflect.Ptr {
 			break
 		}
-
 	}
 
 	if of.unsafeSet != nil {
@@ -173,76 +173,23 @@ func setCompositeMap(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt
 	return err
 }
 
-// func setCompositeMap(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options) (err error) {
-// 	srcMap := reflect.NewAt(srcType, src).Elem()
-// 	if srcMap.Len() == 0 {
-// 		return nil
-// 	}
-
-// 	dstMap := reflect.NewAt(dstType, dst).Elem()
-// 	if dstMap.IsNil() {
-// 		dstMap.Set(reflect.MakeMapWithSize(dstType, srcMap.Len()))
-// 	}
-
-// 	mapKeyType := dstMap.Type().Key()
-// 	mapValueType := dstMap.Type().Elem()
-
-// 	keyExits := true
-// 	valExits := true
-// 	// 获取src map的值
-// 	for _, srcMapKey := range srcMap.MapKeys() {
-// 		srcMapVal := srcMap.MapIndex(srcMapKey)
-
-// 		newVal := reflect.New(mapValueType).Elem()
-// 		newKey := reflect.New(mapKeyType).Elem()
-
-// 		reflect.New(mapValueType).UnsafeAddr()
-
-// 		dstMap.SetMapIndex(newKey, newVal)
-
-// 		if valExits {
-// 			src = unsafe.Pointer(newKey.UnsafeAddr())
-// 			dst = unsafe.Pointer(srcMapKey.UnsafeAddr())
-// 			key := dstSrcType{dst: mapValueType, src: srcMapVal.Type()}
-// 			valExits = getFromCacheSetAndRun(key, dst, src, opt)
-// 		}
-
-// 		if !valExits {
-// 			if err = copyInner(newKey.Interface(), srcMapKey.Interface(), opt); err != nil {
-// 				return err
-// 			}
-// 		}
-
-// 		if keyExits {
-// 			src = unsafe.Pointer(newVal.UnsafeAddr())
-// 			dst = unsafe.Pointer(srcMapVal.UnsafeAddr())
-// 			key := dstSrcType{dst: mapValueType, src: srcMapVal.Type()}
-// 			keyExits = getFromCacheSetAndRun(key, dst, src, opt)
-// 		}
-
-// 		if !keyExits {
-// 			if err = copyInner(newVal.Interface(), srcMapVal.Interface(), opt); err != nil {
-// 				return err
-// 			}
-// 		}
-// 	}
-// 	return err
-// }
-
 func setCompositeSlice(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options, of *offsetAndFunc) error {
+	srcValPtr := reflect.NewAt(srcType, src)
 	// src转成reflect.Value
-	srcVal := reflect.NewAt(srcType, src).Elem()
+	srcVal := srcValPtr.Elem()
 	if srcVal.Len() == 0 {
 		return nil
 	}
 
+	dstValPtr := reflect.NewAt(dstType, dst)
 	// dst转成reflect.Value
-	dstVal := reflect.NewAt(dstType, dst).Elem()
-	if dstVal.Cap() < srcVal.Len() {
+	dstVal := dstValPtr.Elem()
+	if dstVal.Len() < srcVal.Len() {
 		dstVal.Set(reflect.MakeSlice(dstType, srcVal.Len(), srcVal.Len()))
 	}
 
-	offset := dstVal.Type().Elem().Size()
+	dstOffset := dstVal.Type().Elem().Size()
+	srcOffset := srcVal.Type().Elem().Size()
 	subDstType := dstVal.Type().Elem()
 	subSrcType := srcVal.Type().Elem()
 
@@ -257,7 +204,7 @@ func setCompositeSlice(dstType, srcType reflect.Type, dst, src unsafe.Pointer, o
 	}
 	if exits {
 		for i := 1; i < srcVal.Len(); i++ {
-			exits, err = getFromCacheSetAndRun(key, addOffset(dstSliceAddr, offset, i), addOffset(srcSliceAddr, offset, i), opt)
+			exits, err = getFromCacheSetAndRun(key, addOffset(dstSliceAddr, dstOffset, i), addOffset(srcSliceAddr, srcOffset, i), opt)
 			if err != nil {
 				return err
 			}
@@ -269,7 +216,17 @@ func setCompositeSlice(dstType, srcType reflect.Type, dst, src unsafe.Pointer, o
 		return nil
 	}
 
-	return dcopyInner(dstVal.Interface(), srcVal.Interface(), opt)
+	if subDstType.Kind() == reflect.Ptr || subSrcType.Kind() == reflect.Ptr {
+
+		for i := 0; i < srcVal.Len(); i++ {
+			if err := setCompositePtr(subDstType, subSrcType, addOffset(dstSliceAddr, dstOffset, i), addOffset(srcSliceAddr, srcOffset, i), opt, of); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	return dcopyInner(dstValPtr.Interface(), srcValPtr.Interface(), opt)
 }
 
 func getSetCompositeFunc(t reflect.Kind) setReflectFunc {

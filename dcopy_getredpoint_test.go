@@ -1,3 +1,4 @@
+// Copyright [2020-2023] [guonaihong]
 package dcopy
 
 import (
@@ -34,7 +35,7 @@ func Test_GetRedPoint(t *testing.T) {
 	Preheat(&GetRedPointResp{}, &GetRedPointRespData{})
 	rv := GetRedPointResp{}
 
-	err := Copy(&rv.Data, local_GetRedPointRespData, WithUsePreheat())
+	err := Copy(&rv.Data, &local_GetRedPointRespData, WithUsePreheat())
 	assert.NoError(t, err)
 	assert.Equal(t, rv.Data.Point, local_GetRedPointRespData.Point)
 }
