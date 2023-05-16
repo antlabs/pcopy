@@ -5,8 +5,8 @@ import (
 	"bytes"
 	"fmt"
 	"go/format"
-	"html/template"
 	"io/ioutil"
+	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
 )
