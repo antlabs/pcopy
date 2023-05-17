@@ -49,7 +49,7 @@ func Benchmark_GetRedPoint_dcopy(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		// var dst testData
 		rv := GetRedPointResp{}
-		err := Copy(&rv.Data, local_GetRedPointRespData)
+		err := Copy(&rv.Data, &local_GetRedPointRespData)
 		if err != nil {
 			b.Fatal(err)
 		}

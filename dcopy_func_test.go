@@ -39,7 +39,7 @@ func Test_Func_Special(t *testing.T) {
 	for _, tc := range []testCase{
 		// dst 里面没有Add成员变量
 		func() testCase {
-			Copy(new(int), fn{Add: func() {}})
+			Copy(new(int), &fn{Add: func() {}})
 			return testCase{true, true}
 		}(),
 		func() testCase {

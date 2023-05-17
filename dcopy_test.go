@@ -125,7 +125,8 @@ func Test_Special(t *testing.T) {
 			return testCase{got: d, need: d}
 		}(),
 		func() testCase {
-			Copy(new(int), nil)
+			var s *int
+			Copy(new(int), s)
 			return testCase{got: true, need: true}
 		}(),
 	} {

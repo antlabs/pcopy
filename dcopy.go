@@ -28,7 +28,7 @@ type dcopy struct {
 	options
 }
 
-func Copy(dst, src interface{}, opts ...Option) error {
+func Copy[T any, U any](dst *T, src *U, opts ...Option) error {
 	if dst == nil || src == nil {
 		return ErrUnsupportedNil
 	}
@@ -36,7 +36,10 @@ func Copy(dst, src interface{}, opts ...Option) error {
 	for _, o := range opts {
 		o(&opt)
 	}
-	return dcopyInner(dst, src, opt)
+	var dstI interface{} = dst
+	var srcI interface{} = src
+
+	return dcopyInner(dstI, srcI, opt)
 }
 
 func dcopyInner(dst, src interface{}, opt options) error {
@@ -72,14 +75,14 @@ func dcopyInner(dst, src interface{}, opt options) error {
 		dstValue = dstValue.Elem()
 		srcValue = srcValue.Elem()
 
-		of.srcType = srcValue.Type()
-		of.dstType = dstValue.Type()
-
 		// 从cache load出类型直接执行
 		exist, err := getFromCacheSetAndRun(dstSrcType{dst: dstValue.Type(), src: srcValue.Type()}, dstAddr, srcAddr, opt)
 		if exist || err != nil {
 			return err
 		}
+
+		of.srcType = srcValue.Type()
+		of.dstType = dstValue.Type()
 
 		if opt.preheat {
 			all = newAllFieldFunc()

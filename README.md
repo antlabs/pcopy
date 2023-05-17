@@ -2,26 +2,22 @@
 [![Go](https://github.com/antlabs/dcopy/workflows/Go/badge.svg)](https://github.com/antlabs/dcopy/actions)
 [![codecov](https://codecov.io/gh/antlabs/dcopy/branch/master/graph/badge.svg)](https://codecov.io/gh/antlabs/dcopy)
 
-`dcopy.Copy`主要用于两个类型间的深度拷贝[从零实现]-这是新文档
-
-本文是新文档，[旧接口文档](./README_old.md)保持兼容性
+`dcopy.Copy`主要用于两个类型间的深度拷贝, 相比上个版本deepcopy.Copy，主要是性能方面的优化
+dcopy.Copy的前身是deepcopy.Copy优化版本。新加预热函数。Copy时新加使用预热接口函数，达到性能提升4-10倍的效果。
+警告: 高性能的同时可能会有些bug, 如果发现bug可以去掉`dcopy.WithUsePreheat()`试下， 结果不一致，可以提issue。
 
 ## feature
+* 高性能, 相对第一个版本提升4-10倍的性能
 * 支持异构结构体拷贝, dst和src可以是不同的类型，会拷贝dst和src交集的部分
 * 多类型支持struct/map/slice/array/int...int64/uint...uint64/ 等等
-* 性能相比json序列化和反序列化的做法，拥有更快的执行速度
-* 可以控制拷贝结构体层次
-* 可以通过tag控制感兴趣的字段
 
 ## 内容
 - [Installation](#Installation)
 - [Quick start](#quick-start)
 - [example](#example)
-    - [1. 控制拷贝结构体最多深度](#max-copy-depth)
-    - [2. 只拷贝设置tag的结构体成员](#copy-only-the-specified-tag)
-    - [3.拷贝slice](#copy-slice)
-    - [4.拷贝map](#copy-map)
-    - [5.简化业务代码开发](#simplify-business-code-development)
+    - [1.拷贝slice](#copy-slice)
+    - [2.拷贝map](#copy-map)
+    - [3.简化业务代码开发](#simplify-business-code-development)
 - [性能压测](#benchmark)
 ## Installation
 ```
@@ -48,7 +44,8 @@ type src struct{
 }
 func main() {
    d, s := dst{}, src{ID:3}
-   dcopy.Copy(&d, &s)
+   dcopy.Preheat(&dst{}, &src{}) // 一对类型只要预热一次
+   dcopy.Copy(&d, &s, dcopy.WithUsePreheat())
    fmt.Printf("%#v\n", d)
    
 }
@@ -69,7 +66,8 @@ func main() {
         i := []int{1, 2, 3, 4, 5, 6}
         var o []int
 
-        dcopy.Copy(&o, &i)
+        dcopy.Preheat(&o, &i)
+        dcopy.Copy(&o, &i, dcopy.WithUsePreheat())
 
         fmt.Printf("%#v\n", o)
 }
@@ -95,7 +93,8 @@ func main() {
         }
 
         var o map[string]int
-        dcopy.Copy(&o, &i)
+        dcopy.Preheat(&o, &i)
+        dcopy.Copy(&o, &i, dcopy.WithUsePreheat())
 
         fmt.Printf("%#v\n", o)
 }
@@ -124,8 +123,9 @@ func main() {
                 a.S = b.S
         }
 
+        dcopy.Preheat(&a, &b) //只要预热一次
         //可以约化成
-        dcopy.Copy(&a, &b)
+        dcopy.Copy(&a, &b, dcopy.WithUsePreheat())
 }
 ```
 # benchmark

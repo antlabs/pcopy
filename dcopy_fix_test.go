@@ -45,7 +45,7 @@ func TestCopy(t *testing.T) {
 	}}
 
 	rsp := AllTopicResp2{Data: &AllTopicResp_AllTopicRespData{}}
-	Copy(rsp.Data, resp)
+	Copy(rsp.Data, &resp)
 
 	// fmt.Printf("%#v\n", resp)
 	// fmt.Printf("%#v\n", rsp.Data)
