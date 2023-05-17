@@ -76,6 +76,12 @@ var (
 	local_Complex128_3 = complex128(3)
 )
 
+var (
+	local_bool_1 = true
+	local_bool_2 = false
+	local_bool_3 = true
+)
+
 var local_SlicePtrTestSrc = slicePtrTestSrc{
 	A: []*int{&local_int_1, &local_int_2, &local_int_3},
 	B: []*int8{(*int8)(unsafe.Pointer(&local_int_1)), (*int8)(unsafe.Pointer(&local_int_2)), (*int8)(unsafe.Pointer(&local_int_3))},
@@ -92,7 +98,7 @@ var local_SlicePtrTestSrc = slicePtrTestSrc{
 	M: []*float64{(*float64)(unsafe.Pointer(&local_int_1)), (*float64)(unsafe.Pointer(&local_int_2)), (*float64)(unsafe.Pointer(&local_int_3))},
 	N: []*complex64{(*complex64)(unsafe.Pointer(&local_int_1)), (*complex64)(unsafe.Pointer(&local_int_2)), (*complex64)(unsafe.Pointer(&local_int_3))},
 	O: []*complex128{(*complex128)(unsafe.Pointer(&local_int_1)), (*complex128)(unsafe.Pointer(&local_int_2)), (*complex128)(unsafe.Pointer(&local_int_3))},
-	P: []*bool{(*bool)(unsafe.Pointer(&local_int_1)), (*bool)(unsafe.Pointer(&local_int_2)), (*bool)(unsafe.Pointer(&local_int_3))},
+	P: []*bool{(*bool)(unsafe.Pointer(&local_bool_1)), (*bool)(unsafe.Pointer(&local_bool_2)), (*bool)(unsafe.Pointer(&local_bool_3))},
 	Q: []*string{(*string)(unsafe.Pointer(&local_string_1)), (*string)(unsafe.Pointer(&local_string_2)), (*string)(unsafe.Pointer(&local_string_3))},
 	// R: []*interface{}{(*interface{})(unsafe.Pointer(&local_int_1)), (*interface{})(unsafe.Pointer(&local_int_2)), (*interface{})(unsafe.Pointer(&local_int_3))},
 	S: []*byte{(*byte)(unsafe.Pointer(&local_int_1)), (*byte)(unsafe.Pointer(&local_int_2)), (*byte)(unsafe.Pointer(&local_int_3))},
