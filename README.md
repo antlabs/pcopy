@@ -134,13 +134,18 @@ func main() {
 ```
 # benchmark
 从零实现的pcopy相比json序列化与反序列化方式拥有更好的性能
-```
-goos: linux
-goarch: amd64
-pkg: github.com/antlabs/pcopy
-Benchmark_MiniCopy-16    	  159084	      6737 ns/op
-Benchmark_pcopy-16    	  374920	      2895 ns/op
-PASS
-ok  	github.com/antlabs/pcopy	2.275s
 
+[压测仓库位置](https://github.com/1whour/deepcopy-benchmark)
+```
+goos: darwin
+goarch: arm64
+pkg: benchmark
+Benchmark_Use_reflectValue_MiniCopy-8   	  334728	      3575 ns/op
+Benchmark_Use_reflectValue_DeepCopy-8   	  595302	      1956 ns/op
+Benchmark_Use_reflectValue_Copier-8     	  203574	      5860 ns/op
+Benchmark_Use_Ptr_jsoniter-8            	  821113	      1477 ns/op
+Benchmark_Use_Ptr_pcopy-8               	 3390382	       354.0 ns/op
+Benchmark_Use_Ptr_coven-8               	 1414197	       848.7 ns/op
+PASS
+ok  	benchmark	9.771s
 ```
