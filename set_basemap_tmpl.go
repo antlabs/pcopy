@@ -1,5 +1,5 @@
 // Copyright [2020-2023] [guonaihong]
-package dcopy
+package pcopy
 
 import (
 	"bytes"
@@ -13,7 +13,7 @@ import (
 
 var baseMapFuncTmpl = `
 // Copyright [2020-2024] [guonaihong]
-package dcopy
+package pcopy
 
 import (
 	"fmt"

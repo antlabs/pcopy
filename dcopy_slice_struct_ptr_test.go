@@ -1,4 +1,4 @@
-package dcopy
+package pcopy
 
 import (
 	"fmt"

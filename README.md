@@ -1,14 +1,14 @@
 ## 作用
-[![Go](https://github.com/antlabs/dcopy/workflows/Go/badge.svg)](https://github.com/antlabs/dcopy/actions)
-[![codecov](https://codecov.io/gh/antlabs/dcopy/branch/master/graph/badge.svg)](https://codecov.io/gh/antlabs/dcopy)
+[![Go](https://github.com/antlabs/pcopy/workflows/Go/badge.svg)](https://github.com/antlabs/pcopy/actions)
+[![codecov](https://codecov.io/gh/antlabs/pcopy/branch/master/graph/badge.svg)](https://codecov.io/gh/antlabs/pcopy)
 
-`dcopy.Copy`主要用于两个类型间的深度拷贝, 前身是[deepcopy](https://github.com/antlabs/deepcopy)
+`pcopy.Copy`主要用于两个类型间的深度拷贝, 前身是[deepcopy](https://github.com/antlabs/deepcopy)
 
 新加预热函数。Copy时打开加速开关，达到性能提升4-10倍的效果。
 
 警告: 
 
-高性能的同时可能会有些bug, 如果发现bug可以去掉`dcopy.WithUsePreheat()`试下， 结果不一致，可以提issue。
+高性能的同时可能会有些bug, 如果发现bug可以去掉`pcopy.WithUsePreheat()`试下， 结果不一致，可以提issue。
 
 ## feature
 * 高性能, 相对第一个版本提升4-10倍的性能
@@ -25,7 +25,7 @@
 - [性能压测](#benchmark)
 ## Installation
 ```
-go get github.com/antlabs/dcopy
+go get github.com/antlabs/pcopy
 ```
 
 ## Quick start
@@ -34,7 +34,7 @@ package main
 
 import (
     "fmt"
-    "github.com/antlabs/dcopy"
+    "github.com/antlabs/pcopy"
 )
 
 type dst struct {
@@ -48,8 +48,8 @@ type src struct{
 }
 func main() {
    d, s := dst{}, src{ID:3}
-   dcopy.Preheat(&dst{}, &src{}) // 一对类型只要预热一次
-   dcopy.Copy(&d, &s, dcopy.WithUsePreheat())
+   pcopy.Preheat(&dst{}, &src{}) // 一对类型只要预热一次
+   pcopy.Copy(&d, &s, pcopy.WithUsePreheat())
    fmt.Printf("%#v\n", d)
    
 }
@@ -63,15 +63,15 @@ package main
 import (
         "fmt"
 
-        "github.com/antlabs/dcopy"
+        "github.com/antlabs/pcopy"
 )
 
 func main() {
         i := []int{1, 2, 3, 4, 5, 6}
         var o []int
 
-        dcopy.Preheat(&o, &i)
-        dcopy.Copy(&o, &i, dcopy.WithUsePreheat())
+        pcopy.Preheat(&o, &i)
+        pcopy.Copy(&o, &i, pcopy.WithUsePreheat())
 
         fmt.Printf("%#v\n", o)
 }
@@ -85,7 +85,7 @@ package main
 import (
         "fmt"
 
-        "github.com/antlabs/dcopy"
+        "github.com/antlabs/pcopy"
 )
 
 func main() {
@@ -97,15 +97,15 @@ func main() {
         }
 
         var o map[string]int
-        dcopy.Preheat(&o, &i)
-        dcopy.Copy(&o, &i, dcopy.WithUsePreheat())
+        pcopy.Preheat(&o, &i)
+        pcopy.Copy(&o, &i, pcopy.WithUsePreheat())
 
         fmt.Printf("%#v\n", o)
 }
 
 ```
 ## simplify business code development
-经常看到，对同一个结构体的，有值更新操作，都是一堆手工if 然后赋值的代码。不仅容易出错，还累。快使用dcopy解放双手。
+经常看到，对同一个结构体的，有值更新操作，都是一堆手工if 然后赋值的代码。不仅容易出错，还累。快使用pcopy解放双手。
 ```go
 type option struct {
         Int int
@@ -127,20 +127,20 @@ func main() {
                 a.S = b.S
         }
 
-        dcopy.Preheat(&a, &b) //只要预热一次
+        pcopy.Preheat(&a, &b) //只要预热一次
         //可以约化成
-        dcopy.Copy(&a, &b, dcopy.WithUsePreheat())
+        pcopy.Copy(&a, &b, pcopy.WithUsePreheat())
 }
 ```
 # benchmark
-从零实现的dcopy相比json序列化与反序列化方式拥有更好的性能
+从零实现的pcopy相比json序列化与反序列化方式拥有更好的性能
 ```
 goos: linux
 goarch: amd64
-pkg: github.com/antlabs/dcopy
+pkg: github.com/antlabs/pcopy
 Benchmark_MiniCopy-16    	  159084	      6737 ns/op
-Benchmark_dcopy-16    	  374920	      2895 ns/op
+Benchmark_pcopy-16    	  374920	      2895 ns/op
 PASS
-ok  	github.com/antlabs/dcopy	2.275s
+ok  	github.com/antlabs/pcopy	2.275s
 
 ```

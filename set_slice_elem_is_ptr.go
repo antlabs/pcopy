@@ -1,5 +1,5 @@
 // Copyright [2020-2024] [guonaihong]
-package dcopy
+package pcopy
 
 import (
 	"fmt"

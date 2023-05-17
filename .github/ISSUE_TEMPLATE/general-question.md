@@ -12,8 +12,8 @@ Before asking a question, make sure you have:
 
 - Searched existing Stack Overflow questions.
 - Googled your question.
-- Searched open and closed [GitHub issues](https://github.com/antlabs/deepcopy/issues)
+- Searched open and closed [GitHub issues](https://github.com/antlabs/pcopy/issues)
 - Read the documentation:
-  - [deepcopy Readme](https://github.com/antlabs/deepcopy/blob/master/README.md)
+  - [deepcopy Readme](https://github.com/antlabs/pcopy/blob/master/README.md)
 
 -->

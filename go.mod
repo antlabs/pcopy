@@ -1,4 +1,4 @@
-module github.com/antlabs/dcopy
+module github.com/antlabs/pcopy
 
 go 1.18
 

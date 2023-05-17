@@ -1,5 +1,5 @@
 // Copyright [2020-2023] [guonaihong]
-package dcopy
+package pcopy
 
 type options struct {
 	// // MaxDepth is the maximum depth to traverse.
