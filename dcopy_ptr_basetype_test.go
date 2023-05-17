@@ -239,7 +239,8 @@ func Test_Ptr_Special(t *testing.T) {
 
 		// dst, src是不同类型
 		func() testCase {
-			Copy("hello", new(int))
+			s := "hello"
+			Copy(&s, new(int))
 			return testCase{}
 		}(),
 		// dst 是双指针

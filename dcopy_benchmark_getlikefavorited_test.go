@@ -5,6 +5,27 @@ import (
 	"testing"
 )
 
+func Benchmark_GetLikeFavorited_Unsafe_dcopy2(b *testing.B) {
+	err := Preheat(&GetMessageLikeFavoritedResp_GetMessageLikeFavoritedRespData{}, &GetMessageLikeFavoritedResp_GetMessageLikeFavoritedRespData{})
+	if err != nil {
+		b.Fatal(err)
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+
+		err = Preheat(&GetMessageLikeFavoritedResp_GetMessageLikeFavoritedRespData{}, &GetMessageLikeFavoritedResp_GetMessageLikeFavoritedRespData{})
+		if err != nil {
+			b.Fatal(err)
+		}
+		var dst GetMessageLikeFavoritedResp_GetMessageLikeFavoritedRespData
+		err = Copy(&dst, &local_GetMessageLikeFavoritedResp_GetMessageLikeFavoritedRespData, WithUsePreheat())
+		if err != nil {
+			b.Fatal(err)
+		}
+
+	}
+}
+
 func Benchmark_GetLikeFavorited_Unsafe_dcopy(b *testing.B) {
 	err := Preheat(&GetMessageLikeFavoritedResp_GetMessageLikeFavoritedRespData{}, &GetMessageLikeFavoritedResp_GetMessageLikeFavoritedRespData{})
 	if err != nil {

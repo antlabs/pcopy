@@ -148,7 +148,7 @@ func Test_Map_Special(t *testing.T) {
 			}
 
 			var dst map[string]mVal
-			Copy(dst, src)
+			Copy(&dst, &src)
 			return testCase{}
 		}(),
 		func() testCase {
