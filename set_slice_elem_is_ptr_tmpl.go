@@ -199,7 +199,7 @@ var _sliceElemIsPtrTable = []string{
 
 func saveSliceElemIsPtrToFile(fileName string) error {
 	var out bytes.Buffer
-	tmpl, err := template.New("sliceElmeIsPtrFuncTmpl").Funcs(sprig.FuncMap()).Parse(sliceElemIsPtrFuncTmpl)
+	tmpl, err := template.New("sliceElmeIsPtrFuncTmpl").Funcs(sprig.TxtFuncMap()).Parse(sliceElemIsPtrFuncTmpl)
 	if err != nil {
 		return fmt.Errorf("build sliceElemIsPtrFuncTmpl fail:%w", err)
 	}
@@ -208,7 +208,7 @@ func saveSliceElemIsPtrToFile(fileName string) error {
 	if err != nil {
 		return err
 	}
-	tmpl, err = template.New("sliceElemIsPtrTable").Funcs(sprig.FuncMap()).Parse(sliceElemIsPtrTable)
+	tmpl, err = template.New("sliceElemIsPtrTable").Funcs(sprig.TxtFuncMap()).Parse(sliceElemIsPtrTable)
 	if err != nil {
 		return fmt.Errorf("build sliceElemIsPtrTableTmpl fail:%w", err)
 	}

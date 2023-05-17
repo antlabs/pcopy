@@ -149,7 +149,7 @@ var baseTypeTable = []string{
 
 func saveBaseMapFuncToFile(fileName string) error {
 	var out bytes.Buffer
-	tmpl, err := template.New("setBaseMapFunc").Funcs(sprig.FuncMap()).Parse(baseMapFuncTmpl)
+	tmpl, err := template.New("setBaseMapFunc").Funcs(sprig.TxtFuncMap()).Parse(baseMapFuncTmpl)
 	if err != nil {
 		return fmt.Errorf("build setBaseMapFunc fail:%w", err)
 	}
@@ -158,7 +158,7 @@ func saveBaseMapFuncToFile(fileName string) error {
 	if err != nil {
 		return err
 	}
-	tmpl, err = template.New("setBaseMapTable").Funcs(sprig.FuncMap()).Parse(baseMapTable)
+	tmpl, err = template.New("setBaseMapTable").Funcs(sprig.TxtFuncMap()).Parse(baseMapTable)
 	if err != nil {
 		return fmt.Errorf("build setBaseMapTable fail:%w", err)
 	}
