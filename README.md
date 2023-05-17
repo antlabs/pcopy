@@ -2,9 +2,13 @@
 [![Go](https://github.com/antlabs/dcopy/workflows/Go/badge.svg)](https://github.com/antlabs/dcopy/actions)
 [![codecov](https://codecov.io/gh/antlabs/dcopy/branch/master/graph/badge.svg)](https://codecov.io/gh/antlabs/dcopy)
 
-`dcopy.Copy`主要用于两个类型间的深度拷贝, 相比上个版本deepcopy.Copy，主要是性能方面的优化
-dcopy.Copy的前身是deepcopy.Copy优化版本。新加预热函数。Copy时新加使用预热接口函数，达到性能提升4-10倍的效果。
-警告: 高性能的同时可能会有些bug, 如果发现bug可以去掉`dcopy.WithUsePreheat()`试下， 结果不一致，可以提issue。
+`dcopy.Copy`主要用于两个类型间的深度拷贝, 前身是[deepcopy](https://github.com/antlabs/deepcopy)
+
+新加预热函数。Copy时打开加速开关，达到性能提升4-10倍的效果。
+
+警告: 
+
+高性能的同时可能会有些bug, 如果发现bug可以去掉`dcopy.WithUsePreheat()`试下， 结果不一致，可以提issue。
 
 ## feature
 * 高性能, 相对第一个版本提升4-10倍的性能
