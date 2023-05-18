@@ -149,3 +149,43 @@ Benchmark_Use_Ptr_coven-8               	 1414197	       848.7 ns/op
 PASS
 ok  	benchmark	9.771s
 ```
+
+### 本项目压测
+从下面的压测数据可以看到，基本提供了4-10倍的性能提升
+```
+goos: darwin
+goarch: arm64
+pkg: github.com/antlabs/pcopy
+Benchmark_BaseMap_Unsafe_Pcopy-8               	  529747	      2343 ns/op
+Benchmark_BaseMap_miniCopy-8                   	   62181	     19212 ns/op
+Benchmark_BaseMap_Reflect-8                    	   93810	     12756 ns/op
+Benchmark_BaseSlice_Unsafe_Pcopy-8             	 2013764	       595.1 ns/op
+Benchmark_BaseSlice_miniCopy-8                 	  154918	      7728 ns/op
+Benchmark_BaseSlice_Reflect-8                  	  188720	      6393 ns/op
+Benchmark_BaseType_Unsafe_Pcopy-8              	 4872112	       243.8 ns/op
+Benchmark_BaseType_MiniCopy-8                  	  517814	      2278 ns/op
+Benchmark_BaseType_Pcopy-8                     	  635156	      1886 ns/op
+Benchmark_CompositeMap_Unsafe_Pcopy-8          	  486253	      2409 ns/op
+Benchmark_CompositeMap_miniCopy-8              	  229674	      5173 ns/op
+Benchmark_CompositeMap_Reflect-8               	  475243	      2490 ns/op
+Benchmark_GetLikeFavorited_Unsafe_Pcopy2-8     	  446907	      2662 ns/op
+Benchmark_GetLikeFavorited_Unsafe_Pcopy-8      	  470217	      2572 ns/op
+Benchmark_GetLikeFavorited_MiniCopy-8          	   85674	     13989 ns/op
+Benchmark_GetLikeFavorited_Reflect_Pcopy-8     	  121603	      9856 ns/op
+Benchmark_GetRedPoint_Unsafe_Pcopy-8           	 1626688	       736.1 ns/op
+Benchmark_GetRedPoint_MiniCopy-8               	  650004	      1871 ns/op
+Benchmark_GetRedPoint_Reflect_Pcopy-8          	 1669778	       722.0 ns/op
+Benchmark_Interface_Unsafe_Pcopy-8             	 2869022	       421.3 ns/op
+Benchmark_Interface_MiniCopy-8                 	  413936	      2704 ns/op
+Benchmark_Interface_Pcopy-8                    	  440250	      2688 ns/op
+Benchmark_Interface_BaseSlice_Unsafe_Pcopy-8   	 1266501	       947.4 ns/op
+Benchmark_Interface_BaseSlice_MiniCopy-8       	  141610	      8422 ns/op
+Benchmark_Interface_BaseSlice_Pcopy-8          	  203906	      5917 ns/op
+Benchmark_Ptr_BaseType1_Unsafe_Pcopy-8         	  910153	      1310 ns/op
+Benchmark_Ptr_BaseType1_Reflect_Pcopy-8        	  391117	      3026 ns/op
+Benchmark_Ptr_BaseSlice_Unsafe_Pcopy-8         	  698156	      1704 ns/op
+Benchmark_Ptr_BaseSlice_Reflect_Pcopy-8        	  219999	      5415 ns/op
+Benchmark_SliceWithStruct_Unsafe_Pcopy-8       	 1395982	       860.3 ns/op
+Benchmark_SliceWithStruct_miniCopy-8           	  163154	      7298 ns/op
+Benchmark_SliceWithStruct_Reflect_Pcopy-8      	  190728	      6213 ns/op
+```

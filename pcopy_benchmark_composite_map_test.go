@@ -3,7 +3,7 @@ package pcopy
 
 import "testing"
 
-func Benchmark_CompositeMap_Unsafe_dcopy(b *testing.B) {
+func Benchmark_CompositeMap_Unsafe_Pcopy(b *testing.B) {
 	var dst test_MapWithMap_Dst
 	err := Preheat(&dst, &local_MapWithMap_Src)
 	if err != nil {

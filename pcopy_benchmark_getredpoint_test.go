@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func Benchmark_GetRedPoint_Unsafe_dcopy(b *testing.B) {
+func Benchmark_GetRedPoint_Unsafe_Pcopy(b *testing.B) {
 	err := Preheat(&GetRedPointResp{}, &GetRedPointRespData{})
 	if err != nil {
 		b.Fatal(err)
@@ -45,7 +45,7 @@ func Benchmark_GetRedPoint_MiniCopy(b *testing.B) {
 	}
 }
 
-func Benchmark_GetRedPoint_dcopy(b *testing.B) {
+func Benchmark_GetRedPoint_Reflect_Pcopy(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		// var dst testData
 		rv := GetRedPointResp{}

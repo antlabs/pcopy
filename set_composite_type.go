@@ -72,7 +72,7 @@ func setCompositePtr(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt
 		return err
 	}
 
-	return dcopyInner(dstVal.Interface(), srcVal.Interface(), opt)
+	return pcopyInner(dstVal.Interface(), srcVal.Interface(), opt)
 }
 
 func setCompositeInterface(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt options, of *offsetAndFunc) error {
@@ -114,7 +114,7 @@ func setCompositeInterface(dstType, srcType reflect.Type, dst, src unsafe.Pointe
 	// TODO 这里也可以细化出map的情况
 	// 以后再优化
 
-	return dcopyInner((*interface{})(dst), (*interface{})(src), opt)
+	return pcopyInner((*interface{})(dst), (*interface{})(src), opt)
 }
 
 // map 拿不到UnsafeAddr指针，所以只能用reflect.Value来做
@@ -153,7 +153,7 @@ func setCompositeMap(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt
 			newKey2 := getNewBaseType(mapKeyType.Kind(), srcMapKey.Interface())
 			newDstKey.Elem().Set(reflect.ValueOf(newKey2))
 		} else {
-			if err = dcopyInner(newDstKey.Interface(), srcMapKey.Interface(), opt); err != nil {
+			if err = pcopyInner(newDstKey.Interface(), srcMapKey.Interface(), opt); err != nil {
 				return err
 			}
 		}
@@ -164,7 +164,7 @@ func setCompositeMap(dstType, srcType reflect.Type, dst, src unsafe.Pointer, opt
 			goto next
 		}
 
-		if err = dcopyInner(newDstVal.Interface(), srcMapVal.Interface(), opt); err != nil {
+		if err = pcopyInner(newDstVal.Interface(), srcMapVal.Interface(), opt); err != nil {
 			return err
 		}
 	next:
@@ -226,7 +226,7 @@ func setCompositeSlice(dstType, srcType reflect.Type, dst, src unsafe.Pointer, o
 		return nil
 	}
 
-	return dcopyInner(dstValPtr.Interface(), srcValPtr.Interface(), opt)
+	return pcopyInner(dstValPtr.Interface(), srcValPtr.Interface(), opt)
 }
 
 func getSetCompositeFunc(t reflect.Kind) setReflectFunc {

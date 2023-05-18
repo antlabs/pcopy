@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func Benchmark_GetLikeFavorited_Unsafe_dcopy2(b *testing.B) {
+func Benchmark_GetLikeFavorited_Unsafe_Pcopy2(b *testing.B) {
 	err := Preheat(&GetMessageLikeFavoritedResp_GetMessageLikeFavoritedRespData{}, &GetMessageLikeFavoritedResp_GetMessageLikeFavoritedRespData{})
 	if err != nil {
 		b.Fatal(err)
@@ -26,7 +26,7 @@ func Benchmark_GetLikeFavorited_Unsafe_dcopy2(b *testing.B) {
 	}
 }
 
-func Benchmark_GetLikeFavorited_Unsafe_dcopy(b *testing.B) {
+func Benchmark_GetLikeFavorited_Unsafe_Pcopy(b *testing.B) {
 	err := Preheat(&GetMessageLikeFavoritedResp_GetMessageLikeFavoritedRespData{}, &GetMessageLikeFavoritedResp_GetMessageLikeFavoritedRespData{})
 	if err != nil {
 		b.Fatal(err)
@@ -82,7 +82,7 @@ func Benchmark_GetLikeFavorited_MiniCopy(b *testing.B) {
 	}
 }
 
-func Benchmark_GetLikeFavorited_dcopy(b *testing.B) {
+func Benchmark_GetLikeFavorited_Reflect_Pcopy(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		// var dst testData
 		var dst GetMessageLikeFavoritedResp_GetMessageLikeFavoritedRespData

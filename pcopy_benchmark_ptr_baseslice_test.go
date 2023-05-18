@@ -3,7 +3,7 @@ package pcopy
 
 import "testing"
 
-func Benchmark_Ptr_BaseSlice_Unsafe_dcopy(b *testing.B) {
+func Benchmark_Ptr_BaseSlice_Unsafe_Pcopy(b *testing.B) {
 	err := Preheat(&test_BaseSliceType_ptr_Dst{}, &test_BaseSliceType_ptr_Src{})
 	if err != nil {
 		b.Fatal(err)
@@ -53,7 +53,7 @@ func Benchmark_Ptr_BaseSlice_miniCopy(b *testing.B) {
 	}
 }
 
-func Benchmark_Ptr_BaseSlice_Reflect(b *testing.B) {
+func Benchmark_Ptr_BaseSlice_Reflect_Pcopy(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		var dst test_BaseSliceType_ptr_Dst
 		err := Copy(&dst, &local_test_BaseSliceType_ptr_Src)

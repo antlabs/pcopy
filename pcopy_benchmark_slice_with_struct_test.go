@@ -3,7 +3,7 @@ package pcopy
 
 import "testing"
 
-func Benchmark_SliceWithStruct_Unsafe_dcopy(b *testing.B) {
+func Benchmark_SliceWithStruct_Unsafe_Pcopy(b *testing.B) {
 	var dst test_SliceWithStruct_Src
 
 	err := Preheat(&dst, &test_SliceWithStruct_Src{})
@@ -42,7 +42,7 @@ func Benchmark_SliceWithStruct_miniCopy(b *testing.B) {
 	}
 }
 
-func Benchmark_SliceWithStruct_Reflect(b *testing.B) {
+func Benchmark_SliceWithStruct_Reflect_Pcopy(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		var dst test_SliceWithStruct_Src
 		err := Copy(&dst, &local_SliceWithStruct_Src)

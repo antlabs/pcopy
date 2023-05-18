@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type DCopyDst_BaseSlice struct {
+type PCopyDst_BaseSlice struct {
 	// 所有基础类型
 	Bool    bool
 	Int     int
@@ -45,9 +45,9 @@ type DCopyDst_BaseSlice struct {
 	// SliceComplex128 []complex128
 }
 
-type DCopySrc_BaseSlice DCopyDst_BaseSlice
+type PCopySrc_BaseSlice PCopyDst_BaseSlice
 
-var testSrc_BaseSlice = DCopySrc_BaseSlice{
+var testSrc_BaseSlice = PCopySrc_BaseSlice{
 	Bool:    true,
 	Int:     1,
 	Int8:    2,
@@ -85,16 +85,16 @@ var testSrc_BaseSlice = DCopySrc_BaseSlice{
 }
 
 // 基础类型slice测试
-func TestDCopy_BaseWithSlice(t *testing.T) {
-	var dst DCopyDst_BaseSlice
+func TestPcopy_BaseWithSlice(t *testing.T) {
+	var dst PCopyDst_BaseSlice
 
 	err := Preheat(&dst, &testSrc_BaseSlice)
-	dst = DCopyDst_BaseSlice{}
+	dst = PCopyDst_BaseSlice{}
 	assert.NoError(t, err)
 
 	err = Copy(&dst, &testSrc_BaseSlice, WithUsePreheat())
 	assert.NoError(t, err)
 
-	var dst2 DCopyDst_BaseSlice = DCopyDst_BaseSlice(testSrc_BaseSlice)
+	var dst2 PCopyDst_BaseSlice = PCopyDst_BaseSlice(testSrc_BaseSlice)
 	assert.Equal(t, dst, dst2)
 }

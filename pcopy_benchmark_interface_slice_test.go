@@ -39,7 +39,7 @@ var localInterfaceSliceSrcTest = interfaceBaseSliceSrcTest{
 	N: []bool{true, false, true, false, true},
 }
 
-func Benchmark_Interface_BaseSlice_Unsafe_dcopy(b *testing.B) {
+func Benchmark_Interface_BaseSlice_Unsafe_Pcopy(b *testing.B) {
 	var dst interfaceSliceDstTest
 	err := Preheat(&dst, &localInterfaceSliceSrcTest)
 	if err != nil {
@@ -92,7 +92,7 @@ func Benchmark_Interface_BaseSlice_MiniCopy(b *testing.B) {
 	}
 }
 
-func Benchmark_Interface_BaseSlice_dcopy(b *testing.B) {
+func Benchmark_Interface_BaseSlice_Pcopy(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		// var dst testData
 		var dst interfaceSliceDstTest

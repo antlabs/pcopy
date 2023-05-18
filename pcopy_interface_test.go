@@ -32,7 +32,7 @@ func Test_Inteface(t *testing.T) {
 }
 
 // 基础类型
-func Test_Interface_DCopy2(t *testing.T) {
+func Test_Interface_Pcopy2(t *testing.T) {
 	err := Preheat(&interfaceDstTest{}, &interfaceBaseSrcTest{})
 	// err := Preheat(&interfaceDstTest{}, &local)
 	assert.NoError(t, err)
@@ -65,7 +65,7 @@ func Test_Interface_DCopy2(t *testing.T) {
 	}
 }
 
-func Test_Interface_DCopy3(t *testing.T) {
+func Test_Interface_Pcopy3(t *testing.T) {
 	err := Preheat(&interfaceSliceDstTest{}, &interfaceBaseSliceSrcTest{})
 	assert.NoError(t, err)
 	for _, tc := range []interfaceBaseSliceSrcTest{
@@ -98,7 +98,7 @@ func Test_Interface_DCopy3(t *testing.T) {
 }
 
 // TODO 打开
-func Test_Interface_DCopy(t *testing.T) {
+func Test_Interface_Pcopy(t *testing.T) {
 	type interfaceTest struct {
 		I interface{}
 		S interface{}

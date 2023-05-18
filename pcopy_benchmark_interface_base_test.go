@@ -41,7 +41,7 @@ var localInterfaceSrcTest = interfaceBaseSrcTest{
 	N: true,
 }
 
-func Benchmark_Interface_Unsafe_dcopy(b *testing.B) {
+func Benchmark_Interface_Unsafe_Pcopy(b *testing.B) {
 	var dst interfaceDstTest
 	err := Preheat(&dst, &localInterfaceSrcTest)
 	if err != nil {
@@ -94,7 +94,7 @@ func Benchmark_Interface_MiniCopy(b *testing.B) {
 	}
 }
 
-func Benchmark_Interface_dcopy(b *testing.B) {
+func Benchmark_Interface_Pcopy(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		// var dst testData
 		var dst interfaceDstTest

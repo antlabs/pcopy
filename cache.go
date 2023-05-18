@@ -104,7 +104,7 @@ func (c *allFieldFunc) do(dstBaseAddr, srcBaseAddr unsafe.Pointer, opt options) 
 		kind = v.srcType.Kind()
 		switch {
 		// dst如果是ptr
-		// 修改这里的代码，也要修改dcopy()函数里面的代码
+		// 修改这里的代码，也要修改pcopy()函数里面的代码
 		// 这里必须要放在第一
 		case v.dstType.Kind() == reflect.Ptr:
 			if err := v.reflectSet(v.dstType, v.srcType, add(dstBaseAddr, v.dstOffset), add(srcBaseAddr, v.srcOffset), opt, &v); err != nil {

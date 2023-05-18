@@ -6,15 +6,15 @@ import (
 	"testing"
 )
 
-func Benchmark_BaseType_Unsafe_dcopy(b *testing.B) {
-	var dst DCopyDst
+func Benchmark_BaseType_Unsafe_Pcopy(b *testing.B) {
+	var dst PCopyDst
 	err := Preheat(&dst, &testSrc)
 	if err != nil {
 		b.Fatal(err)
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		var dst DCopyDst
+		var dst PCopyDst
 		err := Copy(&dst, &testSrc, WithUsePreheat())
 		if err != nil {
 			b.Fatal(err)
@@ -25,7 +25,7 @@ func Benchmark_BaseType_Unsafe_dcopy(b *testing.B) {
 
 func Benchmark_BaseType_RawCopy(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		var dst DCopyDst
+		var dst PCopyDst
 		dst.Bool = testSrc.Bool
 		dst.Int = testSrc.Int
 		dst.Int8 = testSrc.Int8
@@ -70,7 +70,7 @@ var td = testData{
 	UInt64: 164,
 	UInt32: 132,
 	UInt16: 116,
-	S:      "test dcopy",
+	S:      "test pcopy",
 	Slice:  []string{"123", "456", "789"},
 	Array:  []int{0x33, 0x44, 0x55, 0x66, 0x77, 0x88},
 }
@@ -87,7 +87,7 @@ func miniCopy(dst, src interface{}) error {
 func Benchmark_BaseType_MiniCopy(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		// var dst testData
-		var dst DCopyDst
+		var dst PCopyDst
 		err := miniCopy(&dst, &testSrc)
 		if err != nil {
 			b.Fatal(err)
@@ -96,10 +96,10 @@ func Benchmark_BaseType_MiniCopy(b *testing.B) {
 	}
 }
 
-func Benchmark_BaseType_dcopy(b *testing.B) {
+func Benchmark_BaseType_Pcopy(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		// var dst testData
-		var dst DCopyDst
+		var dst PCopyDst
 		err := Copy(&dst, &testSrc)
 		if err != nil {
 			b.Fatal(err)

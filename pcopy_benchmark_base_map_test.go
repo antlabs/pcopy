@@ -3,8 +3,8 @@ package pcopy
 
 import "testing"
 
-func Benchmark_BaseMap_Unsafe_dcopy(b *testing.B) {
-	var dst DCopyDst_BaseMap
+func Benchmark_BaseMap_Unsafe_Pcopy(b *testing.B) {
+	var dst PCopyDst_BaseMap
 	err := Preheat(&dst, &testSrc_BaseMap)
 	if err != nil {
 		b.Fatal(err)
@@ -12,7 +12,7 @@ func Benchmark_BaseMap_Unsafe_dcopy(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		var dst DCopyDst_BaseMap
+		var dst PCopyDst_BaseMap
 		err := Copy(&dst, &testSrc_BaseMap, WithUsePreheat())
 		if err != nil {
 			b.Fatal(err)
@@ -23,7 +23,7 @@ func Benchmark_BaseMap_Unsafe_dcopy(b *testing.B) {
 
 func Benchmark_BaseMap_RawCopy(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		var dst DCopyDst_BaseMap
+		var dst PCopyDst_BaseMap
 		dst.A = make(map[string]string)
 		for k, v := range testSrc_BaseMap.A {
 			dst.A[k] = v
@@ -115,7 +115,7 @@ func Benchmark_BaseMap_RawCopy(b *testing.B) {
 
 func Benchmark_BaseMap_miniCopy(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		var dst DCopyDst_BaseMap
+		var dst PCopyDst_BaseMap
 		err := miniCopy(&dst, &testSrc_BaseMap)
 		if err != nil {
 			b.Fatal(err)
@@ -126,7 +126,7 @@ func Benchmark_BaseMap_miniCopy(b *testing.B) {
 
 func Benchmark_BaseMap_Reflect(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		var dst DCopyDst_BaseMap
+		var dst PCopyDst_BaseMap
 		err := Copy(&dst, &testSrc_BaseMap)
 		if err != nil {
 			b.Fatal(err)

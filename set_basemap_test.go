@@ -13,7 +13,7 @@ import (
 // 	assert.NoError(t, err)
 // }
 
-type DCopyDst_BaseMap struct {
+type PCopyDst_BaseMap struct {
 	A map[string]string
 	B map[string]int
 	C map[string]float64
@@ -63,9 +63,9 @@ type DCopyDst_BaseMap struct {
 	// CO []complex128
 }
 
-type DCopySrc_BaseMap DCopyDst_BaseMap
+type PCopySrc_BaseMap PCopyDst_BaseMap
 
-var testSrc_BaseMap = DCopySrc_BaseMap{
+var testSrc_BaseMap = PCopySrc_BaseMap{
 	A: map[string]string{
 		"1": "1",
 		"2": "2",
@@ -165,15 +165,15 @@ var testSrc_BaseMap = DCopySrc_BaseMap{
 }
 
 func Test_SetBaseMap(t *testing.T) {
-	var dst DCopyDst_BaseMap
+	var dst PCopyDst_BaseMap
 
 	err := Preheat(&dst, &testSrc_BaseMap)
-	dst = DCopyDst_BaseMap{}
+	dst = PCopyDst_BaseMap{}
 	assert.NoError(t, err)
 
 	err = Copy(&dst, &testSrc_BaseMap, WithUsePreheat())
 	assert.NoError(t, err)
 
-	var dst2 DCopyDst_BaseMap = DCopyDst_BaseMap(testSrc_BaseMap)
+	var dst2 PCopyDst_BaseMap = PCopyDst_BaseMap(testSrc_BaseMap)
 	assert.Equal(t, dst, dst2)
 }

@@ -23,8 +23,8 @@ var ErrNotAddr = errors.New("dst or src type can not get address")
 
 var zeroUintptr unsafe.Pointer
 
-// dcopy结构体
-type dcopy struct {
+// pcopy结构体
+type pcopy struct {
 	options
 }
 
@@ -39,10 +39,10 @@ func Copy[T any, U any](dst *T, src *U, opts ...Option) error {
 	var dstI interface{} = dst
 	var srcI interface{} = src
 
-	return dcopyInner(dstI, srcI, opt)
+	return pcopyInner(dstI, srcI, opt)
 }
 
-func dcopyInner(dst, src interface{}, opt options) error {
+func pcopyInner(dst, src interface{}, opt options) error {
 	if dst == nil || src == nil {
 		return ErrUnsupportedNil
 	}
@@ -96,10 +96,10 @@ func dcopyInner(dst, src interface{}, opt options) error {
 		}
 	}
 
-	d := dcopy{
+	d := pcopy{
 		options: opt,
 	}
-	return d.dcopy(dstValue, srcValue, dstAddr, srcAddr, of, all)
+	return d.pcopy(dstValue, srcValue, dstAddr, srcAddr, of, all)
 }
 
 // // 需要的tag name
@@ -117,7 +117,7 @@ func isArraySlice(v reflect.Value) bool {
 }
 
 // 拷贝slice array
-func (d *dcopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, of offsetAndFunc, all *allFieldFunc) error {
+func (d *pcopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, of offsetAndFunc, all *allFieldFunc) error {
 	// dst只能是slice和array类型
 	if !isArraySlice(dst) {
 		return nil
@@ -168,11 +168,11 @@ func (d *dcopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe.Po
 		}
 
 		// 元素不存在转换表，需要创建
-		return dcopyInner(reflect.New(dstElemType).Interface(), reflect.New(srcElemType).Interface(), d.options)
+		return pcopyInner(reflect.New(dstElemType).Interface(), reflect.New(srcElemType).Interface(), d.options)
 	}
 
 	for i := 0; i < l; i++ {
-		if err := d.dcopy(dst.Index(i), src.Index(i), dstBase, srcBase, of, all); err != nil {
+		if err := d.pcopy(dst.Index(i), src.Index(i), dstBase, srcBase, of, all); err != nil {
 			return err
 		}
 	}
@@ -180,7 +180,7 @@ func (d *dcopy) cpySliceArray(dst, src reflect.Value, dstBase, srcBase unsafe.Po
 }
 
 // 拷贝map
-func (d *dcopy) cpyMap(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, of offsetAndFunc, all *allFieldFunc) error {
+func (d *pcopy) cpyMap(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, of offsetAndFunc, all *allFieldFunc) error {
 	if dst.Kind() == reflect.Ptr {
 		return d.cpyPtr(dst, src, dstBase, srcBase, of, all)
 	}
@@ -233,7 +233,7 @@ func (d *dcopy) cpyMap(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, 
 		}
 
 		// 元素不存在转换表，需要创建
-		return dcopyInner(reflect.New(dstElemType).Interface(), reflect.New(srcElemType).Interface(), d.options)
+		return pcopyInner(reflect.New(dstElemType).Interface(), reflect.New(srcElemType).Interface(), d.options)
 	}
 
 	iter := src.MapRange()
@@ -242,7 +242,7 @@ func (d *dcopy) cpyMap(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, 
 		v := iter.Value()
 
 		newVal := reflect.New(v.Type()).Elem()
-		if err := d.dcopy(newVal, v, zeroUintptr, zeroUintptr, of, all); err != nil {
+		if err := d.pcopy(newVal, v, zeroUintptr, zeroUintptr, of, all); err != nil {
 			return err
 		}
 
@@ -252,7 +252,7 @@ func (d *dcopy) cpyMap(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, 
 }
 
 // 拷贝函数
-func (d *dcopy) cpyFunc(dst, src reflect.Value) error {
+func (d *pcopy) cpyFunc(dst, src reflect.Value) error {
 	if dst.Kind() != src.Kind() {
 		return nil
 	}
@@ -262,7 +262,7 @@ func (d *dcopy) cpyFunc(dst, src reflect.Value) error {
 }
 
 // 拷贝结构体
-func (d *dcopy) cpyStruct(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, of offsetAndFunc, all *allFieldFunc) error {
+func (d *pcopy) cpyStruct(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, of offsetAndFunc, all *allFieldFunc) error {
 	if dst.Kind() != src.Kind() {
 		return nil
 	}
@@ -314,7 +314,7 @@ func (d *dcopy) cpyStruct(dst, src reflect.Value, dstBase, srcBase unsafe.Pointe
 			of.srcOffset = sub(sField.UnsafeAddr(), uintptr(srcBase))
 		}
 
-		if err := d.dcopy(dstValue, sField, dstBase, srcBase, of, all); err != nil {
+		if err := d.pcopy(dstValue, sField, dstBase, srcBase, of, all); err != nil {
 			return err
 		}
 	}
@@ -323,7 +323,7 @@ func (d *dcopy) cpyStruct(dst, src reflect.Value, dstBase, srcBase unsafe.Pointe
 }
 
 // 拷贝interface{}
-func (d *dcopy) cpyInterface(dst, src reflect.Value, of offsetAndFunc, all *allFieldFunc) error {
+func (d *pcopy) cpyInterface(dst, src reflect.Value, of offsetAndFunc, all *allFieldFunc) error {
 	if dst.Kind() != src.Kind() {
 		return nil
 	}
@@ -338,7 +338,7 @@ func (d *dcopy) cpyInterface(dst, src reflect.Value, of offsetAndFunc, all *allF
 		newSrcAddr = unsafe.Pointer(src.UnsafeAddr())
 	}
 
-	if err := d.dcopy(newDst, src, newDstAddr, newSrcAddr, of, all); err != nil {
+	if err := d.pcopy(newDst, src, newDstAddr, newSrcAddr, of, all); err != nil {
 		return err
 	}
 
@@ -346,7 +346,7 @@ func (d *dcopy) cpyInterface(dst, src reflect.Value, of offsetAndFunc, all *allF
 	return nil
 }
 
-func (d *dcopy) preheatPtr(dst, src reflect.Value, of offsetAndFunc, all *allFieldFunc) error {
+func (d *pcopy) preheatPtr(dst, src reflect.Value, of offsetAndFunc, all *allFieldFunc) error {
 	bkDst := dst
 	bkSrc := src
 	for {
@@ -404,13 +404,13 @@ func (d *dcopy) preheatPtr(dst, src reflect.Value, of offsetAndFunc, all *allFie
 		if exits {
 			return nil
 		}
-		return dcopyInner(dst.Addr().Interface(), src.Addr().Interface(), d.options)
+		return pcopyInner(dst.Addr().Interface(), src.Addr().Interface(), d.options)
 	}
 	return nil
 }
 
 // 拷贝指针
-func (d *dcopy) cpyPtr(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, of offsetAndFunc, all *allFieldFunc) error {
+func (d *pcopy) cpyPtr(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, of offsetAndFunc, all *allFieldFunc) error {
 	// 解引用之后的类型如果不一样，直接返回
 	if d.preheat {
 		return d.preheatPtr(dst, src, of, all)
@@ -436,11 +436,11 @@ func (d *dcopy) cpyPtr(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, 
 		dstBase = unsafe.Pointer(dst.UnsafeAddr())
 	}
 
-	return d.dcopy(dst, src, dstBase, srcBase, of, all)
+	return d.pcopy(dst, src, dstBase, srcBase, of, all)
 }
 
 // 其他类型
-func (d *dcopy) cpyDefault(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, of offsetAndFunc, all *allFieldFunc) error {
+func (d *pcopy) cpyDefault(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, of offsetAndFunc, all *allFieldFunc) error {
 	if dst.Kind() != src.Kind() {
 		// panic(fmt.Sprintf("%v, %v", dst.Kind(), src.Kind()))
 		return nil
@@ -489,7 +489,7 @@ func (d *dcopy) cpyDefault(dst, src reflect.Value, dstBase, srcBase unsafe.Point
 	return nil
 }
 
-func (d *dcopy) dcopy(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, of offsetAndFunc, all *allFieldFunc) error {
+func (d *pcopy) pcopy(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, of offsetAndFunc, all *allFieldFunc) error {
 	// 预热的时间一定要绕开这个判断, 默认src都有值
 	// 寻找和dst匹配的字段
 	if !(d.preheat || d.usePreheat) {

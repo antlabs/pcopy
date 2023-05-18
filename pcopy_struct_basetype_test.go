@@ -9,8 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// dcopy指优化原来dcopy的优化版本，正式发布也行会改名为dcopy
-type DCopyDst struct {
+type PCopyDst struct {
 	// 所有基础类型
 	Bool    bool
 	Int     int
@@ -30,9 +29,9 @@ type DCopyDst struct {
 	// Complex128 complex128
 }
 
-type DCopySrc DCopyDst
+type PCopySrc PCopyDst
 
-var testSrc = DCopySrc{
+var testSrc = PCopySrc{
 	Bool:    true,
 	Int:     1,
 	Int8:    2,
@@ -52,16 +51,16 @@ var testSrc = DCopySrc{
 }
 
 // 基础类型
-func TestDCopyBase(t *testing.T) {
-	var dst DCopyDst
+func Test_PcopyBase(t *testing.T) {
+	var dst PCopyDst
 
 	err := Preheat(&dst, &testSrc)
 	assert.NoError(t, err)
-	dst = DCopyDst{}
+	dst = PCopyDst{}
 
 	err = Copy(&dst, &testSrc, WithUsePreheat())
 
-	var dst2 DCopyDst
+	var dst2 PCopyDst
 	dst2.Bool = true
 	dst2.Int = 1
 	dst2.Int8 = 2
@@ -159,10 +158,10 @@ func getSliceHeaderPtr(s unsafe.Pointer) *reflect.SliceHeader {
 	return (*reflect.SliceHeader)(s)
 }
 
-type DCopySrc_BaseStruct DCopyDst_BaseStruct
+type _PcopySrc_BaseStruct _PcopyDst_BaseStruct
 
 // 基础下struct 套struct的情况
-type DCopyDst_BaseStruct struct {
+type _PcopyDst_BaseStruct struct {
 	Bool    bool
 	Int     int
 	Int8    int8
@@ -194,10 +193,10 @@ type DCopyDst_BaseStruct struct {
 	SliceFloat32 []float32
 	SliceFloat64 []float64
 
-	Sub2 DCopyDst_BaseStruct_Sub2
+	Sub2 _PcopyDst_BaseStruct_Sub2
 }
 
-type DCopyDst_BaseStruct_Sub2 struct {
+type _PcopyDst_BaseStruct_Sub2 struct {
 	Bool    bool
 	Int     int
 	Int8    int8
@@ -229,10 +228,10 @@ type DCopyDst_BaseStruct_Sub2 struct {
 	SliceFloat32 []float32
 	SliceFloat64 []float64
 
-	Sub3 DCopyDst_BaseStruct_Sub3
+	Sub3 _PcopyDst_BaseStruct_Sub3
 }
 
-type DCopyDst_BaseStruct_Sub3 struct {
+type _PcopyDst_BaseStruct_Sub3 struct {
 	Bool    bool
 	Int     int
 	Int8    int8
@@ -265,7 +264,7 @@ type DCopyDst_BaseStruct_Sub3 struct {
 	SliceFloat64 []float64
 }
 
-var testBaseStructSrc DCopySrc_BaseStruct = DCopySrc_BaseStruct{
+var testBaseStructSrc _PcopySrc_BaseStruct = _PcopySrc_BaseStruct{
 	Bool:    true,
 	Int:     1,
 	Int8:    2,
@@ -296,7 +295,7 @@ var testBaseStructSrc DCopySrc_BaseStruct = DCopySrc_BaseStruct{
 	SliceString:  []string{"21", "22"},
 	SliceFloat32: []float32{23, 24},
 	SliceFloat64: []float64{25, 26},
-	Sub2: DCopyDst_BaseStruct_Sub2{
+	Sub2: _PcopyDst_BaseStruct_Sub2{
 		Bool:    true,
 		Int:     1,
 		Int8:    2,
@@ -327,7 +326,7 @@ var testBaseStructSrc DCopySrc_BaseStruct = DCopySrc_BaseStruct{
 		SliceString:  []string{"21", "22"},
 		SliceFloat32: []float32{23, 24},
 		SliceFloat64: []float64{25, 26},
-		Sub3: DCopyDst_BaseStruct_Sub3{
+		Sub3: _PcopyDst_BaseStruct_Sub3{
 			Bool:    true,
 			Int:     1,
 			Int8:    2,
@@ -363,12 +362,12 @@ var testBaseStructSrc DCopySrc_BaseStruct = DCopySrc_BaseStruct{
 }
 
 func Test_StructWithStruct(t *testing.T) {
-	var dst DCopyDst_BaseStruct
+	var dst _PcopyDst_BaseStruct
 
 	err := Preheat(&dst, &testBaseStructSrc)
 	// err := Preheat(&dst, &testSrc)
 	assert.NoError(t, err)
-	dst = DCopyDst_BaseStruct{}
+	dst = _PcopyDst_BaseStruct{}
 
 	// fmt.Printf("%v\n", cacheAllFunc)
 	err = Copy(&dst, &testBaseStructSrc, WithUsePreheat())
@@ -376,5 +375,5 @@ func Test_StructWithStruct(t *testing.T) {
 	// 直接赋值对于slice是浅拷贝，这里只是为了测试
 	dst2 := testBaseStructSrc
 	assert.NoError(t, err)
-	assert.Equal(t, dst, DCopyDst_BaseStruct(dst2))
+	assert.Equal(t, dst, _PcopyDst_BaseStruct(dst2))
 }
