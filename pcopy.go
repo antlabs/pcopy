@@ -86,14 +86,22 @@ func pcopyInner(dst, src interface{}, opt options) error {
 
 		if opt.preheat {
 			all = newAllFieldFunc()
-			// if dstValue.Type().Kind() != reflect.Struct && srcValue.Type().Kind() != reflect.Struct {
-			// 	saveToCache(dstSrcType{
-			// 		dst: dstValue.Type(),
-			// 		src: srcValue.Type(),
-			// 	},
-			// 		all)
-			// }
+			// 如果顶层对象是结构体，肯定会有预热结构
+			// 但是是其它类型可能没有预热结构, 所以这里要判断一下
+			if dstValue.Type().Kind() != reflect.Struct && srcValue.Type().Kind() != reflect.Struct {
+				saveToCache(dstSrcType{
+					dst: dstValue.Type(),
+					src: srcValue.Type(),
+				},
+					all)
+			}
 		}
+
+		// 按道理已经预热过的类型, 不会走到这里
+		// 但这里有个特殊情况，比如多级不对称指针。为了支持这种情况，就不报错了
+		// if opt.usePreheat {
+		// 	return errors.New("usePreheat must be used with preheat")
+		// }
 	}
 
 	d := pcopy{
@@ -490,7 +498,7 @@ func (d *pcopy) cpyDefault(dst, src reflect.Value, dstBase, srcBase unsafe.Point
 }
 
 func (d *pcopy) pcopy(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, of offsetAndFunc, all *allFieldFunc) error {
-	// 预热的时间一定要绕开这个判断, 默认src都有值
+	// 预热的时候一定要绕开这个判断, 不管src有值没值都要继续往下走
 	// 寻找和dst匹配的字段
 	if !(d.preheat || d.usePreheat) {
 		if src.IsZero() {
