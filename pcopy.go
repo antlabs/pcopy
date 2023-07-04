@@ -450,8 +450,13 @@ func (d *pcopy) cpyPtr(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, 
 // 其他类型
 func (d *pcopy) cpyDefault(dst, src reflect.Value, dstBase, srcBase unsafe.Pointer, of offsetAndFunc, all *allFieldFunc) error {
 	if dst.Kind() != src.Kind() {
-		// panic(fmt.Sprintf("%v, %v", dst.Kind(), src.Kind()))
-		return nil
+		// 如果是尺寸相等但类型不同的数字类型，可以进行转换
+		if !(isInt64(dst.Kind()) && isInt64(src.Kind()) ||
+			isInt32(dst.Kind()) && isInt32(src.Kind()) ||
+			isInt16(dst.Kind()) && isInt16(src.Kind()) ||
+			isInt8(dst.Kind()) && isInt8(src.Kind())) {
+			return nil
+		}
 	}
 
 	if d.preheat {
