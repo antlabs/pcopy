@@ -475,7 +475,18 @@ func (d *pcopy) cpyDefault(dst, src reflect.Value, dstBase, srcBase unsafe.Point
 		reflect.Int16,
 		reflect.Int32,
 		reflect.Int64:
-		dst.SetInt(src.Int())
+
+		switch dst.Kind() {
+		case
+			reflect.Uint,
+			reflect.Uint8,
+			reflect.Uint16,
+			reflect.Uint32,
+			reflect.Uint64:
+			dst.SetUint(uint64(src.Int()))
+		default:
+			dst.SetInt(src.Int())
+		}
 		return nil
 	case
 		reflect.Uint,
@@ -483,7 +494,18 @@ func (d *pcopy) cpyDefault(dst, src reflect.Value, dstBase, srcBase unsafe.Point
 		reflect.Uint16,
 		reflect.Uint32,
 		reflect.Uint64:
-		dst.SetUint(src.Uint())
+
+		switch dst.Kind() {
+		case
+			reflect.Int,
+			reflect.Int8,
+			reflect.Int16,
+			reflect.Int32,
+			reflect.Int64:
+			dst.SetInt(int64(src.Uint()))
+		default:
+			dst.SetUint(src.Uint())
+		}
 		return nil
 	case reflect.String:
 		dst.SetString(src.String())
