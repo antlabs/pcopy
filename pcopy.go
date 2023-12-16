@@ -89,7 +89,7 @@ func pcopyInner(dst, src interface{}, opt options) error {
 			// 如果顶层对象是结构体，肯定会有预热结构
 			// 但是是其它类型可能没有预热结构, 所以这里要判断一下
 			if dstValue.Type().Kind() != reflect.Struct && srcValue.Type().Kind() != reflect.Struct {
-				saveToCache(dstSrcType{
+				defer saveToCache(dstSrcType{
 					dst: dstValue.Type(),
 					src: srcValue.Type(),
 				},
