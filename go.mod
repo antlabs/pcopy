@@ -1,6 +1,6 @@
 module github.com/antlabs/pcopy
 
-go 1.18
+go 1.24.0
 
 require (
 	github.com/Masterminds/sprig/v3 v3.2.3
@@ -19,6 +19,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
-	golang.org/x/crypto v0.31.0 // indirect
+	golang.org/x/crypto v0.45.0 // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 )
